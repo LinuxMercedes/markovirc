@@ -11,28 +11,28 @@ class Bot(irc.IRCClient):
 
   def connectionMade(self):
     irc.IRCClient.connectionMade(self)
-    handler.connected()
+    self.handler.connected()
 
   def connectionLost(self):
     irc.IRCClient.connectionLost(self)
-    handler.disconnected()
+    self.handler.disconnected()
 
   def signedOn(self):
     self.join(self.channel)
-    handler.signedOn()
+    self.handler.signedOn()
 
   def joined(self, channel):
-    handler.joined(channel)
+    self.handler.joined(channel)
 
   def privmsg(self, user, channel, msg):
 # TODO: Make user pretty/object
     if channel == self.nickname:
-      handler.privmsg(user, msg)
+      self.handler.privmsg(user, msg)
     else: 
-      handler.chanmsg(user, channel, msg)
+      self.handler.chanmsg(user, channel, msg)
 
   def action(self, user, channel, msg):
-    handler.action(user, channel, msg)
+    self.handler.action(user, channel, msg)
 
   # Do I need this? Methinks not.
   def irc_NICK(self, prefix, params):
