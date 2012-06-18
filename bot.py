@@ -3,47 +3,52 @@ from twisted.internet import reactor, protocol
 from twisted.python import log
 
 class Bot(irc.IRCClient):
-  def __init__(self, nick, channel, filename):
+  def __init__(self, handler, nick, channel, filename):
+    self.handler = handler
     self.nickname = nick
     self.channel = channel
     self.filename = filename
 
   def connectionMade(self):
     irc.IRCClient.connectionMade(self)
-    print "connected!"
+    handler.connected()
 
   def connectionLost(self):
     irc.IRCClient.connectionLost(self)
-    print "disconnected =/"
+    handler.disconnected()
 
   def signedOn(self):
     self.join(self.channel)
+    handler.signedOn()
 
   def joined(self, channel):
-    print "Joined %s" % channel
+    handler.joined(channel)
 
   def privmsg(self, user, channel, msg):
+# TODO: Make user pretty/object
     if channel == self.nickname:
-      print "Msg from %s: %s" % (user, msg)
-    else: #higlight
-      print "%s says on %s: %s" % (user, channel, msg)
+      handler.privmsg(user, msg)
+    else: 
+      handler.chanmsg(user, channel, msg)
 
   def action(self, user, channel, msg):
-    print "Action on %s by %s: %s" % (channel, user, msg)
+    handler.action(user, channel, msg)
 
+  # Do I need this? Methinks not.
   def irc_NICK(self, prefix, params):
     old_nick = prefix.split('!')[0]
     new_nick = params[0]
     print "%s is now known as %s" % (old_nick, new_nick)
 
 class BotFactory(protocol.ClientFactory):
-  def __init__(self, nick, channel, filename):
+  def __init__(self, handler, nick, channel, filename):
+    self.handler = handler
     self.channel = channel
     self.nick = nick
     self.filename = filename
 
   def buildProtocol(self, addr):
-    p = Bot(self.nick, self.channel, self.filename)
+    p = Bot(self.handler, self.nick, self.channel, self.filename)
     return p
 
   def clientConnectionLost(self, connector, reason):
@@ -54,8 +59,7 @@ class BotFactory(protocol.ClientFactory):
     print "connection failed", reason
     reactor.stop()
 
-if __name__=="__main__":
-  f = BotFactory("markovbot", "markovbot", "log.txt")
-  reactor.connectTCP("irc.freenode.net", 6667, f)
-
+def start(handler, nick, channel, server, logfile, port=6667):
+  f = BotFactory(handler, nick, channel, logfile)
+  reactor.connectTCP(server, port, f)
   reactor.run()
