@@ -1,6 +1,10 @@
 require 'cinch'
-
+require 'sqlite3'
+  
 require './commands.rb'
+require './log.rb'
+
+$db = SQLite3::Database.new( "./markov.db" )
 
 bot = Cinch::Bot.new do
   configure do |c|
@@ -26,6 +30,10 @@ bot = Cinch::Bot.new do
   
   on :message, /!([a-z]*)(.*)/i do |msg, command, args|
     commandHandle command, args, msg
+  end
+  
+  on :message do |msg|
+    logHandle $db, msg
   end
 end
 
