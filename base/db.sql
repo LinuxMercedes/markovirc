@@ -15,4 +15,12 @@ CREATE TABLE "users"(
     "sourceid" INTEGER,
     "time" INTEGER,
     "text" TEXT
+); CREATE TABLE "words" (
+    "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+    "word" TEXT
+); CREATE TABLE "chains" (
+    "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+    "wordid" INTEGER,
+    "textid" INTEGER,
+    "nextwordid" INTEGER DEFAULT (-1)
 );

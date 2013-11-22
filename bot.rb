@@ -2,9 +2,9 @@ require 'cinch'
 require 'sqlite3'
   
 require './commands.rb'
-require './log.rb'
+require './logic.rb'
 
-$db = SQLite3::Database.open "markov.db"
+$db = SQLite3::Database.open "markovirc.db"
 
 bot = Cinch::Bot.new do
   configure do |c|
