@@ -4,7 +4,7 @@ require 'sqlite3'
 require './commands.rb'
 require './log.rb'
 
-$db = SQLite3::Database.new( "./markov.db" )
+$db = SQLite3::Database.open "markov.db"
 
 bot = Cinch::Bot.new do
   configure do |c|
