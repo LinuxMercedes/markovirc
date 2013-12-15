@@ -1,8 +1,8 @@
 require 'cinch'
-require 'sqlite3'
-  
-require './commands.rb'
-require './logic.rb'
+require 'sqlite3' 
+
+require_relative 'commands.rb'
+require_relative 'logic.rb'
 
 $db = SQLite3::Database.open "markovirc.db"
 
