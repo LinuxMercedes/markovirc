@@ -16,7 +16,7 @@ bot = Cinch::Bot.new do
     c.delimeter = "!"
   end
 
-  on :message, /^('?sup|he[y]+|hello)[\s]*(\s[a-z0-9_-]*)/i do |m, greeting, text|
+  on :message, /^('?sup|he[y]+|hello)(\s+[a-z0-9_-]*)?/i do |m, greeting, text|
     if text != "" and text != bot.nick
       next
     end
@@ -35,6 +35,7 @@ bot = Cinch::Bot.new do
   end
 
   on :message do |msg|
+	puts msg
     logHandle $db, msg
   end
 end
