@@ -8,22 +8,22 @@ $db = SQLite3::Database.open "markovirc.db"
 
 bot = Cinch::Bot.new do
   configure do |c|
-    c.server = "irc.freenode.org"
-    c.channels = ["##test"]
+    c.server = "irc.esper.net"
+    c.channels = ["#mstdeskeng"]
     c.nick = "markovirc"
     c.user = "markovirc"
     
     c.delimeter = "!"
   end
 
-  on :message, /^('?sup|he[y]+|hello)(\s+[a-z0-9_-]*)?/i do |m, greeting, text|
+  on :message, /^('?sup|he[y]+|hello|hi)[\s]*([a-z0-9_-]*)?/i do |m, greeting, text|
     if text != "" and text != bot.nick
       next
     end
     
     if m.user.nick == "lae"
       m.reply "Hey Musee!"
-    elsif m.user.nick == 'Aaron5367'
+    elsif m.user.nick == 'brodes'
       m.reply "/xe/ billy!"
     else
       m.reply "Hello #{m.user.nick}"
