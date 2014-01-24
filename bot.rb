@@ -23,8 +23,8 @@ bot = Cinch::Bot.new do
     
     if m.user.nick == "lae"
       m.reply "Hey Musee!"
-		elsif m.user.nick == 'Aaron5367'
-			m.reply "/xe/ billy!"
+    elsif m.user.nick == 'Aaron5367'
+      m.reply "/xe/ billy!"
     else
       m.reply "Hello #{m.user.nick}"
     end
