@@ -110,7 +110,6 @@ def speak( db, msg, word )
     end
     
     rownum = Random.rand(0..(numcontexts-1))  
-    print twid, "\n"
     db.execute "SELECT wordid FROM chains WHERE nextwordid=?", twid do |res|
       # FIXME: This won't scale well, LIMIT #,# may help
       if rownum > 0
