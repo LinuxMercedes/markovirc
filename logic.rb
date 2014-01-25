@@ -97,9 +97,10 @@ def speak( db, msg, word )
   end
   
   sentencewids = [wid] #our sentence to build
+  done = false
 
   #Recursively get the previous word (randomly if > 1) until we stop
-  while sentencewids.length < 25
+  while sentencewids.length < 25 and not done
     twid = sentencewids[0] #thiswid
     numcontexts = db.get_first_value "SELECT count(*) FROM chains WHERE nextwordid=?", twid
 
@@ -109,19 +110,27 @@ def speak( db, msg, word )
     end
     
     rownum = Random.rand(0..(numcontexts-1))  
+    print twid, "\n"
     db.execute "SELECT wordid FROM chains WHERE nextwordid=?", twid do |res|
       # FIXME: This won't scale well, LIMIT #,# may help
       if rownum > 0
 	rownum -= 1
 	next
       end
+      if res[0] == -1
+	#Done!
+	done = true
+      end
+      
       sentencewids.unshift res[0]
       break
     end
   end
   
+  done = false
+  
   #Recursively get the next word (randomly if > 1) until we stop
-  while sentencewids.length < 50
+  while sentencewids.length < 50 and not done
     twid = sentencewids[-1] #thiswid
     numcontexts = db.get_first_value "SELECT count(*) FROM chains WHERE wordid=?", twid
 
@@ -135,9 +144,10 @@ def speak( db, msg, word )
       
       if res[0] == -1
 	#We're done!
+	done = true
 	break
       end
-      sentencewids.unshift res[0]
+      sentencewids << res[0]
       break
     end
   end
