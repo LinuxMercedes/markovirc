@@ -9,7 +9,7 @@ $db = SQLite3::Database.open "markovirc.db"
 bot = Cinch::Bot.new do
   configure do |c|
     c.server = "irc.esper.net"
-    c.channels = ["#mstdeskeng"]
+    c.channels = ["##testing"]
     c.nick = "markovirc"
     c.user = "markovirc"
     
@@ -33,9 +33,8 @@ bot = Cinch::Bot.new do
   on :message, /^!([a-z]*)(.*)/i do |msg, command, args|
     commandHandle command, args, msg
   end
-
-  on :message do |msg|
-	puts msg
+  
+  on :message, /^[A-Za-z0-9]/ do |msg|
     logHandle $db, msg
   end
 end

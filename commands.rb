@@ -26,6 +26,13 @@ def help( args, msg )
   end
 end
 
+#force it to speak
+def say( args, msg )
+  args = args.strip
+  
+  speak $db, msg, args
+end
+
 """
 Hash that contains information about each command.
  An array that can be looked up by command name has three subvalues, a method
@@ -35,8 +42,12 @@ Hash that contains information about each command.
  $commands = { "help" => 
               [ self.method(:help), "Prints this message.", 
                 ["!help <command>:", "  Prints a message about a command or displays all commands with a short summary."] 
-              ] 
-            }
+              ],
+                "say" => 
+              [ self.method(:say), "Finds something to say related to the specified word.", 
+                ["!help <single word>:", "  Builds something to say from the word provided."] 
+              ],
+              }
 
 """
 Wrapper for calling commands, just checks to see if the command exists first.
