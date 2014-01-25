@@ -8,8 +8,8 @@ $db = SQLite3::Database.open "markovirc.db"
 
 bot = Cinch::Bot.new do
   configure do |c|
-    c.server = "irc.esper.net"
-    c.channels = ["##testing"]
+    c.server = "irc.freenode.net"
+    c.channels = ["##ircbottesting"]
     c.nick = "markovirc"
     c.user = "markovirc"
     
