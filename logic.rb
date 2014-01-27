@@ -113,12 +113,12 @@ def speak( db, msg, word )
     db.execute "SELECT wordid FROM chains WHERE nextwordid=?", twid do |res|
       # FIXME: This won't scale well, LIMIT #,# may help
       if rownum > 0
-	rownum -= 1
-	next
+        rownum -= 1
+        next
       end
       if res[0] == -1
-	#Done!
-	done = true
+        #Done!
+        done = true
       end
       
       sentencewids.unshift res[0]
@@ -137,14 +137,14 @@ def speak( db, msg, word )
     db.execute "SELECT nextwordid FROM chains WHERE wordid=?", twid do |res|
       # FIXME: This won't scale well, LIMIT #,# may help
       if rownum > 0
-	rownum -= 1
-	next
+        rownum -= 1
+        next
       end
       
       if res[0] == -1
-	#We're done!
-	done = true
-	break
+        #We're done!
+        done = true
+        break
       end
       sentencewids << res[0]
       break
