@@ -10,7 +10,7 @@ require_relative "utils.rb"
 """
 I'm pretty sure sqlite3 handles this natively
 First get chanid, then the userid. Check to see if this is a known source, if not
-  add it, then plug the text in.
+add it, then plug the text in.
 """
 def logHandle( db, msg )
   chanid = 0
@@ -21,7 +21,7 @@ def logHandle( db, msg )
   if res.size == 0
     db.execute "INSERT INTO channels (name) VALUES (?)", msg.channel.name
   end
-
+  
   chanid = db.get_first_value "SELECT id FROM channels WHERE name=?", msg.channel.name
   
   res = db.execute "SELECT 1 FROM users WHERE hostmask=?", (msg.user.name + "@" + msg.user.host)
@@ -48,12 +48,12 @@ end
 
 """
 Chain
-  Create our chain and throw it into main.chains
-  
-  We take our base text and split it up into sentences by punctuation.
-  Next split the sentences by space into a 2d array.
-  Then replace all words with their word id.
-  Last create a relation for each word referencing our text.
+Create our chain and throw it into main.chains
+
+We take our base text and split it up into sentences by punctuation.
+Next split the sentences by space into a 2d array.
+Then replace all words with their word id.
+Last create a relation for each word referencing our text.
 """
 def chain( db, text, textid )
   sentencewords = sever text
@@ -85,9 +85,9 @@ end
 
 """
 Speak
-  Pulls a word from our database and starts a chain with it.
+Pulls a word from our database and starts a chain with it.
 """
-def speak( db, msg, word )
+def speak( db, msg, word, chainlen )
   # Number of sentences with our word:
   wid = db.get_first_value "SELECT id FROM words WHERE word=?", word
   
@@ -97,63 +97,94 @@ def speak( db, msg, word )
   end
   
   sentencewids = [wid] #our sentence to build
-
+  
   #Go to the left, negative
-  speakNext sentencewids, -1
-
+  speakNext sentencewids, chainlen, -1
+  
   #Now to the right, positive
-  speakNext sentencewids, 1
+  speakNext sentencewids, chainlen, 1
   
   #Now recursively get the words for each wid
   sentence = []
   sentencewids.each do |wid|
-    sentence << ( db.get_first_value "SELECT word FROM words WHERE id=#{wid}" )
+    sentence << ( db.get_first_value "SELECT word FROM words WHERE id=?", wid )
   end
   
   msg.reply sentence.join " "
 end
 
 """
+SpeakNext
 Helper function for getting the 'next' word. Using dir, it decides which way it is going to
 look while iterating through chains. The sentence inputted is an array of wordids
-which is added to whilest iterating.
+which is added to whilest iterating. 
+FIXME: make this a goddamn class
 """
-def speakNext( sentencewids, dir )
+def speakNext( sentencewids, chainlen, dir )
   done = false
-
+  # we use our source id and sourceid counter (sid / sidi) to help us emulate native database support for
+  #   higher length markov chains. 
+  sid = -1
+  sidi = -1
+  
   start = sentencewids.length
-
+  
   while sentencewids.length < start+25 and not done
-    twid = sentencewids[0] #thiswid
+    twid = sentencewids[ dir <= 0 ? 0 : -1 ] #thiswid
     q = ""
-
-    if dir <= 0
-      numcontexts = $db.get_first_value "SELECT count(*) FROM chains WHERE nextwordid=?", twid # look for where WE are the next wid
-      q = "SELECT wordid from chains where nextwordid=?"
+    
+    # If we don't already have a source lined up...
+    if sid == -1
+      if dir <= 0
+        numcontexts = $db.get_first_value "SELECT count(*) FROM chains WHERE nextwordid=?", twid # look for where WE are the next wid
+        q = "SELECT wordid,textid from chains WHERE nextwordid=?"
+      else
+        numcontexts = $db.get_first_value "SELECT count(*) FROM chains WHERE wordid=?", twid # look for our wid
+        q = "SELECT nextwordid,textid from chains WHERE wordid=?"
+      end
+      
+      # This typically means our sentence is over.
+      if numcontexts == 0
+        break
+      end
+      rownum = Random.rand(0..(numcontexts-1))
+      
+      $db.execute q, twid do |res|
+        if rownum > 0
+          rownum -= 1
+          next # FIXME: This won't scale well, LIMIT #,# may help
+        end
+        
+        if res[0] == -1
+          #Done!
+          done = true
+        end
+        
+        if dir <= 0
+          sentencewids.unshift res[0]
+        else
+          sentencewids << res[0]
+        end
+        
+        if chainlen > 1
+          sid = res[1] # Due to the query ordering
+          sidi = chainlen-1
+        end
+        
+        break
+      end
     else
-      numcontexts = $db.get_first_value "SELECT count(*) FROM chains WHERE wordid=?", twid # look for our wid
-      q = "SELECT nextwordid from chains where wordid=?"
-    end
-
-    # This typically means our sentence is over.
-    if numcontexts == 0
-      break
-    end
-
-    rownum = Random.rand(0..(numcontexts-1))
-
-    $db.execute q, twid do |res|
-      if rownum > 0
-        rownum -= 1
-        next      # FIXME: This won't scale well, LIMIT #,# may help
+      # We know our next word will be from a certain textid, so there should be just one result
+      if dir <= 0
+        sentencewids.unshift( $db.get_first_value "SELECT wordid FROM chains WHERE nextwordid=? AND textid=?", [twid, sid] )
+      else
+        sentencewids << ( $db.get_first_value "SELECT nextwordid FROM chains WHERE wordid=? AND textid=?", [twid, sid] )
       end
-      if res[0] == -1
-        #Done!
-        done = true
+      
+      sidi -= 1
+      if sidi <= 0
+        sid = -1
       end
-
-      sentencewids.unshift res[0]
-      break
     end
   end
 end

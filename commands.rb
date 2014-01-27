@@ -28,9 +28,19 @@ end
 
 #force it to speak
 def say( args, msg )
-  args = args.strip
+  word = args.strip
+  level = 3
   
-  speak $db, msg, args
+  if args.match /\s+/
+    args = args.split /\s+/
+    args.delete ""
+    word = args[0]
+    if args[1].to_i < 10 and args[1].to_i > 0
+      level = args[1].to_i
+    end
+  end
+    
+  speak $db, msg, word, level
 end
 
 #Statistics
@@ -46,7 +56,8 @@ def stats( args, msg )
     contexts = $db.get_first_value "SELECT count(*) FROM chains"
   end
   
-  msg.reply "I know " + words.to_s + " words and " + contexts.to_s + " contexts for them, with an average context density of " + (contexts/words).floor.to_s + "."
+  msg.reply "I know " + words.to_s + " words and " + contexts.to_s + " contexts for them, with an average context density of " \
+    + (contexts/words).floor.to_s + "."
 end
 
 """
@@ -61,7 +72,8 @@ Hash that contains information about each command.
                 ],
                 "say" => 
                 [ self.method(:say), "Finds something to say related to the specified word.",
-                  ["!say <single word>:", "  Builds something to say from the word provided."]
+                  ["!say <single word> (optional chain length):", "  Builds something to say from the word provided. If provided, chain length specifies", 
+                   "  the number of consecutive words per cycle; see wikipedia for details." ]
                 ],
                 "stats" =>
                 [ self.method(:stats), "Returns some statistics about the database.",
