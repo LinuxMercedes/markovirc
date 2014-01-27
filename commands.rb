@@ -33,6 +33,22 @@ def say( args, msg )
   speak $db, msg, args
 end
 
+#Statistics
+def stats( args, msg )
+  args = args.strip
+  
+  if args == ""
+    args = "db"
+  end
+  
+  if args == "db"
+    words = $db.get_first_value "SELECT count(*) FROM words"
+    contexts = $db.get_first_value "SELECT count(*) FROM chains"
+  end
+  
+  msg.reply "I know " + words.to_s + " words and " + contexts.to_s + " contexts for them, with an average context density of " + (contexts/words).floor.to_s + "."
+end
+
 """
 Hash that contains information about each command.
  An array that can be looked up by command name has three subvalues, a method
@@ -45,8 +61,11 @@ Hash that contains information about each command.
               ],
                 "say" => 
               [ self.method(:say), "Finds something to say related to the specified word.", 
-                ["!help <single word>:", "  Builds something to say from the word provided."] 
+                ["!say <single word>:", "  Builds something to say from the word provided."] 
               ],
+                "stats" =>
+		[ self.method(:stats), "Returns some statistics about the database.",
+                  ["!stats <optional topic>:", "  Returns statistics about the optional topic, or the database."] ]
               }
 
 """
