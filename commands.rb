@@ -56,16 +56,17 @@ Hash that contains information about each command.
  the command itself is used with help, ie !help google.
 """
  $commands = { "help" => 
-              [ self.method(:help), "Prints this message.", 
-                ["!help <command>:", "  Prints a message about a command or displays all commands with a short summary."] 
-              ],
+                [ self.method(:help), "Prints this message.",
+                  ["!help <command>:", "  Prints a message about a command or displays all commands with a short summary."]
+                ],
                 "say" => 
-              [ self.method(:say), "Finds something to say related to the specified word.", 
-                ["!say <single word>:", "  Builds something to say from the word provided."] 
-              ],
+                [ self.method(:say), "Finds something to say related to the specified word.",
+                  ["!say <single word>:", "  Builds something to say from the word provided."]
+                ],
                 "stats" =>
-		[ self.method(:stats), "Returns some statistics about the database.",
-                  ["!stats <optional topic>:", "  Returns statistics about the optional topic, or the database."] ]
+                [ self.method(:stats), "Returns some statistics about the database.",
+                  ["!stats <optional topic>:", "  Returns statistics about the optional topic, or the database."]
+                ]
               }
 
 """
