@@ -1,4 +1,4 @@
-#FIXME: Give me a constants file
+# FIXME: Give me a constants file
 module TYPES
   CHANNEL=0
   PM=1
@@ -8,7 +8,7 @@ end
 require_relative "utils.rb"
 
 """
-NO ESCAPES. I'm pretty sure sqlite3 handles this natively
+I'm pretty sure sqlite3 handles this natively
 First get chanid, then the userid. Check to see if this is a known source, if not
   add it, then plug the text in.
 """
@@ -97,60 +97,12 @@ def speak( db, msg, word )
   end
   
   sentencewids = [wid] #our sentence to build
-  done = false
 
-  #Recursively get the previous word (randomly if > 1) until we stop
-  while sentencewids.length < 25 and not done
-    twid = sentencewids[0] #thiswid
-    numcontexts = db.get_first_value "SELECT count(*) FROM chains WHERE nextwordid=?", twid
+  #Go to the left, negative
+  speakNext sentencewids, -1
 
-    #We're at the start of a sentence! Done!
-    if numcontexts == 0
-      break
-    end
-    
-    rownum = Random.rand(0..(numcontexts-1))  
-    db.execute "SELECT wordid FROM chains WHERE nextwordid=?", twid do |res|
-      # FIXME: This won't scale well, LIMIT #,# may help
-      if rownum > 0
-        rownum -= 1
-        next
-      end
-      if res[0] == -1
-        #Done!
-        done = true
-      end
-      
-      sentencewids.unshift res[0]
-      break
-    end
-  end
-  
-  done = false
-  
-  #Recursively get the next word (randomly if > 1) until we stop
-  while sentencewids.length < 50 and not done
-    twid = sentencewids[-1] #thiswid
-    numcontexts = db.get_first_value "SELECT count(*) FROM chains WHERE wordid=?", twid
-
-    rownum = Random.rand(0..(numcontexts-1))  
-    db.execute "SELECT nextwordid FROM chains WHERE wordid=?", twid do |res|
-      # FIXME: This won't scale well, LIMIT #,# may help
-      if rownum > 0
-        rownum -= 1
-        next
-      end
-      
-      if res[0] == -1
-        #We're done!
-        done = true
-        break
-      end
-      sentencewids << res[0]
-      break
-    end
-  end
-
+  #Now to the right, positive
+  speakNext sentencewids, 1
   
   #Now recursively get the words for each wid
   sentence = []
@@ -161,8 +113,47 @@ def speak( db, msg, word )
   msg.reply sentence.join " "
 end
 
+"""
+Helper function for getting the 'next' word. Using dir, it decides which way it is going to
+look while iterating through chains. The sentence inputted is an array of wordids
+which is added to whilest iterating.
+"""
+def speakNext( sentencewids, dir )
+  done = false
 
-#   numcontexts = db.get_first_value "SELECT count(*) FROM chains WHERE wordid=?", wid
-#   
-#   msg.reply numcontexts.to_s + " context(s)"
-  
+  start = sentencewids.length
+
+  while sentencewids.length < start+25 and not done
+    twid = sentencewids[0] #thiswid
+    q = ""
+
+    if dir <= 0
+      numcontexts = $db.get_first_value "SELECT count(*) FROM chains WHERE nextwordid=?", twid # look for where WE are the next wid
+      q = "SELECT wordid from chains where nextwordid=?"
+    else
+      numcontexts = $db.get_first_value "SELECT count(*) FROM chains WHERE wordid=?", twid # look for our wid
+      q = "SELECT nextwordid from chains where wordid=?"
+    end
+
+    # This typically means our sentence is over.
+    if numcontexts == 0
+      break
+    end
+
+    rownum = Random.rand(0..(numcontexts-1))
+
+    $db.execute q, twid do |res|
+      if rownum > 0
+        rownum -= 1
+        next      # FIXME: This won't scale well, LIMIT #,# may help
+      end
+      if res[0] == -1
+        #Done!
+        done = true
+      end
+
+      sentencewids.unshift res[0]
+      break
+    end
+  end
+end
