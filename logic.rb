@@ -87,9 +87,9 @@ end
 Speak
 Pulls a word from our database and starts a chain with it.
 """
-def speak( db, msg, word, chainlen )
+def speak( db, msg, word, chainlen, like=false )
   # Number of sentences with our word:
-  wid = db.get_first_value "SELECT id FROM words WHERE word=?", word
+  wid = db.get_first_value "SELECT id FROM words WHERE word" + ( like ? " LIKE ?" : "=?" ) + " COLLATE NOCASE", word
   
   if wid == nil
     msg.reply "I don't know the word: \"#{word}\""
