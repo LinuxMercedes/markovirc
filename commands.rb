@@ -72,13 +72,14 @@ Hash that contains information about each command.
                 ],
                 "say" => 
                 [ self.method(:say), "Finds something to say related to the specified word.",
-                  ["!say <single word> (optional chain length):", "  Builds something to say from the word provided. If provided, chain length specifies", 
-                   "  the number of consecutive words per cycle; see wikipedia for details." ]
+                  ["!say <word or phrase> (optional chain length):", "  Builds something to say from the word provided. If provided, chain length specifies", 
+                   "  If provided, chain length specifies the number of consecutive words per cycle; this increases coherency but reduces creativity. Default is 3." ]
                 ],
                 "sayl" => 
                 [ self.method(:sayl), "Finds something to say related to a word similar to the one specified.",
-                  ["!say <single word> (optional chain length):", "  Builds something to say from a similar word to the one provided. If provided, chain length specifies", 
-                    "  the number of consecutive words per cycle; see wikipedia for details." ]
+                  ["!say <word or phrase> (optional chain length):", "  Builds something to say from a similar word to the one provided, accepting wildcards (%).",
+                   "  Default wildcards (%word%) are always added unless another wildcard is specified.",
+                   "  If provided, chain length specifies the number of consecutive words per cycle; this increases coherency but reduces creativity. Default is 3." ]
                 ],
                 "stats" =>
                 [ self.method(:stats), "Returns some statistics about the database.",
