@@ -57,7 +57,7 @@ Last create a relation for each word referencing our text.
 """
 def chain( db, text, textid )
   sentencewords = sever text
-  
+    
   #Replace all words with their ids
   sentencewords.each do |sentence|    
     for i in (0..sentence.size-1)
@@ -109,8 +109,6 @@ def speak( db, msg, word, chainlen )
   sentencewids.each do |wid|
     sentence << ( db.get_first_value "SELECT word FROM words WHERE id=?", wid )
   end
-  
-  print "\n", sentencewids, "\n"
   
   msg.reply sentence.join " "
 end

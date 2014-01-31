@@ -1,5 +1,5 @@
 def sever( text )
-  sentences = text.split( /[.!?]+/ )
+  sentences = text.split( /[.!?][ ]+/ )
   sentencewords = []
   
   sentences.each do |sentence|
