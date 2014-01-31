@@ -110,6 +110,8 @@ def speak( db, msg, word, chainlen )
     sentence << ( db.get_first_value "SELECT word FROM words WHERE id=?", wid )
   end
   
+  print "\n", sentencewids, "\n"
+  
   msg.reply sentence.join " "
 end
 
@@ -132,6 +134,13 @@ def speakNext( sentencewids, chainlen, dir )
   while sentencewids.length < start+25 and not done
     twid = sentencewids[ dir <= 0 ? 0 : -1 ] #thiswid
     q = ""
+    
+    if twid == -1
+      break
+    elsif twid == nil
+      sentencewids.compact! #dirty fix for sometimes getting nil back in chain len > 1
+      break
+    end
     
     # If we don't already have a source lined up...
     if sid == -1
