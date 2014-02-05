@@ -89,7 +89,7 @@ Pulls a word from our database and starts a chain with it.
 """
 def speak( db, msg, word, chainlen, like=false )
   # Number of sentences with our word:
-  wid = db.get_first_value "SELECT id FROM words WHERE word" + ( like ? " LIKE ?" : "=?" ) + " COLLATE NOCASE", word
+  wid = db.get_first_value "SELECT id FROM words WHERE word" + ( like ? " LIKE ?" : "=?" ) + " COLLATE NOCASE ORDER BY random() LIMIT 1", word
   
   if wid == nil
     msg.reply "I don't know the word: \"#{word}\""
@@ -131,7 +131,7 @@ def speakNext( sentencewids, chainlen, dir )
   
   while sentencewids.length < start+25 and not done
     twid = sentencewids[ dir <= 0 ? 0 : -1 ] #thiswid
-    q = ""
+    res = ""
     
     if twid == -1
       break
@@ -143,42 +143,25 @@ def speakNext( sentencewids, chainlen, dir )
     # If we don't already have a source lined up...
     if sid == -1
       if dir <= 0
-        numcontexts = $db.get_first_value "SELECT count(*) FROM chains WHERE nextwordid=?", twid # look for where WE are the next wid
-        q = "SELECT wordid,textid from chains WHERE nextwordid=?"
+        res = $db.execute "SELECT nextwordid,textid from chains WHERE wordid=? ORDER BY random() LIMIT 1", twid
       else
-        numcontexts = $db.get_first_value "SELECT count(*) FROM chains WHERE wordid=?", twid # look for our wid
-        q = "SELECT nextwordid,textid from chains WHERE wordid=?"
+        res = $db.execute "SELECT nextwordid,textid from chains WHERE wordid=? ORDER BY random() LIMIT 1", twid
       end
-      
-      # This typically means our sentence is over.
-      if numcontexts == 0
+
+      # We've done our duty
+      if res == nil or res.compact == []
         break
       end
-      rownum = Random.rand(0..(numcontexts-1))
-      
-      $db.execute q, twid do |res|
-        if rownum > 0
-          rownum -= 1
-          next # FIXME: This won't scale well, LIMIT #,# may help
-        end
-        
-        if res[0] == -1
-          #Done!
-          done = true
-        end
-        
-        if dir <= 0
-          sentencewids.unshift res[0]
-        else
-          sentencewids << res[0]
-        end
-        
-        if chainlen > 1
-          sid = res[1] # Due to the query ordering
-          sidi = chainlen-1
-        end
-        
-        break
+
+      if dir <= 0
+        sentencewids.unshift res[0]
+      else
+        sentencewids << res[0]
+      end
+
+      if chainlen > 1
+        sid = res[1] # Due to the query ordering
+        sidi = chainlen-1
       end
     else
       # We know our next word will be from a certain textid, so there should be just one result
