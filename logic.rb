@@ -143,24 +143,26 @@ def speakNext( sentencewids, chainlen, dir )
     # If we don't already have a source lined up...
     if sid == -1
       if dir <= 0
-        res = $db.execute "SELECT id,textid from chains WHERE nextwordid=? ORDER BY random() LIMIT 1", twid #goin' left, look to the left
+        res = $db.execute "SELECT wordid,textid from chains WHERE nextwordid=? ORDER BY random() LIMIT 1", twid #goin' left, look to the left
       else
         res = $db.execute "SELECT nextwordid,textid from chains WHERE wordid=? ORDER BY random() LIMIT 1", twid #goin' right
       end
       print res.to_s, "\n"
+      
+      res = res[0]
 
-      if res == nil
+      if res == nil or res[0] == -1
         break
       end
 
       if dir <= 0
-        sentencewids.unshift res[0][0]
+        sentencewids.unshift res[0]
       else
-        sentencewids << res[0][0]
+        sentencewids << res[0]
       end
 
       if chainlen > 1
-        sid = res[0][1] # Due to the query ordering
+        sid = res[1] # Due to the query ordering
         sidi = chainlen-1
       end
     else
