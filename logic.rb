@@ -147,7 +147,6 @@ def speakNext( sentencewids, chainlen, dir )
       else
         res = $db.execute "SELECT nextwordid,textid from chains WHERE wordid=? ORDER BY random() LIMIT 1", twid #goin' right
       end
-      print res.to_s, "\n"
       
       res = res[0]
 
@@ -168,10 +167,10 @@ def speakNext( sentencewids, chainlen, dir )
     else
       # We know our next word will be from a certain textid, so there should be just one result
       if dir <= 0
-        print "\nSID: ", sid.to_s, "\nTWID: ", twid.to_s, "\n", sentencewids, "\n\n" 
+        #print "\nSID: ", sid.to_s, "\nTWID: ", twid.to_s, "\n", sentencewids, "\n\n" 
         sentencewids.unshift( $db.get_first_value "SELECT wordid FROM chains WHERE nextwordid=? AND textid=?", [twid, sid] )
       else   
-        print "\nSID: ", sid.to_s, "\nTWID: ", twid.to_s, "\n", sentencewids, "\n\n"
+        #print "\nSID: ", sid.to_s, "\nTWID: ", twid.to_s, "\n", sentencewids, "\n\n"
         sentencewids << ( $db.get_first_value "SELECT nextwordid FROM chains WHERE wordid=? AND textid=?", [twid, sid] )
       end
       
