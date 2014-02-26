@@ -2,15 +2,15 @@ require 'cinch'
 require 'sqlite3' 
 
 require_relative "utils.rb"
+
+$set = Settings.new
+$db = SQLite3::Database.open "markovirc.db"
+
 require_relative 'commands.rb'
 require_relative 'logic.rb'
 
-$db = SQLite3::Database.open "markovirc.db"
-
 bot = Cinch::Bot.new do
   configure do |c|
-    $set = Settings.new
-
     c.server = $set['server']
     c.channels = $set['channels'].keys.map{ |k| "#"+k }
     c.nick = $set['nick']

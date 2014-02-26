@@ -86,13 +86,15 @@ Hash that contains information about each command.
                 "say" => 
                 [ self.method(:say), "Finds something to say related to the specified word.",
                   ["!say <word or phrase> (optional chain length):", "  Builds something to say from the word provided. If provided, chain length specifies", 
-                   "  If provided, chain length specifies the number of consecutive words per cycle; this increases coherency but reduces creativity. Default is 3." ]
+                   "  If provided, chain length specifies the number of consecutive words per cycle; this increases coherency but reduces creativity.",
+                   "  Default is random from " + $set['logic']['minchainlength'].to_s + " to " + $set['logic']['maxchainlength'].to_s + "." ]
                 ],
                 "sayl" => 
                 [ self.method(:sayl), "Finds something to say related to a word similar to the one specified.",
                   ["!say <word or phrase> (optional chain length):", "  Builds something to say from a similar word to the one provided, accepting wildcards (%).",
                    "  Default wildcards (%word%) are always added unless another wildcard is specified.",
-                   "  If provided, chain length specifies the number of consecutive words per cycle; this increases coherency but reduces creativity. Default is 3." ]
+                   "  If provided, chain length specifies the number of consecutive words per cycle; this increases coherency but reduces creativity.", 
+                   "  Default is random from " + $set['logic']['minchainlength'].to_s + " to " + $set['logic']['maxchainlength'].to_s + "." ]
                 ],
                 "stats" =>
                 [ self.method(:stats), "Returns some statistics about the database.",
@@ -131,7 +133,7 @@ if it's numeric, and returns it as level.
 """
 def sayArgParser( args )
   word = args.strip
-  level = $set.chainlength
+  level = Random.rand $set['logic']['minchainlength']...$set['logic']['maxchainlength']
   
   if args.match /[ ]+/
     args = args.split /[ ]+/

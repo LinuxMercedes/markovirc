@@ -8,8 +8,11 @@ authpass:
 
 logic:
   # Markov chain length. Higher means more coherent, but in turn less
-  # random. The stock chainlength 5, is a decent mix between the two.
-  chainlength: 5 
+  # random. The stock chainlength 4 is very coherent and typically 8 is
+  # nearly verbatim source text.
+  minchainlength: 4 
+
+  maxchainlength: 8
 
   # Percent of messages which markovirc has a chance to reply. Note 
   # that the weights also influence whether he will reply or not too.
@@ -55,8 +58,8 @@ admins:
 # List of channels to join on connecting. A # is added by default, if a channel with ##
 # is desired, use "#channelname":. Current flags are -speak, speak, and silent. -speak disables
 # speaking in that channel all together, while the speak enables random speech. Ommiting it
-# causes markovirc to only respond to commands in the channel. Silent makes markovirc listen
-# in that channel.
+# causes markovirc to only respond to commands in the channel. Silent makes markovirc only
+# listen in that channel and implies -silent.
 channels:
   channelname:
     - speak
