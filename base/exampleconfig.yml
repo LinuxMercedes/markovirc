@@ -2,7 +2,13 @@ user: markovirc
 nick: markovirc
 server: irc.freenode.net
 
+# Authentication pass, for !auth. A blank pass will disable auth and
+# cause it to report "invalid password."
 authpass:
+
+# Markov chain length. Higher means more coherent, but in turn less
+# random. The stock chainlength 5, is a decent mix between the two.
+chainlength: 5 
 
 admins:
   - user@invalid!host

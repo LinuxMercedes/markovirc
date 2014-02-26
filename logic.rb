@@ -40,7 +40,7 @@ def logHandle( db, msg )
   
   textid = db.get_first_value "SELECT id FROM text WHERE sourceid=? AND time=? AND text=?", [sourceid, msg.time.to_i, msg.message]
   
-  #Create our chain
+  # Create our chain
   chain db, msg.message, textid
 end
 
@@ -56,7 +56,7 @@ Last create a relation for each word referencing our text.
 def chain( db, text, textid )
   sentencewords = sever text
     
-  #Replace all words with their ids
+  # Replace all words with their ids
   sentencewords.each do |sentence|    
     for i in (0..sentence.size-1)
       word = sentence[i]
@@ -70,7 +70,7 @@ def chain( db, text, textid )
       sentence[i] = wid
     end
     
-    #and insert them
+    # and insert them
     for i in (0..sentence.size-1)
       if i != sentence.size-1
         db.execute "INSERT INTO chains (wordid,textid,nextwordid) VALUES (?,?,?)", [sentence[i], textid, sentence[i+1]]
@@ -96,13 +96,13 @@ def speak( db, msg, word, chainlen, like=false )
   
   sentencewids = [wid] #our sentence to build
   
-  #Go to the left, negative
+  # Go to the left, negative
   speakNext sentencewids, chainlen, -1
   
-  #Now to the right, positive
+  # Now to the right, positive
   speakNext sentencewids, chainlen, 1
   
-  #Now recursively get the words for each wid
+  # Recursively get the words for each wid
   sentence = []
   sentencewids.each do |wid|
     sentence << ( db.get_first_value "SELECT word FROM words WHERE id=?", wid )

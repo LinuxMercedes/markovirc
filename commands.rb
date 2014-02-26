@@ -126,11 +126,12 @@ def commandHandle(command, args, msg)
 end
 
 """
-Wrapper for some common say functions
+Wrapper for some common say functions. Grabs the last argument,
+if it's numeric, and returns it as level.
 """
 def sayArgParser( args )
   word = args.strip
-  level = 3
+  level = $set.chainlength
   
   if args.match /[ ]+/
     args = args.split /[ ]+/
