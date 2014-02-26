@@ -1,0 +1,14 @@
+user: markovirc
+nick: markovirc
+server: irc.freenode.net
+
+authpass:
+
+admins:
+  - user@invalid!host
+
+channels:
+  channelname:
+      - speak
+  another:
+      - -speak

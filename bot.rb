@@ -1,6 +1,7 @@
 require 'cinch'
 require 'sqlite3' 
 
+require_relative "utils.rb"
 require_relative 'commands.rb'
 require_relative 'logic.rb'
 
@@ -8,12 +9,15 @@ $db = SQLite3::Database.open "markovirc.db"
 
 bot = Cinch::Bot.new do
   configure do |c|
-    c.server = "irc.freenode.net"
-    c.channels = ["##ircbottesting"]
-    c.nick = "markovirc"
-    c.user = "markovirc"
+    set = Settings.new
+
+    c.server = set['server']
+    c.channels = set['channels'].keys.map{ |k| "#"+k }
+    c.nick = set['nick']
+    c.user = set['user']
     
     c.delimeter = "!"
+    c.settings = set
   end
 
   on :message, /^('?sup|he[y]+|hello|hi)[\s]*([a-z0-9_-]*)?/i do |m, greeting, text|

@@ -5,8 +5,6 @@ module TYPES
   DIRECT=2
 end
 
-require_relative "utils.rb"
-
 """
 I'm pretty sure sqlite3 handles this natively
 First get chanid, then the userid. Check to see if this is a known source, if not
