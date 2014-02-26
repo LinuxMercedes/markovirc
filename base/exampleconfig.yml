@@ -6,15 +6,60 @@ server: irc.freenode.net
 # cause it to report "invalid password."
 authpass:
 
-# Markov chain length. Higher means more coherent, but in turn less
-# random. The stock chainlength 5, is a decent mix between the two.
-chainlength: 5 
+logic:
+  # Markov chain length. Higher means more coherent, but in turn less
+  # random. The stock chainlength 5, is a decent mix between the two.
+  chainlength: 5 
+
+  # Percent of messages which markovirc has a chance to reply. Note 
+  # that the weights also influence whether he will reply or not too.
+  replyrate: .10
+  
+  ###################################################################
+  # Penalties make a message markovirc will say get tossed. High 
+  # penalties and a low reply rate, coupled with a new database,
+  # can cause markovirc to be entirely silent.  
+  ###################################################################
+
+  # Max penalty, if something hits this then the phrase is thrown out.
+  maxpenalty: 30
+
+  # Maximum words on either side of the trigger word. This will cause
+  # the text chaining to stop immediately and a penalty to occur. 25
+  # means the total max length of a phrase is 51 words.
+  maxwords: 25
+
+  # Penalty for hitting the word limit on the left hand side.
+  lhsoverflow: 30
+
+  # Penalty for hitting the word limit on the right hand side.
+  rhsoverflow: 30
+  
+  # Penalty for using a rare chain. This is triggered by a with chainlength 
+  # of chainlength/2, not existing in a source text.
+  coherency: 15
+
+  # Penalizes repeating chains in the sentence. Each time a chain segment 
+  # repeats, this amount is added, this includes metachains made by 
+  # combinations of other chains.
+  repetition: 3
+
+# Users that match this hostmask will be given access to all admin commands.
+# This format accepts regex for the individual segments, ie:
+#   [a]*ron!.*@(64|65).18.47.122
 
 admins:
-  - user@invalid!host
+  - user!invalid@host
 
+
+# List of channels to join on connecting. A # is added by default, if a channel with ##
+# is desired, use "#channelname":. Current flags are -speak, speak, and silent. -speak disables
+# speaking in that channel all together, while the speak enables random speech. Ommiting it
+# causes markovirc to only respond to commands in the channel. Silent makes markovirc listen
+# in that channel.
 channels:
   channelname:
-      - speak
+    - speak
   another:
-      - -speak
+    - -speak
+    - silent
