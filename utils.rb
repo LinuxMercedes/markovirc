@@ -1,3 +1,5 @@
+require 'settingslogic'
+
 def sever( text )
   sentences = text.split( /[.!?][ ]+/ )
   sentencewords = []
@@ -7,4 +9,8 @@ def sever( text )
   end
   
   return sentencewords
+end
+
+class Settings < Settingslogic
+    source "config.yml"
 end

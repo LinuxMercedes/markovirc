@@ -54,10 +54,23 @@ def stats( args, msg )
   if args == "db"
     words = $db.get_first_value "SELECT count(*) FROM words"
     contexts = $db.get_first_value "SELECT count(*) FROM chains"
-  end
   
-  msg.reply "I know " + words.to_s + " words and " + contexts.to_s + " contexts for them, with an average context density of " \
-    + (contexts/words).floor.to_s + "."
+    msg.reply "I know " + words.to_s + " words and " + contexts.to_s + " contexts for them, with an average context density of " \
+      + (contexts/words).floor.to_s + "."
+  end
+end
+
+def shutup( args, msg )
+  
+end
+
+def speak( args, msg )
+
+end
+
+def auth( args, msg )
+  args = args.strip 
+  
 end
 
 """
@@ -84,7 +97,23 @@ Hash that contains information about each command.
                 "stats" =>
                 [ self.method(:stats), "Returns some statistics about the database.",
                   ["!stats <optional topic>:", "  Returns statistics about the optional topic, or the database."]
-                ]
+                ],
+
+                "shutup" =>
+                [ self.method(:shutup), "The bot will remain quiet on this channel until woken.", 
+                  ["!shutup*:", "  The bot will remain silent until !wakeup is used in this channel."]
+                ],
+
+                "speak" => 
+                [ self.method(:speak), "The bot will speak in this channel again.",
+                  ["!speak*:", "  The bot will speak in the current channel again if it was told to shutup before."]
+                ],
+                
+                "auth" =>
+                [ self.method(:auth), "Authenticate using the administrator password with the bot.",
+                  ["!auth <password> (optional host mask):", "  Authenticate with the bot to become an administrator using the admin password.",
+                     "The host mask provided will modify your user."],
+                ],
               }
 
 """
