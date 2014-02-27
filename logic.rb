@@ -85,15 +85,19 @@ end
 Speak
 Pulls a word from our database and starts a chain with it.
 """
-def speak( db, msg, word, chainlen, like=false )
-  # Number of sentences with our word:
-  wid = db.get_first_value "SELECT id FROM words WHERE word" + ( like ? " LIKE ?" : "=?" ) + " COLLATE NOCASE ORDER BY random() LIMIT 1", word
-  
-  if wid == nil
-    msg.reply "I don't know the word: \"#{word}\""
-    return
+def speak( db, msg, word, chainlen, like=false, widIn=nil )
+  if widIn == nil
+    # Number of sentences with our word:
+    wid = db.get_first_value "SELECT id FROM words WHERE word" + ( like ? " LIKE ?" : "=?" ) + " COLLATE NOCASE ORDER BY random() LIMIT 1", word
+
+    if wid == nil
+      msg.reply "I don't know the word: \"#{word}\""
+      return
+    end
+  else
+    wid = word
   end
-  
+
   sentencewids = [wid] #our sentence to build
   
   # Go to the left, negative
@@ -102,12 +106,9 @@ def speak( db, msg, word, chainlen, like=false )
   # Now to the right, positive
   speakNext sentencewids, chainlen, 1
   
-  # Recursively get the words for each wid
-  sentence = []
-  sentencewids.each do |wid|
-    sentence << ( db.get_first_value "SELECT word FROM words WHERE id=?", wid )
-  end
-  
+  # Get the words for each wid
+  sentence = widsToSentence sentencewids 
+
   msg.reply sentence.join " "
 end
 
@@ -179,3 +180,63 @@ def speakNext( sentencewids, chainlen, dir )
     end
   end
 end
+
+
+"""
+speakRandom
+
+Wraps speak() going from someone's last spoken line. It'll only go through if a random probability is met,
+and in the future may get thrown out for various criteria described in the example config file. It somewhat
+randomly chooses a word from the text provided by ranking all words by their frequency of occurance and choosing
+randomly from top rarest 45%**. This knocks out a bunch of pronouns and common verbs, which are typically boring... 
+this is also incredibly rough for the internet, as grammar gets the axe online. 
+
+** The Secret Life of Pronouns, pg 25
+"""
+def speakRandom( msg )
+  if Random.rand > $set.logic.replyrate
+    return
+  end
+
+  bits = sever msg.message
+
+  # Merge sentences so we have one hot mess of words, then translate them to wids.
+  sentence = sentenceToWids bits.flatten
+ 
+  # Get a corresponding array of the number of chains that mention this wid at any point
+  counts = []
+  sentence.each do |wid|
+    counts << ( $db.get_first_value "SELECT count(*) FROM chains WHERE wordid = ? OR nextwordid = ?", wid, wid )
+  end
+  
+  # Drop words with <= one occurence, this means it's brand new and not good fodder.
+  i = 0
+  counts.each do |num|
+    if num <= 1
+      counts.delete_at i
+      sentence.delete_at i
+    else
+      i += 1 
+    end
+  end
+
+  if sentence.length <= 0
+    return
+  end
+
+  #print "Old sentence \t", sentence, "\n"
+  # Sort each word by its appropriate count. This nasty bit sorts words from least occurences to most. 
+  sentence = sentence.sort { |x, y| counts[sentence.index( x )] <=> counts[sentence.index( y )] }
+  
+  #print "Counts\t\t", counts, "\n"
+  #print "New Sentence \t", sentence, "\n\n"
+
+  # Remove the last (most occuring) 55% of the phrase, rounded down so that there's an extra 
+  sentence = sentence[0..(sentence.length*0.45).ceil]
+
+  # msg.reply "Candidate words: " + widsToSentence( sentence ).join( ", " )
+  
+  # Chain length is random from the config
+  chainlen = Random.rand( $set.logic.minchainlength..$set.logic.maxchainlength )
+  speak( $db, msg, sentence[Random.rand(0..(sentence.length-1))], chainlen, false, true ) 
+end 

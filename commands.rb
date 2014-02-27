@@ -74,16 +74,12 @@ def stats( args, msg )
       topnext       = $db.execute         "SELECT count(*),nextwordid FROM chains WHERE wordid=? GROUP BY nextwordid ORDER BY count(*) DESC LIMIT 1", wid
       topbefore     = $db.execute         "SELECT count(*),wordid FROM chains WHERE nextwordid=? GROUP BY wordid ORDER BY count(*) DESC LIMIT 1", wid
       
-      print topnext, "\t", topbefore, "\t\t", $db.errmsg, "\n"
-
       topnext       = topnext[0]
       topbefore     = topbefore[0]
       
       # Use the overloaded float class to give us x sigfigs.
       topnextfreq   = (topnext[0].to_f/contextsrhs*100).sigfig 4
       topbeforefreq = (topbefore[0].to_f/contextslhs*100).sigfig 4 
-
-      print topnext, "\t", topbefore, "\t", topnextfreq, "\t", topbeforefreq, "\t", contextslhs, "\t", contextsrhs, "\n\n"
 
       topnext       = topnext[1]
       topbefore     = topbefore[1]

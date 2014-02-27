@@ -39,6 +39,7 @@ bot = Cinch::Bot.new do
   
   on :message, /^[A-Za-z0-9]/ do |msg|
     logHandle $db, msg
+    speakRandom msg
   end
 end
 
