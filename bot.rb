@@ -14,9 +14,7 @@ bot = Cinch::Bot.new do
     c.server = $set['server']
     c.channels = $set['channels'].keys.map{ |k| "#"+k }
     c.nick = $set['nick']
-    c.user = $set['user']
-    
-    c.delimeter = "!"
+    c.user = $set['user'] 
   end
 
   on :message, /^('?sup|he[y]+|hello|hi)[\s]*([a-z0-9_-]*)?/i do |m, greeting, text|
@@ -37,8 +35,11 @@ bot = Cinch::Bot.new do
     commandHandle command, args, msg
   end
   
-  on :message, /^[A-Za-z0-9]/ do |msg|
+  on :message, /^[^!]/ do |msg|
     logHandle $db, msg
+  end
+
+  on :message, /^[^!]/ do |msg|
     speakRandom msg
   end
 end

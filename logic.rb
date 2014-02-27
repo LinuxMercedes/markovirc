@@ -201,8 +201,17 @@ def speakRandom( msg )
   bits = sever msg.message
 
   # Merge sentences so we have one hot mess of words, then translate them to wids.
-  sentence = sentenceToWids bits.flatten
+  sentencewords = bits.flatten
  
+  # Also strip punctuation
+  sentencewords.each do |word|
+    if word =~ /[\?\!,\.¡̉¿]+$/ 
+      word.sub /[\?\!,\.̉¡¿]+$/, ""
+    end
+  end
+
+  sentence = sentenceToWids sentencewords
+
   # Get a corresponding array of the number of chains that mention this wid at any point
   counts = []
   sentence.each do |wid|
