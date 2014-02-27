@@ -58,6 +58,7 @@ def chain( db, text, textid )
     
   # Replace all words with their ids
   sentencewords.each do |sentence|    
+
     for i in (0..sentence.size-1)
       word = sentence[i]
       wid = db.get_first_value "SELECT id FROM words WHERE word=?", word
@@ -194,7 +195,7 @@ this is also incredibly rough for the internet, as grammar gets the axe online.
 ** The Secret Life of Pronouns, pg 25
 """
 def speakRandom( msg, force=false )
-  if Random.rand > $set.logic.replyrate or force
+  if Random.rand > $set.logic.replyrate and not force
     return
   end
 
