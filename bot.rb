@@ -39,8 +39,13 @@ bot = Cinch::Bot.new do
     logHandle $db, msg
   end
 
-  on :message, /^[^!]/ do |msg|
+  # This won't respond to pings to markovirc
+  on :message, /^(?!#{$set['nick']}[:,])|[^!]/ do |msg|
     speakRandom msg
+  end
+
+  on :message, /#{$set['nick']}[:,\.]/ do |msg|
+    speakRandom msg, true
   end
 end
 

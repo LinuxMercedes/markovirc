@@ -193,8 +193,8 @@ this is also incredibly rough for the internet, as grammar gets the axe online.
 
 ** The Secret Life of Pronouns, pg 25
 """
-def speakRandom( msg )
-  if Random.rand > $set.logic.replyrate
+def speakRandom( msg, force=false )
+  if Random.rand > $set.logic.replyrate or force
     return
   end
 
