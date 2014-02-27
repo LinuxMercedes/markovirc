@@ -46,17 +46,68 @@ end
 #Statistics
 def stats( args, msg )
   args = args.strip
-  
+
   if args == ""
     args = "db"
   end
-  
+
   if args == "db"
     words = $db.get_first_value "SELECT count(*) FROM words"
     contexts = $db.get_first_value "SELECT count(*) FROM chains"
-  
+
     msg.reply "I know " + words.to_s + " words and " + contexts.to_s + " contexts for them, with an average context density of " \
       + (contexts/words).floor.to_s + "."
+  else
+    args = args.split " "
+
+    if args[0] == "w"
+      args.delete_at 0
+      wid = $db.get_first_value "SELECT id FROM words WHERE word=?", args.join( " " )
+      if wid == nil
+        msg.reply "I don't know the word \"" + args.join( " " ) + "\""
+        return
+      end
+
+      contextslhs   = $db.get_first_value "SELECT count(*) FROM chains WHERE wordid=?", wid
+      contextsrhs   = $db.get_first_value "SELECT count(*) FROM chains WHERE nextwordid=?", wid
+      
+      topnext       = $db.execute         "SELECT count(*),nextwordid FROM chains WHERE wordid=? GROUP BY nextwordid ORDER BY count(*) DESC LIMIT 1", wid
+      topbefore     = $db.execute         "SELECT count(*),wordid FROM chains WHERE nextwordid=? GROUP BY wordid ORDER BY count(*) DESC LIMIT 1", wid
+      
+      print topnext, "\t", topbefore, "\t\t", $db.errmsg, "\n"
+
+      topnext       = topnext[0]
+      topbefore     = topbefore[0]
+      
+      # Use the overloaded float class to give us x sigfigs.
+      topnextfreq   = (topnext[0].to_f/contextsrhs*100).sigfig 4
+      topbeforefreq = (topbefore[0].to_f/contextslhs*100).sigfig 4 
+
+      print topnext, "\t", topbefore, "\t", topnextfreq, "\t", topbeforefreq, "\t", contextslhs, "\t", contextsrhs, "\n\n"
+
+      topnext       = topnext[1]
+      topbefore     = topbefore[1]
+     
+      # Gracefully handle if this word is commonly at the end of a sentence (nextword == -1) or at the beginning
+      # (no nextwordid's point to it) 
+      if topnext == nil or topnext == -1
+        topnext     = ""
+        topnextfreq = 100.0
+      else
+        topnext     = $db.get_first_value "SELECT word FROM words WHERE id=?", topnext
+      end
+
+      if topbefore == nil or topbefore == -1
+        topbefore   = ""
+      topbeforefreq = 100.0
+     else
+        topbefore   = $db.get_first_value "SELECT word FROM words WHERE id=?", topbefore
+     end 
+
+      msg.reply "I know " + (contextslhs+contextsrhs).to_s + " contexts for " + args.join( " " ) + "."
+      msg.reply "The most common preceding word is \"" + topbefore + "\" (" + topbeforefreq.to_s + "%) and the most common " +
+                "following word is \"" + topnext.to_s + "\" (" + topnextfreq.to_s + "%)."
+    end
   end
 end
 
@@ -98,7 +149,8 @@ Hash that contains information about each command.
                 ],
                 "stats" =>
                 [ self.method(:stats), "Returns some statistics about the database.",
-                  ["!stats <optional topic>:", "  Returns statistics about the optional topic, or the database."]
+                  ["!stats <optional topic> <optional param>:", "  Returns statistics about the optional topic, or the database if there are no arguments.",
+                  "Currently the only other topic is w, which looks up statistics for the provided word." ]
                 ],
 
                 "shutup" =>
