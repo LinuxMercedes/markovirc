@@ -31,4 +31,10 @@ class SayArgParserTest < MiniTest::Unit::TestCase
     output = sayArgParser(input)
     assert_equal "word9", output[0]
   end
+
+  def testWordWithNumericPostfixAndLeadingSpace
+    input = " word9"
+    output = sayArgParser(input)
+    assert_equal "word9", output[0]
+  end
 end
