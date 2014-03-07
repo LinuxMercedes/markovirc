@@ -19,7 +19,7 @@ class SayArgParserTest < MiniTest::Unit::TestCase
     assert_equal "9word", output[0]
   end
 
-  def testWordWithNumericInflix
+  def testWordWithNumericInfix
     input = "wo9rd"
     output = sayArgParser(input)
     assert_equal "wo9rd", output[0]

@@ -180,7 +180,8 @@ Wrapper for some common say functions. Grabs the last argument,
 if it's numeric, and returns it as level.
 """
 def sayArgParser( args )
-  word = args.strip
+  args.strip!
+  word = args
   level = Random.rand $set['logic']['minchainlength']...$set['logic']['maxchainlength']
   
   if args.match /[ ]+/
