@@ -41,8 +41,12 @@ bot = Cinch::Bot.new do
     logHandle $db, msg
   end
 
-  on :message, /^[^!]/i do |msg, nick|
-    speakRandom msg
+  on :message, /^[^!](.*)/ do |msg, text|
+    if !text.include? bot.nick
+      speakRandom msg, true
+    else
+      speakRandom msg
+    end
   end
 end
 
