@@ -16,7 +16,9 @@ bot = Cinch::Bot.new do
     c.nick = $set['nick']
     c.user = $set['user'] 
   end
-
+  self.settings = Setings.new
+  self.db = PG::Connection.open( :dbname => self.settings['db'] )
+                                
   on :message, /^('?sup|he[y]+|hello|hi)[\s]*([a-z0-9_-]*)?/i do |m, greeting, text|
     if text != "" and text != bot.nick
       next
@@ -39,13 +41,8 @@ bot = Cinch::Bot.new do
     logHandle $db, msg
   end
 
-  # This won't respond to pings to markovirc
-  on :message, /^(?!#{$set['nick']}[:,])|[^!]/ do |msg|
+  on :message, /^[^!]/i do |msg, nick|
     speakRandom msg
-  end
-
-  on :message, /#{$set['nick']}[:,\.]/ do |msg|
-    speakRandom msg, true
   end
 end
 

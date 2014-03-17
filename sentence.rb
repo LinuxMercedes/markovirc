@@ -38,25 +38,23 @@ class Sentence
   extend Forwardable
 
   @words = []
+  @sid = -1
+  @channel = -1
 
   def_delegators :@words, :each, :unshift, :first, :last
   
-  # Lazy constants
-  WORDS = 0;
-  WIDS = 1;
-
-  #Do whatever is desired here. If we're passed a string, sever it and convert the contents to words.
-  # If we're passed a wid or string array just convert to words.
-  def initialize( words=nil )
+  def initialize( words=nil, todb=nil )
     wordsarray = []
 
     if words.is_a? String
-      wordsarray = sever( words ).first     
+      wordsarray = sever( words ).first  
     elsif words.is_a? Array and words.length > 0 and words[0].is_a? Word
       @words = words
       return
     elsif words.is_a? Array
       wordsarray = words
+    elsif words.is_a? Message
+      wordsarray = sever( words.message ).first
     else
       return # Hopefully nil
     end

@@ -10,38 +10,38 @@ I'm pretty sure sqlite3 handles this natively
 First get chanid, then the userid. Check to see if this is a known source, if not
 add it, then plug the text in.
 """
-def logHandle( db, msg )
+def logHandle( msg )
   chanid = 0
   userid = 0
   sourceid = 0
-  
-  res = db.execute "SELECT 1 FROM channels WHERE name=?", msg.channel.name
+
+  res = $db.execute "SELECT 1 FROM channels WHERE name=?", msg.channel.name
   if res.size == 0
-    db.execute "INSERT INTO channels (name) VALUES (?)", msg.channel.name
+    $db.execute "INSERT INTO channels (name) VALUES (?)", msg.channel.name
   end
-  
-  chanid = db.get_first_value "SELECT id FROM channels WHERE name=?", msg.channel.name
-  
-  res = db.execute "SELECT 1 FROM users WHERE hostmask=?", (msg.user.name + "@" + msg.user.host)
+
+  chanid = $db.get_first_value "SELECT id FROM channels WHERE name=?", msg.channel.name
+
+  res = $db.execute "SELECT 1 FROM users WHERE hostmask=?", (msg.user.name + "@" + msg.user.host)
   if res.size == 0
-    db.execute "INSERT INTO users (hostmask) VALUES (?)", (msg.user.name + "@" + msg.user.host)
+    $db.execute "INSERT INTO users (hostmask) VALUES (?)", (msg.user.name + "@" + msg.user.host)
   end
-  
-  userid = db.get_first_value "SELECT id FROM users WHERE hostmask=?", (msg.user.name + "@" + msg.user.host)
-  
-  res = db.execute "SELECT 1 FROM sources WHERE channelid=? AND userid=?", [chanid, userid]
+
+  userid = $db.get_first_value "SELECT id FROM users WHERE hostmask=?", (msg.user.name + "@" + msg.user.host)
+
+  res = $db.execute "SELECT 1 FROM sources WHERE channelid=? AND userid=?", [chanid, userid]
   if res.size == 0
-    db.execute "INSERT INTO sources (channelid,userid,type) VALUES (?,?,?)", [chanid, userid, TYPES::CHANNEL]
+    $db.execute "INSERT INTO sources (channelid,userid,type) VALUES (?,?,?)", [chanid, userid, TYPES::CHANNEL]
   end
-  
-  sourceid = db.get_first_value "SELECT id FROM sources WHERE userid=? AND channelid=?", [userid, chanid]
-  
-  db.execute "INSERT INTO text (sourceid, time, text) VALUES (?,?,?)", [sourceid, msg.time.to_i, msg.message]
-  
-  textid = db.get_first_value "SELECT id FROM text WHERE sourceid=? AND time=? AND text=?", [sourceid, msg.time.to_i, msg.message]
-  
+
+  sourceid = $db.get_first_value "SELECT id FROM sources WHERE userid=? AND channelid=?", [userid, chanid]
+
+  $db.execute "INSERT INTO text (sourceid, time, text) VALUES (?,?,?)", [sourceid, msg.time.to_i, msg.message]
+
+  textid = $db.get_first_value "SELECT id FROM text WHERE sourceid=? AND time=? AND text=?", [sourceid, msg.time.to_i, msg.message]
+
   # Create our chain
-  chain db, msg.message, textid
+  chain $db, msg.message, textid
 end
 
 """
@@ -53,30 +53,30 @@ Next split the sentences by space into a 2d array.
 Then replace all words with their word id.
 Last create a relation for each word referencing our text.
 """
-def chain( db, text, textid )
+def chain($db, text, textid )
   sentencewords = sever text
-    
+
   # Replace all words with their ids
   sentencewords.each do |sentence|    
 
     for i in (0..sentence.size-1)
       word = sentence[i]
-      wid = db.get_first_value "SELECT id FROM words WHERE word=?", word
-      
+      wid = $db.get_first_value "SELECT id FROM words WHERE word=?", word
+
       if wid == nil
-        db.execute "INSERT INTO words (word) VALUES (?)", word
-        wid = db.get_first_value "SELECT id FROM words WHERE word=?", word
+        $db.execute "INSERT INTO words (word) VALUES (?)", word
+        wid = $db.get_first_value "SELECT id FROM words WHERE word=?", word
       end
-      
+
       sentence[i] = wid
     end
-    
+
     # and insert them
     for i in (0..sentence.size-1)
       if i != sentence.size-1
-        db.execute "INSERT INTO chains (wordid,textid,nextwordid) VALUES (?,?,?)", [sentence[i], textid, sentence[i+1]]
+        $db.execute "INSERT INTO chains (wordid,textid,nextwordid) VALUES (?,?,?)", [sentence[i], textid, sentence[i+1]]
       else
-        db.execute "INSERT INTO chains (wordid,textid) VALUES (?,?)", [sentence[i], textid]
+        $db.execute "INSERT INTO chains (wordid,textid) VALUES (?,?)", [sentence[i], textid]
       end
     end
   end
@@ -86,10 +86,10 @@ end
 Speak
 Pulls a word from our database and starts a chain with it.
 """
-def speak( db, msg, word, chainlen, like=false, widIn=nil )
+def speak( msg, word, chainlen, like=false, widIn=nil )
   if widIn == nil
     # Number of sentences with our word:
-    wid = db.get_first_value "SELECT id FROM words WHERE word" + ( like ? " LIKE ?" : "=?" ) + " COLLATE NOCASE ORDER BY random() LIMIT 1", word
+    wid = $db.get_first_value "SELECT id FROM words WHERE word" + ( like ? " LIKE ?" : "=?" ) + " COLLATE NOCASE ORDER BY random() LIMIT 1", word
 
     if wid == nil
       msg.reply "I don't know the word: \"#{word}\""
@@ -100,13 +100,13 @@ def speak( db, msg, word, chainlen, like=false, widIn=nil )
   end
 
   sentencewids = [wid] #our sentence to build
-  
+
   # Go to the left, negative
   speakNext sentencewids, chainlen, -1
-  
+
   # Now to the right, positive
   speakNext sentencewids, chainlen, 1
-  
+
   # Get the words for each wid
   sentence = widsToSentence sentencewids 
 
@@ -126,20 +126,20 @@ def speakNext( sentencewids, chainlen, dir )
   #   higher length markov chains. 
   sid = -1
   sidi = -1
-  
+
   start = sentencewids.length
-  
+
   while sentencewids.length < start+25 and not done
     twid = sentencewids[ dir <= 0 ? 0 : -1 ] #thiswid
     res = ""
-    
+
     if twid == -1
       break
     elsif twid == nil
       sentencewids.compact! #dirty fix for sometimes getting nil back in chain len > 1
       break
     end
-    
+
     # If we don't already have a source lined up...
     if sid == -1
       if dir <= 0
@@ -147,7 +147,7 @@ def speakNext( sentencewids, chainlen, dir )
       else
         res = $db.execute "SELECT nextwordid,textid from chains WHERE wordid=? ORDER BY random() LIMIT 1", twid #goin' right
       end
-      
+
       res = res[0]
 
       if res == nil or res[0] == -1
@@ -173,7 +173,7 @@ def speakNext( sentencewids, chainlen, dir )
         #print "\nSID: ", sid.to_s, "\nTWID: ", twid.to_s, "\n", sentencewids, "\n\n"
         sentencewids << ( $db.get_first_value "SELECT nextwordid FROM chains WHERE wordid=? AND textid=?", [twid, sid] )
       end
-      
+
       sidi -= 1
       if sidi <= 0
         sid = -1
@@ -194,20 +194,26 @@ this is also incredibly rough for the internet, as grammar gets the axe online.
 
 ** The Secret Life of Pronouns, pg 25
 """
-def speakRandom( msg, force=false )
-  if Random.rand > $set.logic.replyrate and not force
+def speakRandom( msg )
+  print "Random speak\n\n"
+  if Random.rand > $set.logic.replyrate and msg.message !~ /^#{$bot.nick}[:, ]+/
     return
+  else
+    print "Activated\n\n"
   end
 
   bits = sever msg.message
 
   # Merge sentences so we have one hot mess of words, then translate them to wids.
   sentencewords = bits.flatten
- 
+
   # Also strip punctuation
   sentencewords.each do |word|
     if word =~ /[\?\!,\.¡̉¿]+$/ 
       word.sub /[\?\!,\.̉¡¿]+$/, ""
+    end
+    if word =~ /#{$bot.nick}[:,]+/ # (strip out pings)
+      sentencewords.delete word
     end
   end
 
@@ -218,7 +224,7 @@ def speakRandom( msg, force=false )
   sentence.each do |wid|
     counts << ( $db.get_first_value "SELECT count(*) FROM chains WHERE wordid = ? OR nextwordid = ?", wid, wid )
   end
-  
+
   # Drop words with <= one occurence, this means it's brand new and not good fodder.
   i = 0
   counts.each do |num|
@@ -237,7 +243,7 @@ def speakRandom( msg, force=false )
   #print "Old sentence \t", sentence, "\n"
   # Sort each word by its appropriate count. This nasty bit sorts words from least occurences to most. 
   sentence = sentence.sort { |x, y| counts[sentence.index( x )] <=> counts[sentence.index( y )] }
-  
+
   #print "Counts\t\t", counts, "\n"
   #print "New Sentence \t", sentence, "\n\n"
 
@@ -245,7 +251,7 @@ def speakRandom( msg, force=false )
   sentence = sentence[0..(sentence.length*0.45).ceil]
 
   # msg.reply "Candidate words: " + widsToSentence( sentence ).join( ", " )
-  
+
   # Chain length is random from the config
   chainlen = Random.rand( $set.logic.minchainlength..$set.logic.maxchainlength )
   speak( $db, msg, sentence[Random.rand(0..(sentence.length-1))], chainlen, false, true ) 

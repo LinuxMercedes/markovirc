@@ -53,7 +53,10 @@ class Word
     end
 
     @wid = $db.get_first_value "SELECT id FROM words WHERE word=?", @text
-    return @wid
+    if @wid == nil
+      $bot.error "Word " + @text + " lacks a wid and was called to be added into a word."
+      @wid = -1
+    end
   end
 
   def getWord( )
@@ -62,6 +65,9 @@ class Word
     end
 
     @text = $db.get_first_value "SELECT word FROM words WHERE id=?", @wid
+    if @text == nil
+      $bot.error "WID " + @wid.to_s + " was passed to a word constructor but doesn't exist in the database."
+    end
   end
 
   def to_s( )
