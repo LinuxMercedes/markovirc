@@ -196,7 +196,7 @@ this is also incredibly rough for the internet, as grammar gets the axe online.
 """
 def speakRandom( msg )
   print "Random speak\n\n"
-  if Random.rand > $set.logic.replyrate and msg.message !~ /^#{$bot.nick}[:, ]+/
+  if Random.rand > $bot.set.logic.replyrate and msg.message !~ /^#{$bot.nick}[:, ]+/
     return
   else
     print "Activated\n\n"
@@ -253,6 +253,6 @@ def speakRandom( msg )
   # msg.reply "Candidate words: " + widsToSentence( sentence ).join( ", " )
 
   # Chain length is random from the config
-  chainlen = Random.rand( $set.logic.minchainlength..$set.logic.maxchainlength )
+  chainlen = Random.rand( $bot.set.logic.minchainlength..$bot.set.logic.maxchainlength )
   speak( $db, msg, sentence[Random.rand(0..(sentence.length-1))], chainlen, false, true ) 
 end 

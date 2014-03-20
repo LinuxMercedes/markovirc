@@ -1,23 +1,15 @@
 require 'cinch'
-require 'sqlite3' 
+require 'pg'
 
 require_relative "utils.rb"
 
-$set = Settings.new
-$db = SQLite3::Database.open "markovirc.db"
-
-require_relative 'commands.rb'
-require_relative 'logic.rb'
-
-bot = Cinch::Bot.new do
+$bot = Markovirc.new do
   configure do |c|
-    c.server = $set['server']
-    c.channels = $set['channels'].keys.map{ |k| "#"+k }
-    c.nick = $set['nick']
-    c.user = $set['user'] 
+    c.server = self.set['server']
+    c.channels = self.set['channels'].keys.map{ |k| "#"+k }
+    c.nick = self.set['nick']
+    c.user = self.set['user'] 
   end
-  self.settings = Setings.new
-  self.db = PG::Connection.open( :dbname => self.settings['db'] )
                                 
   on :message, /^('?sup|he[y]+|hello|hi)[\s]*([a-z0-9_-]*)?/i do |m, greeting, text|
     if text != "" and text != bot.nick
@@ -42,7 +34,7 @@ bot = Cinch::Bot.new do
   end
 
   on :message, /^[^!](.*)/ do |msg, text|
-    if !text.include? bot.nick
+    if !text.include? self.nick
       speakRandom msg, true
     else
       speakRandom msg
@@ -50,4 +42,7 @@ bot = Cinch::Bot.new do
   end
 end
 
-bot.start
+require_relative 'commands.rb'
+require_relative 'logic.rb'
+
+$bot.start
