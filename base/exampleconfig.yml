@@ -1,6 +1,7 @@
 user: markovirc
 nick: markovirc
 server: irc.freenode.net
+database: markovirc
 
 # Postgres database to connect to
 database: markovirc

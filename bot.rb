@@ -1,5 +1,4 @@
 require 'cinch'
-require 'sqlite3' 
 require 'pg'
 
 require_relative "utils.rb"
