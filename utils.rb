@@ -43,3 +43,32 @@ class Float
     Float("%.#{signs}g" % self)
   end
 end
+
+# Extend the cinch class to have a exec statement on the database
+# that auto executes and autoescapes. This wraps around the previous sqlite3
+# gem syntax which I (Billy) have a preference for.
+
+class Markovirc < Cinch::Bot
+  attr_accessor :set, :db
+  
+  def initialize( )
+    @set = Settings.new
+    @db  = PG::Connection.open( :dbname => @set['database'] ) 
+    super( )
+  end
+
+  def exec( query, args )
+    args.each do |arg|
+      # Escape and substitute into string. % Is the symbol I'm replacing.
+      query.sub! /[^\\]\%/, arg
+    end
+  end
+
+  # Reads settings from a array of indicies.
+  def getSet( keys )
+    this = self.set[keys.pop]
+    keys.each do |i|
+      this = this[i]
+    end
+  end
+end
