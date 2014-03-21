@@ -52,8 +52,8 @@ def stats( args, msg )
   end
 
   if args == "db"
-    words = $bot.db.get_first_value "SELECT count(*) FROM words"
-    contexts = $bot.db.get_first_value "SELECT count(*) FROM chains"
+    words = $bot.getFirst "SELECT count(*) FROM words"
+    contexts = $bot.getFirst "SELECT count(*) FROM chains"
 
     msg.reply "I know " + words.to_s + " words and " + contexts.to_s + " contexts for them, with an average context density of " \
       + (contexts/words).floor.to_s + "."
@@ -62,17 +62,17 @@ def stats( args, msg )
 
     if args[0] == "w"
       args.delete_at 0
-      wid = $bot.db.get_first_value "SELECT id FROM words WHERE word=?", args.join( " " )
+      wid = $bot.getFirst "SELECT id FROM words WHERE word = ?", args.join( " " )
       if wid == nil
         msg.reply "I don't know the word \"" + args.join( " " ) + "\""
         return
       end
 
-      contextslhs   = $bot.db.get_first_value "SELECT count(*) FROM chains WHERE wordid=?", wid
-      contextsrhs   = $bot.db.get_first_value "SELECT count(*) FROM chains WHERE nextwordid=?", wid
+      contextslhs   = $bot.getFirst "SELECT count(*) FROM chains WHERE wordid = ?", wid
+      contextsrhs   = $bot.getFirst "SELECT count(*) FROM chains WHERE nextwordid = ?", wid
       
-      topnext       = $bot.db.execute         "SELECT count(*),nextwordid FROM chains WHERE wordid=? GROUP BY nextwordid ORDER BY count(*) DESC LIMIT 1", wid
-      topbefore     = $bot.db.execute         "SELECT count(*),wordid FROM chains WHERE nextwordid=? GROUP BY wordid ORDER BY count(*) DESC LIMIT 1", wid
+      topnext       = $bot.getArray         "SELECT count(*),nextwordid FROM chains WHERE wordid = ? GROUP BY nextwordid ORDER BY count(*) DESC LIMIT 1", wid
+      topbefore     = $bot.getArray         "SELECT count(*),wordid FROM chains WHERE nextwordid = ? GROUP BY wordid ORDER BY count(*) DESC LIMIT 1", wid
       
       topnext       = topnext[0]
       topbefore     = topbefore[0]
@@ -90,14 +90,14 @@ def stats( args, msg )
         topnext     = ""
         topnextfreq = 100.0
       else
-        topnext     = $bot.db.get_first_value "SELECT word FROM words WHERE id=?", topnext
+        topnext     = $bot.getFirst "SELECT word FROM words WHERE id = ?", topnext
       end
 
       if topbefore == nil or topbefore == -1
         topbefore   = ""
       topbeforefreq = 100.0
      else
-        topbefore   = $bot.db.get_first_value "SELECT word FROM words WHERE id=?", topbefore
+        topbefore   = $bot.getFirst "SELECT word FROM words WHERE id = ?", topbefore
      end 
 
       msg.reply "I know " + (contextslhs+contextsrhs).to_s + " contexts for " + args.join( " " ) + "."

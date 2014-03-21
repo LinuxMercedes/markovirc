@@ -30,15 +30,11 @@ $bot = Markovirc.new do
   end
   
   on :message, /^[^!]/ do |msg|
-    logHandle $db, msg
+    logHandle msg
   end
 
   on :message, /^[^!](.*)/ do |msg, text|
-    if !text.include? self.nick
-      speakRandom msg, true
-    else
-      speakRandom msg
-    end
+    speakRandom msg
   end
 end
 

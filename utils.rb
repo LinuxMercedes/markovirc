@@ -17,7 +17,7 @@ end
 def widsToSentence( sentencewids )
   sentence = []
   sentencewids.each do |wid|
-    sentence << ( $db.get_first_value "SELECT word FROM words WHERE id=?", wid )
+    sentence << ( $bot.getFirst "SELECT word FROM words WHERE id = ?", wid )
   end
 
   return sentence
@@ -27,7 +27,7 @@ end
 def sentenceToWids( sentence )
   sentencewids = []
   sentence.each do |word|
-    sentencewids << ( $db.get_first_value "SELECT id FROM words WHERE word=?", word )
+    sentencewids << ( $bot.getFirst "SELECT id FROM words WHERE word = ?", word )    
   end
 
   return sentencewids
@@ -57,18 +57,32 @@ class Markovirc < Cinch::Bot
     super( )
   end
 
-  def exec( query, args )
-    args.each do |arg|
-      # Escape and substitute into string. % Is the symbol I'm replacing.
-      query.sub! /[^\\]\%/, arg
+  def getFirst( query, args )
+    res = self.exec( query, args ).values.first
+
+    if res.length == 1
+      res = res[0]
     end
   end
 
-  # Reads settings from a array of indicies.
-  def getSet( keys )
-    this = self.set[keys.pop]
-    keys.each do |i|
-      this = this[i]
+  def getArray( query, args )
+    self.exec( query, args ).values
+  end
+
+  def exec( query, argsin )
+    args = Array.new
+
+    if not argsin.is_a? Array
+      args = [ argsin ]
+    else
+      args = argsin
     end
+
+    args.length.times do |i|
+      query.sub! /(?!\\)\?/, "$#{i+1}" # Postgres friendly format
+    end
+    
+    print "\n\n\n", query, "\n", args, "\n\n\n" 
+    @db.exec_params query, args
   end
 end

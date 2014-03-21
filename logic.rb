@@ -15,30 +15,30 @@ def logHandle( msg )
   userid = 0
   sourceid = 0
 
-  res = $bot.db.execute "SELECT 1 FROM channels WHERE name=?", msg.channel.name
+  res = $bot.getArray "SELECT 1 FROM channels WHERE name = ?", msg.channel.name
   if res.size == 0
-    $bot.db.execute "INSERT INTO channels (name) VALUES (?)", msg.channel.name
+    $bot.getArray "INSERT INTO channels (name) VALUES (?)", msg.channel.name
   end
 
-  chanid = $bot.db.get_first_value "SELECT id FROM channels WHERE name=?", msg.channel.name
+  chanid = $bot.getFirst "SELECT id FROM channels WHERE name = ?", msg.channel.name
 
-  res = $bot.db.execute "SELECT 1 FROM users WHERE hostmask=?", (msg.user.name + "@" + msg.user.host)
+  res = $bot.getArray "SELECT 1 FROM users WHERE hostmask = ?", (msg.user.name + "@" + msg.user.host)
   if res.size == 0
-    $bot.db.execute "INSERT INTO users (hostmask) VALUES (?)", (msg.user.name + "@" + msg.user.host)
+    $bot.getArray "INSERT INTO users (hostmask) VALUES (?)", (msg.user.name + "@" + msg.user.host)
   end
 
-  userid = $bot.db.get_first_value "SELECT id FROM users WHERE hostmask=?", (msg.user.name + "@" + msg.user.host)
+  userid = $bot.getFirst "SELECT id FROM users WHERE hostmask = ?", (msg.user.name + "@" + msg.user.host)
 
-  res = $bot.db.execute "SELECT 1 FROM sources WHERE channelid=? AND userid=?", [chanid, userid]
+  res = $bot.getArray "SELECT 1 FROM sources WHERE channelid = ? AND userid = ?", [chanid, userid]
   if res.size == 0
-    $bot.db.execute "INSERT INTO sources (channelid,userid,type) VALUES (?,?,?)", [chanid, userid, TYPES::CHANNEL]
+    $bot.getArray "INSERT INTO sources (channelid,userid,type) VALUES (?,?,?)", [chanid, userid, TYPES::CHANNEL]
   end
 
-  sourceid = $bot.db.get_first_value "SELECT id FROM sources WHERE userid=? AND channelid=?", [userid, chanid]
+  sourceid = $bot.getFirst "SELECT id FROM sources WHERE userid = ? AND channelid = ?", [userid, chanid]
 
-  $bot.db.execute "INSERT INTO text (sourceid, time, text) VALUES (?,?,?)", [sourceid, msg.time.to_i, msg.message]
+  $bot.getArray "INSERT INTO text (sourceid, time, text) VALUES (?,?,?)", [sourceid, msg.time.to_i, msg.message]
 
-  textid = $bot.db.get_first_value "SELECT id FROM text WHERE sourceid=? AND time=? AND text=?", [sourceid, msg.time.to_i, msg.message]
+  textid = $bot.getFirst "SELECT id FROM text WHERE sourceid = ? AND time = ? AND text=?", [sourceid, msg.time.to_i, msg.message]
 
   # Create our chain
   chain $bot.db, msg.message, textid
@@ -61,11 +61,11 @@ def chain( text, textid )
 
     for i in (0..sentence.size-1)
       word = sentence[i]
-      wid = $bot.db.get_first_value "SELECT id FROM words WHERE word=?", word
+      wid = $bot.getFirst "SELECT id FROM words WHERE word = ?", word
 
       if wid == nil
-        $bot.db.execute "INSERT INTO words (word) VALUES (?)", word
-        wid = $bot.db.get_first_value "SELECT id FROM words WHERE word=?", word
+        $bot.getArray "INSERT INTO words (word) VALUES (?)", word
+        wid = $bot.getFirst "SELECT id FROM words WHERE word = ?", word
       end
 
       sentence[i] = wid
@@ -74,9 +74,9 @@ def chain( text, textid )
     # and insert them
     for i in (0..sentence.size-1)
       if i != sentence.size-1
-        $bot.db.execute "INSERT INTO chains (wordid,textid,nextwordid) VALUES (?,?,?)", [sentence[i], textid, sentence[i+1]]
+        $bot.getArray "INSERT INTO chains (wordid,textid,nextwordid) VALUES (?,?,?)", [sentence[i], textid, sentence[i+1]]
       else
-        $bot.db.execute "INSERT INTO chains (wordid,textid) VALUES (?,?)", [sentence[i], textid]
+        $bot.getArray "INSERT INTO chains (wordid,textid) VALUES (?,?)", [sentence[i], textid]
       end
     end
   end
@@ -89,7 +89,7 @@ Pulls a word from our database and starts a chain with it.
 def speak( msg, word, chainlen, like=false, widIn=nil )
   if widIn == nil
     # Number of sentences with our word:
-    wid = $bot.db.get_first_value "SELECT id FROM words WHERE word" + ( like ? " LIKE ?" : "=?" ) + " COLLATE NOCASE ORDER BY random() LIMIT 1", word
+    wid = $bot.getFirst "SELECT id FROM words WHERE word" + ( like ? " LIKE ?" : " = ?" ) + " COLLATE NOCASE ORDER BY random() LIMIT 1", word
 
     if wid == nil
       msg.reply "I don't know the word: \"#{word}\""
@@ -143,9 +143,9 @@ def speakNext( sentencewids, chainlen, dir )
     # If we don't already have a source lined up...
     if sid == -1
       if dir <= 0
-        res = $bot.db.execute "SELECT wordid,textid from chains WHERE nextwordid=? ORDER BY random() LIMIT 1", twid #goin' left, look to the left
+        res = $bot.getArray "SELECT wordid,textid from chains WHERE nextwordid = ? ORDER BY random() LIMIT 1", twid #goin' left, look to the left
       else
-        res = $bot.db.execute "SELECT nextwordid,textid from chains WHERE wordid=? ORDER BY random() LIMIT 1", twid #goin' right
+        res = $bot.getArray "SELECT nextwordid,textid from chains WHERE wordid = ? ORDER BY random() LIMIT 1", twid #goin' right
       end
 
       res = res[0]
@@ -168,10 +168,10 @@ def speakNext( sentencewids, chainlen, dir )
       # We know our next word will be from a certain textid, so there should be just one result
       if dir <= 0
         #print "\nSID: ", sid.to_s, "\nTWID: ", twid.to_s, "\n", sentencewids, "\n\n" 
-        sentencewids.unshift( $bot.db.get_first_value "SELECT wordid FROM chains WHERE nextwordid=? AND textid=?", [twid, sid] )
+        sentencewids.unshift( $bot.getFirst "SELECT wordid FROM chains WHERE nextwordid = ? AND textid = ?", [twid, sid] )
       else   
         #print "\nSID: ", sid.to_s, "\nTWID: ", twid.to_s, "\n", sentencewids, "\n\n"
-        sentencewids << ( $bot.db.get_first_value "SELECT nextwordid FROM chains WHERE wordid=? AND textid=?", [twid, sid] )
+        sentencewids << ( $bot.getFirst "SELECT nextwordid FROM chains WHERE wordid = ? AND textid = ?", [twid, sid] )
       end
 
       sidi -= 1
@@ -222,7 +222,7 @@ def speakRandom( msg )
   # Get a corresponding array of the number of chains that mention this wid at any point
   counts = []
   sentence.each do |wid|
-    counts << ( $bot.db.get_first_value "SELECT count(*) FROM chains WHERE wordid = ? OR nextwordid = ?", wid, wid )
+    counts << ( $bot.getFirst "SELECT count(*) FROM chains WHERE wordid = ? OR nextwordid = ?", [ wid, wid ] )
   end
 
   # Drop words with <= one occurence, this means it's brand new and not good fodder.
