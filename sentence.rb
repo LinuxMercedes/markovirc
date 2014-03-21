@@ -37,15 +37,18 @@ class Sentence
   include Enumerable
   extend Forwardable
 
+  @bot = nil
   @words = []
   @sid = -1
   @channel = -1
 
   def_delegators :@words, :each, :unshift, :first, :last
   
-  def initialize( words=nil, todb=nil )
+  def initialize( bot, words=nil )
     wordsarray = []
+    @bot = bot
 
+    #FIXME: these first three options may be borked
     if words.is_a? String
       wordsarray = sever( words ).first  
     elsif words.is_a? Array and words.length > 0 and words[0].is_a? Word
@@ -54,13 +57,13 @@ class Sentence
     elsif words.is_a? Array
       wordsarray = words
     elsif words.is_a? Message
-      wordsarray = sever( words.message ).first
+      wordsarray = sever( words.message ).first # always returns at least an array with one sentence
     else
       return # Hopefully nil
     end
     
     wordsarray.each do |word|
-      @words.append  Word.new word
+      @words.append  Word.new bot, word
     end
   end
 

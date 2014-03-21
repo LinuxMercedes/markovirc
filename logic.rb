@@ -39,9 +39,11 @@ def logHandle( msg )
   $bot.getArray "INSERT INTO text (sourceid, time, text) VALUES (?,?,?)", [sourceid, msg.time.to_i, msg.message]
 
   textid = $bot.getFirst "SELECT id FROM text WHERE sourceid = ? AND time = ? AND text=?", [sourceid, msg.time.to_i, msg.message]
+  
+  msg.textid = textid
 
   # Create our chain
-  chain $bot.db, msg.message, textid
+  chain msg, textid
 end
 
 """
@@ -53,31 +55,15 @@ Next split the sentences by space into a 2d array.
 Then replace all words with their word id.
 Last create a relation for each word referencing our text.
 """
-def chain( text, textid )
-  sentencewords = sever text
+def chain( msg, textid )
+  msg.sentence = Sentence.new msg.message
 
-  # Replace all words with their ids
-  sentencewords.each do |sentence|    
-
-    for i in (0..sentence.size-1)
-      word = sentence[i]
-      wid = $bot.getFirst "SELECT id FROM words WHERE word = ?", word
-
-      if wid == nil
-        $bot.getArray "INSERT INTO words (word) VALUES (?)", word
-        wid = $bot.getFirst "SELECT id FROM words WHERE word = ?", word
-      end
-
-      sentence[i] = wid
-    end
-
-    # and insert them
-    for i in (0..sentence.size-1)
-      if i != sentence.size-1
-        $bot.getArray "INSERT INTO chains (wordid,textid,nextwordid) VALUES (?,?,?)", [sentence[i], textid, sentence[i+1]]
-      else
-        $bot.getArray "INSERT INTO chains (wordid,textid) VALUES (?,?)", [sentence[i], textid]
-      end
+  # Insert our chains
+  sentence.size.times do |i|
+    if i != sentence.size-1
+      $bot.getArray "INSERT INTO chains (wordid,textid,nextwordid) VALUES (?,?,?)", [sentence[i].getWid, textid, sentence[i+1].getWid]
+    else
+      $bot.getArray "INSERT INTO chains (wordid,textid) VALUES (?,?)", [sentence[i].getWid, textid]
     end
   end
 end

@@ -29,14 +29,15 @@ class Word
   @wid = nil
 
   def initialize( word, wid=nil )
+
     if word.is_a? Integer
       @wid = word
       self.getWord
     elsif word.is_a? String and wid == nil
-      @word = word
+      @text = word
       self.getWid
     else
-      @word = word
+      @text = word
       @wid = wid
     end  
   end
@@ -52,10 +53,10 @@ class Word
       return @wid
     end
 
-    @wid = $db.get_first_value "SELECT id FROM words WHERE word=?", @text
-    if @wid == nil
-      $bot.error "Word " + @text + " lacks a wid and was called to be added into a word."
-      @wid = -1
+    @wid = $bot.getFirst "SELECT id FROM words WHERE word=?", @text
+    if wid == nil
+      $bot.getArray "INSERT INTO words (word) VALUES (?)", word
+      @wid = $bot.getFirst "SELECT id FROM words WHERE word = ?", word
     end
   end
 
@@ -64,7 +65,7 @@ class Word
       return @text
     end
 
-    @text = $db.get_first_value "SELECT word FROM words WHERE id=?", @wid
+    @text = $bot.getFirst "SELECT word FROM words WHERE id=?", @wid
     if @text == nil
       $bot.error "WID " + @wid.to_s + " was passed to a word constructor but doesn't exist in the database."
     end
