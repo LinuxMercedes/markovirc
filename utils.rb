@@ -86,3 +86,11 @@ class Markovirc < Cinch::Bot
     @db.exec_params query, args
   end
 end
+
+# Add a textid and sentence field to the message
+
+class Cinch::Message
+  attr_accessor :sentence, :textid, :sourceid
+
+  @sentence, @textid, @sourceid = nil
+end

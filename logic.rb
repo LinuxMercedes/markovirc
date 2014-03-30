@@ -38,7 +38,7 @@ def logHandle( msg )
 
   $bot.getArray "INSERT INTO text (sourceid, time, text) VALUES (?,?,?)", [sourceid, msg.time.to_i, msg.message]
 
-  textid = $bot.getFirst "SELECT id FROM text WHERE sourceid = ? AND time = ? AND text=?", [sourceid, msg.time.to_i, msg.message]
+  textid = $bot.getFirst "SELECT id FROM text WHERE sourceid = ? AND time = ? AND text = ?", [sourceid, msg.time.to_i, msg.message]
   
   msg.textid = textid
 
