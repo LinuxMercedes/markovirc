@@ -25,7 +25,7 @@ functions:
 """
 
 class Word
-  @text = ""
+  @text = nil
   @wid = nil
   
   attr_accessor :text, :wid
@@ -64,12 +64,12 @@ class Word
   end
 
   def getWord( )
-    if @text != ""
+    if @text != nil
       return @text
     end
 
-    @text = @sentence.msg.getFirst "SELECT word FROM words WHERE id=?", @wid
-    if @text == nil
+    @text = @sentence.msg.getFirst "SELECT word FROM words WHERE id = ?", @wid
+    if @text == nil or @text.strip == ""
       $bot.error "WID " + @wid.to_s + " was passed to a word constructor but doesn't exist in the database."
     end
   end

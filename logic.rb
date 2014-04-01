@@ -88,6 +88,13 @@ def speak( msg, word, chainlen, like=false )
   # Now to the right, positive
   speakNext msg, sentence, chainlen, 1
 
+  print "FINAL SENTENCE: "
+  print sentence.length, "\n"
+  sentence.words.each do |word|
+    print word.text
+    print "\n"
+  end
+  print "\n\n"
   msg.reply( sentence.join " " )
 end
 
@@ -180,6 +187,8 @@ def speakRandom( msg )
   msg.sentence.each do |sen|
     words.push( sen.words ).flatten!
   end
+
+  print "Words: ", words, "\n\n"
 
   # Get a corresponding array of the number of chains that mention this wid at any point
   counts = []

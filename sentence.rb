@@ -91,9 +91,8 @@ class Sentence
     words = []
     @words.each do |word|
       words << word.text
-      print word, "\n"
     end
 
-    return words.join joiner
+    words.join joiner
   end
 end
