@@ -28,14 +28,14 @@ class Word
   @text = ""
   @wid = nil
 
-  def initialize( word, wid=nil )
+  def initialize( word, msg, wid=nil )
 
     if word.is_a? Integer
       @wid = word
-      self.getWord
+      self.getWord msg
     elsif word.is_a? String and wid == nil
       @text = word
-      self.getWid
+      self.getWid msg
     else
       @text = word
       @wid = wid
@@ -48,15 +48,15 @@ class Word
 
   # Accessors
 
-  def getWid( )
+  def getWid( msg )
     if @wid != nil
       return @wid
     end
 
-    @wid = $bot.getFirst "SELECT id FROM words WHERE word=?", @text
+    @wid = msg.getFirst "SELECT id FROM words WHERE word=?", @text
     if wid == nil
-      $bot.getArray "INSERT INTO words (word) VALUES (?)", word
-      @wid = $bot.getFirst "SELECT id FROM words WHERE word = ?", word
+      msg.getArray "INSERT INTO words (word) VALUES (?)", word
+      @wid = msg.getFirst "SELECT id FROM words WHERE word = ?", word
     end
   end
 
@@ -65,7 +65,7 @@ class Word
       return @text
     end
 
-    @text = $bot.getFirst "SELECT word FROM words WHERE id=?", @wid
+    @text = msg.getFirst "SELECT word FROM words WHERE id=?", @wid
     if @text == nil
       $bot.error "WID " + @wid.to_s + " was passed to a word constructor but doesn't exist in the database."
     end

@@ -26,14 +26,17 @@ $bot = Markovirc.new do
   end
 
   on :message, /^!([a-z]*)(.*)/i do |msg, command, args|
+    msg.connect
     commandHandle command, args, msg
   end
   
   on :message, /^[^!]/ do |msg|
+    msg.connect
     logHandle msg
   end
 
   on :message, /^[^!](.*)/ do |msg, text|
+    msg.connect
     speakRandom msg
   end
 end

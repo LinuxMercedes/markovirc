@@ -44,9 +44,8 @@ class Sentence
 
   def_delegators :@words, :each, :unshift, :first, :last
   
-  def initialize( bot, words=nil )
+  def initialize( msg, words=nil )
     wordsarray = []
-    @bot = bot
 
     #FIXME: these first three options may be borked
     if words.is_a? String
@@ -63,7 +62,7 @@ class Sentence
     end
     
     wordsarray.each do |word|
-      @words.append  Word.new bot, word
+      @words.append  Word.new msg, word
     end
   end
 
