@@ -37,15 +37,14 @@ class Sentence
   include Enumerable
   extend Forwardable
 
-  @bot = nil
-  @words = []
   @sid = -1
   @channel = -1
 
-  def_delegators :@words, :each, :unshift, :first, :last
+  def_delegators :@words, :each, :unshift, :first, :last, :[], :size, :length
   
   def initialize( msg, words=nil )
     wordsarray = []
+    @words = []
 
     #FIXME: these first three options may be borked
     if words.is_a? String
@@ -62,7 +61,7 @@ class Sentence
     end
     
     wordsarray.each do |word|
-      @words.append  Word.new msg, word
+      @words << ( Word.new msg, word )
     end
   end
 
@@ -81,4 +80,5 @@ class Sentence
     end
 
     words.unshift word
+  end
 end

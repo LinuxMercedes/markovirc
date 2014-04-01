@@ -43,5 +43,7 @@ end
 
 require_relative 'commands.rb'
 require_relative 'logic.rb'
+require_relative 'sentence.rb'
+require_relative 'word.rb'
 
 $bot.start

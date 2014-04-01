@@ -56,14 +56,21 @@ Then replace all words with their word id.
 Last create a relation for each word referencing our text.
 """
 def chain( msg, textid )
-  msg.sentence = Sentence.new msg, msg.message
+  sentences = sever msg.message
+  msg.sentence = []
+
+  sentences.each do |sentence|
+    msg.sentence << ( Sentence.new msg, sentence )
+  end
 
   # Insert our chains
-  sentence.size.times do |i|
-    if i != sentence.size-1
-      msg.getArray "INSERT INTO chains (wordid,textid,nextwordid) VALUES (?,?,?)", [sentence[i].getWid, textid, sentence[i+1].getWid]
-    else
-      msg.getArray "INSERT INTO chains (wordid,textid) VALUES (?,?)", [sentence[i].getWid, textid]
+  msg.sentence.each do |sentence|
+    sentence.size.times do |i|
+      if i != sentence.size-1
+        msg.getArray "INSERT INTO chains (wordid,textid,nextwordid) VALUES (?,?,?)", [sentence[i].wid, textid, sentence[i+1].wid]
+      else
+        msg.getArray "INSERT INTO chains (wordid,textid) VALUES (?,?)", [sentence[i].wid, textid]
+      end
     end
   end
 end

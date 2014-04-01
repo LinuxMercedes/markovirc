@@ -27,9 +27,10 @@ functions:
 class Word
   @text = ""
   @wid = nil
-
-  def initialize( word, msg, wid=nil )
-
+  
+  attr_accessor :text, :wid
+  
+  def initialize( msg, word, wid=nil )
     if word.is_a? Integer
       @wid = word
       self.getWord msg
@@ -60,7 +61,7 @@ class Word
     end
   end
 
-  def getWord( )
+  def getWord( msg )
     if @text != ""
       return @text
     end

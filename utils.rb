@@ -29,7 +29,7 @@ end
 # gem syntax which I (Billy) have a preference for.
 
 class Markovirc < Cinch::Bot
-  attr_accessor :set, :db
+  attr_accessor :set
   
   def initialize( )
     @set = Settings.new
@@ -42,7 +42,7 @@ end
 class Cinch::Message
   attr_accessor :sentence, :textid, :sourceid, :db
 
-  @db, @sentence, @textid, @sourceid = nil
+  @db = @sentence = @textid = @sourceid = nil
  
   # Connect to our database. A message travels through an entire thread, so this is a personal connection. 
   # FIXME: Add disconnect when deconstructed.
