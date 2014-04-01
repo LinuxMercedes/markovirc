@@ -79,31 +79,16 @@ end
 Speak
 Pulls a word from our database and starts a chain with it.
 """
-def speak( msg, word, chainlen, like=false, widIn=nil )
-  if widIn == nil
-    # Number of sentences with our word:
-    wid = msg.getFirst "SELECT id FROM words WHERE word" + ( like ? " LIKE ?" : " = ?" ) + " COLLATE NOCASE ORDER BY random() LIMIT 1", word
-
-    if wid == nil
-      msg.reply "I don't know the word: \"#{word}\""
-      return
-    end
-  else
-    wid = word
-  end
-
-  sentencewids = [wid] #our sentence to build
-
+def speak( msg, word, chainlen, like=false )
+  sentence = Sentence.new( msg, word )
+  
   # Go to the left, negative
-  speakNext sentencewids, chainlen, -1
+  speakNext msg, sentence, chainlen, -1
 
   # Now to the right, positive
-  speakNext sentencewids, chainlen, 1
+  speakNext msg, sentence, chainlen, 1
 
-  # Get the words for each wid
-  sentence = widsToSentence sentencewids 
-
-  msg.reply sentence.join " "
+  msg.reply( sentence.join " " )
 end
 
 """
@@ -113,23 +98,18 @@ look while iterating through chains. The sentence inputted is an array of wordid
 which is added to whilest iterating. 
 FIXME: make this a goddamn class
 """
-def speakNext( sentencewids, chainlen, dir )
-  done = false
+def speakNext( msg, sentence, chainlen, dir )
   # we use our source id and sourceid counter (sid / sidi) to help us emulate native database support for
   #   higher length markov chains. 
   sid = -1
   sidi = -1
 
-  start = sentencewids.length
-
-  while sentencewids.length < start+25 and not done
-    twid = sentencewids[ dir <= 0 ? 0 : -1 ] #thiswid
+  start = sentence.length
+  while sentence.length < start+25 
+    twid = ( dir <= 0 ? sentence.first.wid : sentence.last.wid ) #thiswid
     res = ""
 
-    if twid == -1
-      break
-    elsif twid == nil
-      sentencewids.compact! #dirty fix for sometimes getting nil back in chain len > 1
+    if twid == -1 or twid == nil
       break
     end
 
@@ -148,9 +128,9 @@ def speakNext( sentencewids, chainlen, dir )
       end
 
       if dir <= 0
-        sentencewids.unshift res[0]
+        sentence >> res[0].to_i
       else
-        sentencewids << res[0]
+        sentence << res[0].to_i
       end
 
       if chainlen > 1
@@ -160,11 +140,11 @@ def speakNext( sentencewids, chainlen, dir )
     else
       # We know our next word will be from a certain textid, so there should be just one result
       if dir <= 0
-        #print "\nSID: ", sid.to_s, "\nTWID: ", twid.to_s, "\n", sentencewids, "\n\n" 
-        sentencewids.unshift( msg.getFirst "SELECT wordid FROM chains WHERE nextwordid = ? AND textid = ?", [twid, sid] )
+        # print "\nSID: ", sid.to_s, "\nTWID: ", twid.to_s, "\n", sentencewids, "\n\n" 
+        sentence >> ( msg.getFirst( "SELECT wordid FROM chains WHERE nextwordid = ? AND textid = ?", [twid, sid] ).to_i )
       else   
-        #print "\nSID: ", sid.to_s, "\nTWID: ", twid.to_s, "\n", sentencewids, "\n\n"
-        sentencewids << ( msg.getFirst "SELECT nextwordid FROM chains WHERE wordid = ? AND textid = ?", [twid, sid] )
+        # print "\nSID: ", sid.to_s, "\nTWID: ", twid.to_s, "\n", sentencewids, "\n\n"
+        sentence << ( msg.getFirst( "SELECT nextwordid FROM chains WHERE wordid = ? AND textid = ?", [twid, sid] ).to_i )
       end
 
       sidi -= 1
@@ -195,27 +175,16 @@ def speakRandom( msg )
     print "Activated\n\n"
   end
 
-  bits = sever msg.message
-
-  # Merge sentences so we have one hot mess of words, then translate them to wids.
-  sentencewords = bits.flatten
-
-  # Also strip punctuation
-  sentencewords.each do |word|
-    if word =~ /[\?\!,\.¡̉¿]+$/ 
-      word.sub /[\?\!,\.̉¡¿]+$/, ""
-    end
-    if word =~ /#{$bot.nick}[:,]+/ # (strip out pings)
-      sentencewords.delete word
-    end
+  # Mash sentences together into one hot mess
+  words = []
+  msg.sentence.each do |sen|
+    words.push( sen.words ).flatten!
   end
-
-  sentence = sentenceToWids sentencewords
 
   # Get a corresponding array of the number of chains that mention this wid at any point
   counts = []
-  sentence.each do |wid|
-    counts << ( msg.getFirst "SELECT count(*) FROM chains WHERE wordid = ? OR nextwordid = ?", [ wid, wid ] )
+  words.each do |word|
+    counts << ( msg.getFirst "SELECT count(*) FROM chains WHERE wordid = ? OR nextwordid = ?", [ word.wid, word.wid ] ).to_i
   end
 
   # Drop words with <= one occurence, this means it's brand new and not good fodder.
@@ -223,29 +192,23 @@ def speakRandom( msg )
   counts.each do |num|
     if num <= 1
       counts.delete_at i
-      sentence.delete_at i
+      msg.delete_at i
     else
       i += 1 
     end
   end
 
-  if sentence.length <= 0
+  if words.length <= 0
     return
   end
 
-  #print "Old sentence \t", sentence, "\n"
   # Sort each word by its appropriate count. This nasty bit sorts words from least occurences to most. 
-  sentence = sentence.sort { |x, y| counts[sentence.index( x )] <=> counts[sentence.index( y )] }
-
-  #print "Counts\t\t", counts, "\n"
-  #print "New Sentence \t", sentence, "\n\n"
+  words = words.sort { |x, y| counts[words.index( x )] <=> counts[words.index( y )] }
 
   # Remove the last (most occuring) 55% of the phrase, rounded down so that there's an extra 
-  sentence = sentence[0..(sentence.length*0.45).ceil]
-
-  # msg.reply "Candidate words: " + widsToSentence( sentence ).join( ", " )
+  words = words[0..(words.length*0.45).ceil]
 
   # Chain length is random from the config
   chainlen = Random.rand( $bot.set.logic.minchainlength..$bot.set.logic.maxchainlength )
-  speak( msg, sentence[Random.rand(0..(sentence.length-1))], chainlen, false, true ) 
+  speak( msg, words[Random.rand(0..(words.size-1))], chainlen ) 
 end 

@@ -41,10 +41,12 @@ class Sentence
   @channel = -1
 
   def_delegators :@words, :each, :unshift, :first, :last, :[], :size, :length
-  
+  attr_accessor :words, :msg
+
   def initialize( msg, words=nil )
     wordsarray = []
     @words = []
+    @msg = msg
 
     #FIXME: these first three options may be borked
     if words.is_a? String
@@ -54,21 +56,24 @@ class Sentence
       return
     elsif words.is_a? Array
       wordsarray = words
-    elsif words.is_a? Message
+    elsif words.is_a? Cinch::Message
       wordsarray = sever( words.message ).first # always returns at least an array with one sentence
+    elsif words.is_a? Word
+      @words << words
+      return
     else
       return # Hopefully nil
     end
     
     wordsarray.each do |word|
-      @words << ( Word.new msg, word )
+      @words << ( Word.new self, word )
     end
   end
 
   # Drop a new word on the end of our sentence
   def <<( word )
     if not word.is_a? Word
-      word = Word.new word
+      word = Word.new self, word
     end
 
     words << word
@@ -76,9 +81,19 @@ class Sentence
 
   def >>( word )
     if not word.is_a? Word
-      word = Word.new word
+      word = Word.new self, word
     end
 
     words.unshift word
+  end
+
+  def join( joiner )
+    words = []
+    @words.each do |word|
+      words << word.text
+      print word, "\n"
+    end
+
+    return words.join joiner
   end
 end

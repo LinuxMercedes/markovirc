@@ -30,13 +30,15 @@ class Word
   
   attr_accessor :text, :wid
   
-  def initialize( msg, word, wid=nil )
+  def initialize( sentence, word, wid=nil )
+    @sentence = sentence
+
     if word.is_a? Integer
       @wid = word
-      self.getWord msg
+      self.getWord
     elsif word.is_a? String and wid == nil
       @text = word
-      self.getWid msg
+      self.getWid
     else
       @text = word
       @wid = wid
@@ -49,24 +51,24 @@ class Word
 
   # Accessors
 
-  def getWid( msg )
+  def getWid( )
     if @wid != nil
       return @wid
     end
 
-    @wid = msg.getFirst "SELECT id FROM words WHERE word=?", @text
+    @wid = @sentence.msg.getFirst "SELECT id FROM words WHERE word=?", @text
     if wid == nil
-      msg.getArray "INSERT INTO words (word) VALUES (?)", @text
-      @wid = msg.getFirst "SELECT id FROM words WHERE word = ?", @text
+      @sentence.msg.getArray "INSERT INTO words (word) VALUES (?)", @text
+      @wid = @sentence.msg.getFirst "SELECT id FROM words WHERE word = ?", @text
     end
   end
 
-  def getWord( msg )
+  def getWord( )
     if @text != ""
       return @text
     end
 
-    @text = msg.getFirst "SELECT word FROM words WHERE id=?", @wid
+    @text = @sentence.msg.getFirst "SELECT word FROM words WHERE id=?", @wid
     if @text == nil
       $bot.error "WID " + @wid.to_s + " was passed to a word constructor but doesn't exist in the database."
     end
