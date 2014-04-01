@@ -33,10 +33,6 @@ $bot = Markovirc.new do
   on :message, /^[^!]/ do |msg|
     msg.connect
     logHandle msg
-  end
-
-  on :message, /^[^!](.*)/ do |msg, text|
-    msg.connect
     speakRandom msg
   end
 end

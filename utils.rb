@@ -53,7 +53,7 @@ class Cinch::Message
   def getFirst( query, args )
     res = self.exec( query, args ).values.first
 
-    if res.length == 1
+    if res.is_a? Array
       res = res[0]
     end
   end

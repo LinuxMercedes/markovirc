@@ -56,8 +56,8 @@ class Word
 
     @wid = msg.getFirst "SELECT id FROM words WHERE word=?", @text
     if wid == nil
-      msg.getArray "INSERT INTO words (word) VALUES (?)", word
-      @wid = msg.getFirst "SELECT id FROM words WHERE word = ?", word
+      msg.getArray "INSERT INTO words (word) VALUES (?)", @text
+      @wid = msg.getFirst "SELECT id FROM words WHERE word = ?", @text
     end
   end
 
