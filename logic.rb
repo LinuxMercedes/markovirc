@@ -80,7 +80,8 @@ Speak
 Pulls a word from our database and starts a chain with it.
 """
 def speak( msg, word, chainlen, like=false )
-  sentence = Sentence.new( msg, word )
+  sentence = Sentence.new( msg )
+  sentence << word
   
   # Go to the left, negative
   speakNext msg, sentence, chainlen, -1
@@ -201,7 +202,7 @@ def speakRandom( msg )
   counts.each do |num|
     if num <= 1
       counts.delete_at i
-      msg.delete_at i
+      words.delete_at i
     else
       i += 1 
     end
