@@ -30,15 +30,13 @@ end
 def say( args, msg )
   word, level = sayArgParser( args )
 
-  wid = msg.getFirst "SELECT id FROM words WHERE word  = ? COLLATE NOCASE ORDER BY random() LIMIT 1", word
+  wid = msg.getFirst "SELECT id FROM words WHERE word ILIKE ? ORDER BY random() LIMIT 1", word
 
   if wid == nil
     msg.reply "I don't know the word: \"#{word}\""
     return
   end
 
-  word = Word.new word, wid
-    
   speak msg, word, level
 end
 
@@ -49,14 +47,12 @@ def sayl( args, msg )
     word = "%#{word}%"
   end
 
-  wid = msg.getFirst "SELECT id FROM words WHERE word LIKE ? COLLATE NOCASE ORDER BY random() LIMIT 1", word
+  wid = msg.getFirst "SELECT id FROM words WHERE word ILIKE ? ORDER BY random() LIMIT 1", word
 
   if wid == nil
     msg.reply "I don't know the word: \"#{word}\""
     return
   end
-
-  word = Word.new word, wid
 
   speak msg, word, level
 end

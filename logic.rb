@@ -79,9 +79,9 @@ end
 Speak
 Pulls a word from our database and starts a chain with it.
 """
-def speak( msg, word, chainlen, like=false )
+def speak( msg, word, chainlen )
   sentence = Sentence.new( msg )
-  sentence << word
+  sentence <<  word
   
   # Go to the left, negative
   speakNext msg, sentence, chainlen, -1
