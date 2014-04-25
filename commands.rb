@@ -85,8 +85,8 @@ def stats( args, msg )
       contextslhs   = msg.getFirst "SELECT count(*) FROM chains WHERE wordid = ?", wid
       contextsrhs   = msg.getFirst "SELECT count(*) FROM chains WHERE nextwordid = ?", wid
       
-      topnext       = msg.getArray         "SELECT count(*),nextwordid FROM chains WHERE wordid = ? GROUP BY nextwordid ORDER BY count(*) DESC LIMIT 1", wid
-      topbefore     = msg.getArray         "SELECT count(*),wordid FROM chains WHERE nextwordid = ? GROUP BY wordid ORDER BY count(*) DESC LIMIT 1", wid
+      topnext       = msg.getArray "SELECT count(*),nextwordid FROM chains WHERE wordid = ? GROUP BY nextwordid ORDER BY count(*) DESC LIMIT 1", wid
+      topbefore     = msg.getArray "SELECT count(*),wordid FROM chains WHERE nextwordid = ? GROUP BY wordid ORDER BY count(*) DESC LIMIT 1", wid
       
       topnext       = topnext[0]
       topbefore     = topbefore[0]

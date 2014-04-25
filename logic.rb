@@ -81,7 +81,10 @@ Pulls a word from our database and starts a chain with it.
 """
 def speak( msg, word, chainlen )
   sentence = Sentence.new( msg )
-  sentence <<  word
+
+  sentence << word
+
+  p "Starting sentence: " + sentence.to_s, "\n\n"
   
   # Go to the left, negative
   speakNext msg, sentence, chainlen, -1
@@ -114,10 +117,14 @@ def speakNext( msg, sentence, chainlen, dir )
 
   start = sentence.length
   while sentence.length < start+25 
+    p "Sentence count: " + sentence.length.to_s
     twid = ( dir <= 0 ? sentence.first.wid : sentence.last.wid ) #thiswid
     res = ""
 
-    if twid == -1 or twid == nil
+    print "twid: ", twid, "\n"
+    if not ( twid.is_a? Fixnum or twid.is_a? Integer or twid.is_a? String ) or twid < 1 #FIXME: Sometimes sentences end up with trailing 0's or -1's. This should never happen. Fix it.
+      sentence.clean
+      p "ERROR: sentence has something odd it it."
       break
     end
 

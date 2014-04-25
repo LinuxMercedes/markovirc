@@ -50,24 +50,29 @@ class Sentence
 
     #FIXME: these first three options may be borked
     if words.is_a? String
-      wordsarray = sever( words ).first  
+      wordsarray = sever( words ).first
+      if not wordsarray.is_a? Array
+        wordsarray = [ wordsarray ]
+      end
     elsif words.is_a? Array and words.length > 0 and words[0].is_a? Word
       @words = words
-      return
+      return self
     elsif words.is_a? Array
       wordsarray = words
     elsif words.is_a? Cinch::Message
       wordsarray = sever( words.message ).first # always returns at least an array with one sentence
     elsif words.is_a? Word
       @words << words
-      return
+      return self
     else
-      return # Hopefully nil
+      return self # Hopefully nil
     end
     
     wordsarray.each do |word|
       @words << ( Word.new self, word )
     end
+
+    return self
   end
 
   # Drop a new word on the end of our sentence
@@ -94,5 +99,21 @@ class Sentence
     end
 
     words.join joiner
+  end
+  
+  def clean( )
+    @words.each do |word|
+      if not word.wid.is_a? Integer or word.wid < 1 or not word.text.is_a? String
+        @words.delete word
+      end
+    end 
+  end
+
+  def to_s( )
+    self.join " "
+  end
+
+  def +( rhs )
+    self.join( " " ) + rhs
   end
 end

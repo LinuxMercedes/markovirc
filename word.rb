@@ -41,7 +41,7 @@ class Word
       self.getWid
     else
       @text = word
-      @wid = wid
+      @wid = wid.to_i
     end  
   end
 
@@ -61,6 +61,7 @@ class Word
       @sentence.msg.getArray "INSERT INTO words (word) VALUES (?)", @text
       @wid = @sentence.msg.getFirst "SELECT id FROM words WHERE word = ?", @text
     end
+    @wid = @wid.to_i
   end
 
   def getWord( )
