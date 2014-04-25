@@ -50,7 +50,7 @@ class Cinch::Message
     @db  = PG::Connection.open( :dbname => $bot.set['database'] ) 
   end
 
-  def getFirst( query, args )
+  def getFirst( query, args=[] )
     res = self.exec( query, args ).values.first
 
     if res.is_a? Array
