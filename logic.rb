@@ -84,21 +84,12 @@ def speak( msg, word, chainlen )
 
   sentence << word
 
-  p "Starting sentence: " + sentence.to_s, "\n\n"
-  
   # Go to the left, negative
   speakNext msg, sentence, chainlen, -1
 
   # Now to the right, positive
   speakNext msg, sentence, chainlen, 1
 
-  print "FINAL SENTENCE: "
-  print sentence.length, "\n"
-  sentence.words.each do |word|
-    print word.text
-    print "\n"
-  end
-  print "\n\n"
   msg.reply( sentence.join " " )
 end
 
@@ -122,7 +113,6 @@ def speakNext( msg, sentence, chainlen, dir )
 
     if not ( twid.is_a? Fixnum or twid.is_a? Integer or twid.is_a? String ) or twid < 1 #FIXME: Sometimes sentences end up with trailing 0's or -1's. This should never happen. Fix it.
       sentence.clean
-      p "ERROR: sentence has something odd it it."
       break
     end
 
@@ -153,10 +143,8 @@ def speakNext( msg, sentence, chainlen, dir )
     else
       # We know our next word will be from a certain textid, so there should be just one result
       if dir <= 0
-        # print "\nSID: ", sid.to_s, "\nTWID: ", twid.to_s, "\n", sentencewids, "\n\n" 
         sentence >> ( msg.getFirst( "SELECT wordid FROM chains WHERE nextwordid = ? AND textid = ?", [twid, sid] ).to_i )
       else   
-        # print "\nSID: ", sid.to_s, "\nTWID: ", twid.to_s, "\n", sentencewids, "\n\n"
         sentence << ( msg.getFirst( "SELECT nextwordid FROM chains WHERE wordid = ? AND textid = ?", [twid, sid] ).to_i )
       end
 
@@ -184,8 +172,6 @@ def speakRandom( msg )
   print "Random speak\n\n"
   if Random.rand > $bot.set.logic.replyrate and msg.message !~ /^#{$bot.nick}[:, ]+/
     return
-  else
-    print "Activated\n\n"
   end
 
   # Mash sentences together into one hot mess
@@ -193,8 +179,6 @@ def speakRandom( msg )
   msg.sentence.each do |sen|
     words.push( sen.words ).flatten!
   end
-
-  print "Words: ", words, "\n\n"
 
   # Get a corresponding array of the number of chains that mention this wid at any point
   counts = []

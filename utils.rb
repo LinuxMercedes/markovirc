@@ -86,7 +86,6 @@ class Cinch::Message
       query.sub! /(?!\\)\?/, "$#{i+1}" # Postgres friendly format
     end
     
-    print "\n\n\n", query, "\n", args, "\n\n\n" 
     @db.exec_params query, args
   end
 end

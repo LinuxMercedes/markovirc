@@ -51,8 +51,6 @@ def sayl( args, msg )
 
   wid = msg.getFirst "SELECT id FROM words WHERE word ILIKE ? ORDER BY random() LIMIT 1", iword
 
-  p wid
-
   if wid == nil
     msg.reply "I don't know any words containing: \"#{word}\""
     return
@@ -201,7 +199,9 @@ def sayArgParser( args )
   args.strip!
   word = args
   level = Random.rand $bot.set['logic']['minchainlength']...$bot.set['logic']['maxchainlength']
-  
+ 
+  #Do a bit of black magic to separate a number argument at the end of a !say command from 
+  # the requested word
   if args.match /[ ]+/
     args = args.split /[ ]+/
     args.delete ""
