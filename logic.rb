@@ -117,11 +117,9 @@ def speakNext( msg, sentence, chainlen, dir )
 
   start = sentence.length
   while sentence.length < start+25 
-    p "Sentence count: " + sentence.length.to_s
     twid = ( dir <= 0 ? sentence.first.wid : sentence.last.wid ) #thiswid
     res = ""
 
-    print "twid: ", twid, "\n"
     if not ( twid.is_a? Fixnum or twid.is_a? Integer or twid.is_a? String ) or twid < 1 #FIXME: Sometimes sentences end up with trailing 0's or -1's. This should never happen. Fix it.
       sentence.clean
       p "ERROR: sentence has something odd it it."

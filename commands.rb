@@ -44,13 +44,17 @@ def sayl( args, msg )
   word, level = sayArgParser( args )
   
   if not word =~ /\%/
-    word = "%#{word}%"
+    iword = "%#{word}%"
+  else
+    iword = word
   end
 
-  wid = msg.getFirst "SELECT id FROM words WHERE word ILIKE ? ORDER BY random() LIMIT 1", word
+  wid = msg.getFirst "SELECT id FROM words WHERE word ILIKE ? ORDER BY random() LIMIT 1", iword
+
+  p wid
 
   if wid == nil
-    msg.reply "I don't know the word: \"#{word}\""
+    msg.reply "I don't know any words containing: \"#{word}\""
     return
   end
 
