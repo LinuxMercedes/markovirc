@@ -58,6 +58,17 @@ class Cinch::Message
     end
   end
 
+  #By default the type of everything returned is a string. 
+  def getFirst_i( query, args=[] )
+    res = self.exec( query, args ).values.first
+
+    if res.is_a? Array
+      res = res[0]
+    end
+
+    res.to_i
+  end
+
   def getArray( query, args )
     self.exec( query, args ).values
   end

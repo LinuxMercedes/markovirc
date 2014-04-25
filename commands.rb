@@ -70,8 +70,8 @@ def stats( args, msg )
   end
 
   if args == "db"
-    words = msg.getFirst "SELECT count(*) FROM words"
-    contexts = msg.getFirst "SELECT count(*) FROM chains"
+    words = msg.getFirst_i "SELECT count(*) FROM words"
+    contexts = msg.getFirst_i "SELECT count(*) FROM chains"
 
     msg.reply "I know " + words.to_s + " words and " + contexts.to_s + " contexts for them, with an average context density of " \
       + (contexts/words).floor.to_s + "."
@@ -86,8 +86,8 @@ def stats( args, msg )
         return
       end
 
-      contextslhs   = msg.getFirst "SELECT count(*) FROM chains WHERE wordid = ?", wid
-      contextsrhs   = msg.getFirst "SELECT count(*) FROM chains WHERE nextwordid = ?", wid
+      contextslhs   = msg.getFirst_i "SELECT count(*) FROM chains WHERE wordid = ?", wid
+      contextsrhs   = msg.getFirst_i "SELECT count(*) FROM chains WHERE nextwordid = ?", wid
       
       topnext       = msg.getArray "SELECT count(*),nextwordid FROM chains WHERE wordid = ? GROUP BY nextwordid ORDER BY count(*) DESC LIMIT 1", wid
       topbefore     = msg.getArray "SELECT count(*),wordid FROM chains WHERE nextwordid = ? GROUP BY wordid ORDER BY count(*) DESC LIMIT 1", wid
