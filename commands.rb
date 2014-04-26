@@ -84,34 +84,52 @@ def stats( args, msg )
         return
       end
 
+      # Get the number of times our word occurs before / after any. 
       contextslhs   = msg.getFirst_i "SELECT count(*) FROM chains WHERE wordid = ?", wid
       contextsrhs   = msg.getFirst_i "SELECT count(*) FROM chains WHERE nextwordid = ?", wid
       
-      topnext       = msg.getArray "SELECT count(*),nextwordid FROM chains WHERE wordid = ? GROUP BY nextwordid ORDER BY count(*) DESC LIMIT 1", wid
-      topbefore     = msg.getArray "SELECT count(*),wordid FROM chains WHERE nextwordid = ? GROUP BY wordid ORDER BY count(*) DESC LIMIT 1", wid
-      
-      topnext       = topnext[0]
-      topbefore     = topbefore[0]
-      
-      # Use the overloaded float class to give us x sigfigs.
-      topnextfreq   = (topnext[0].to_f/contextsrhs*100).sigfig 4
-      topbeforefreq = (topbefore[0].to_f/contextslhs*100).sigfig 4 
+      # Get the word which occurs the most before / after our wid.
+      topnext       = msg.getArray "SELECT nextwordid,count(*) FROM chains WHERE wordid = ? GROUP BY nextwordid ORDER BY count(*) DESC LIMIT 1", wid
+      topbefore     = msg.getArray "SELECT wordid,count(*) FROM chains WHERE nextwordid = ? GROUP BY wordid ORDER BY count(*) DESC LIMIT 1", wid
 
-      topnext       = topnext[1]
-      topbefore     = topbefore[1]
-     
+
+      print "\n\n\n\n"
+      print "next: ", topnext, "   contextsrhs: ", contextsrhs, "\n"
+      print "before: ", topbefore, "contextslhs: ", contextslhs, "\n"
+      # The query above returns a double array in the format [[topwid, somecount]]
+      topnext       = topnext[0][0].to_i
+      topbefore     = topbefore[0][0].to_i
+
+      print "topnext: ", topnext, " topbefore: ", topbefore, "\n"
+      
+      topnexttimes  = msg.getFirst_i "SELECT count(*) FROM chains WHERE wordid = ? AND nextwordid = ?", [ wid, topnext ]
+      topbeforetimes  = msg.getFirst_i "SELECT count(*) FROM chains WHERE wordid = ? AND nextwordid = ?", [ topbefore, wid ]
+
+      print "topbeforetimes: ", topbeforetimes, " topnexttimes: ", topnexttimes, "\n"
+
+      # Use the overloaded float class to give us x sigfigs.
+      if topnexttimes == 0
+        topnextfreq = 100.0
+      else
+        topnextfreq = (topnexttimes.to_f/contextslhs*100).sigfig 4
+      end
+
+      if topbeforetimes == 0
+        topbeforefreq = 100.0
+      else
+        topbeforefreq = (topbeforetimes.to_f/contextsrhs*100).sigfig 4 
+      end
+
       # Gracefully handle if this word is commonly at the end of a sentence (nextword == -1) or at the beginning
       # (no nextwordid's point to it) 
-      if topnext == nil or topnext == -1
+      if topnext == nil or topnext == "-1" or topnext == -1
         topnext     = ""
-        topnextfreq = 100.0
       else
         topnext     = msg.getFirst "SELECT word FROM words WHERE id = ?", topnext
       end
 
       if topbefore == nil or topbefore == -1
         topbefore   = ""
-      topbeforefreq = 100.0
      else
         topbefore   = msg.getFirst "SELECT word FROM words WHERE id = ?", topbefore
      end 
