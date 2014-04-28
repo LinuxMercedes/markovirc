@@ -11,23 +11,11 @@ $bot = Markovirc.new do
     c.user = self.set['user'] 
   end
                                 
-  on :message, /^('?sup|he[y]+|hello|hi)[\s]*([a-z0-9_-]*)?/i do |m, greeting, text|
-    if text != "" and text != bot.nick
-      next
-    end
-    
-    if m.user.nick == "lae"
-      m.reply "Hey Musee!"
-    elsif m.user.nick == 'brodes'
-      m.reply "/xe/ billy!"
-    else
-      m.reply "Hello #{m.user.nick}"
-    end
-  end
-
   on :message, /^!([a-z]*)(.*)/i do |msg, command, args|
-    msg.connect
-    commandHandle command, args, msg
+    if msg.useCommands?
+      msg.connect
+      commandHandle command, args, msg
+    end
   end
   
   on :message, /^[^!]/ do |msg|

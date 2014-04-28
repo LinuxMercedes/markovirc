@@ -88,4 +88,14 @@ class Cinch::Message
     
     @db.exec_params query, args
   end
+
+  def useCommands?( )
+    print self.channel, "\n\n"
+
+    if self.bot.set['channels'][self.channel]['silent'] or self.bot.set['channels'][self.channel]['-speak']
+      return false
+    else
+      return true
+    end
+  end
 end
