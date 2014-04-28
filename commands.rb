@@ -92,20 +92,12 @@ def stats( args, msg )
       topnext       = msg.getArray "SELECT nextwordid,count(*) FROM chains WHERE wordid = ? GROUP BY nextwordid ORDER BY count(*) DESC LIMIT 1", wid
       topbefore     = msg.getArray "SELECT wordid,count(*) FROM chains WHERE nextwordid = ? GROUP BY wordid ORDER BY count(*) DESC LIMIT 1", wid
 
-
-      print "\n\n\n\n"
-      print "next: ", topnext, "   contextsrhs: ", contextsrhs, "\n"
-      print "before: ", topbefore, "contextslhs: ", contextslhs, "\n"
       # The query above returns a double array in the format [[topwid, somecount]]
       topnext       = topnext[0][0].to_i
       topbefore     = topbefore[0][0].to_i
 
-      print "topnext: ", topnext, " topbefore: ", topbefore, "\n"
-      
       topnexttimes  = msg.getFirst_i "SELECT count(*) FROM chains WHERE wordid = ? AND nextwordid = ?", [ wid, topnext ]
       topbeforetimes  = msg.getFirst_i "SELECT count(*) FROM chains WHERE wordid = ? AND nextwordid = ?", [ topbefore, wid ]
-
-      print "topbeforetimes: ", topbeforetimes, " topnexttimes: ", topnexttimes, "\n"
 
       # Use the overloaded float class to give us x sigfigs.
       if topnexttimes == 0
