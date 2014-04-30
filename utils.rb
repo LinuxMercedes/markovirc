@@ -14,7 +14,11 @@ def sever( text )
 end
 
 class Settings < Settingslogic
+  if ARGV[0] == nil
     source "config.yml"
+  else
+    source ARGV[0]
+  end
 end
 
 # Overload float with an option for significant figure rounding.
