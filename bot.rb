@@ -6,7 +6,7 @@ require_relative "utils.rb"
 $bot = Markovirc.new do
   configure do |c|
     c.server = self.set['server']
-    c.channels = self.set['channels'].keys.map{ |k| "#"+k }
+    c.channels = self.set['channels'].keys
     c.nick = self.set['nick']
     c.user = self.set['user'] 
   end
@@ -21,7 +21,9 @@ $bot = Markovirc.new do
   on :message, /^[^!]/ do |msg|
     msg.connect
     logHandle msg
-    speakRandom msg
+    if msg.canSpeak? 
+      speakRandom msg
+    end
   end
 end
 

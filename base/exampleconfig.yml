@@ -65,8 +65,8 @@ admins:
 # causes markovirc to only respond to commands in the channel. Silent makes markovirc only
 # listen in that channel and implies -silent.
 channels:
-  channelname:
+  "#channelname":
     - speak
-  another:
+  "#another":
     - -speak
     - silent
