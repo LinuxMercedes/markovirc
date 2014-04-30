@@ -116,7 +116,7 @@ class Cinch::Message
   def canRespond?( )
     channel = $bot.set['channels'][self.channel]
     
-    if ( channel.include? 'hilight' or ( not channel.include? 'silent' and not channel.include? '-speak' ) and self.message =~ /^#{$bot.nick}[:, ]+/  
+    if ( channel.include? 'hilight' or ( not channel.include? 'silent' and not channel.include? '-speak' ) ) and self.message =~ /^#{$bot.nick}[:, ]+/  
       true
     else
       false
