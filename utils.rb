@@ -90,7 +90,9 @@ class Cinch::Message
   end
 
   def useCommands?( )
-    if $bot.set['channels'][self.channel].include?('silent') or $bot.set['channels'][self.channel].include?('-speak')
+    channel = $bot.set['channels'][self.channel]
+
+    if channel.include? 'silent' or channel.include? '-commands'
       false
     else
       true
@@ -98,7 +100,21 @@ class Cinch::Message
   end
 
   def canSpeak?( )
-    if self.useCommands?
+    channel = $bot.set['channels'][self.channel]
+
+    if channel.include? 'silent' and not channel.include? 'hilight'
+      false
+    elsif channel.include? '-speak' and not channel.include? 'hilight'
+      false
+    else
+      true
+    end
+  end
+
+  def canRespond?( )
+    channel = $bot.set['channels'][self.channel]
+    
+    if channel.include? 'hilight'
       true
     else
       false

@@ -59,11 +59,11 @@ admins:
   - user!invalid@host
 
 
-# List of channels to join on connecting. A # is added by default, if a channel with ##
-# is desired, use "#channelname":. Current flags are -speak, speak, and silent. -speak disables
-# speaking in that channel all together, while the speak enables random speech. Ommiting it
-# causes markovirc to only respond to commands in the channel. Silent makes markovirc only
-# listen in that channel and implies -silent.
+# List of channels to join on start.
+# Current flags are -speak, silent, -commands, hilight. -speak disables
+# speaking randomly in that channel, while the -commands flag disables commands. silent
+# implies both -speak and -commands. Hilight is on by default with no flags, but is disabled
+# by -speak. It enables marko to only respond to highlights if combined with silent or -speak. 
 channels:
   "#channelname":
     - speak
