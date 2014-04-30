@@ -169,10 +169,8 @@ this is also incredibly rough for the internet, as grammar gets the axe online.
 ** The Secret Life of Pronouns, pg 25
 """
 def speakRandom( msg )
-  if Random.rand > $bot.set.logic.replyrate
-    if msg.message !~ /^#{$bot.nick}[:, ]+/ or not msg.canRespond?
-      return
-    end
+  if Random.rand > $bot.set.logic.replyrate and not msg.canRespond?
+    return
   end
 
   # Mash sentences together into one hot mess
