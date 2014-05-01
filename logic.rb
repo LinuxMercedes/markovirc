@@ -179,6 +179,11 @@ def speakRandom( msg )
     words.push( sen.words ).flatten!
   end
 
+  # Drop our name if we were pinged and the first word matches
+  if words.first.text.match $bot.nick
+    words.slice! 0
+  end
+
   # Get a corresponding array of the number of chains that mention this wid at any point
   counts = []
   words.each do |word|

@@ -95,6 +95,10 @@ class Cinch::Message
 
   def useCommands?( )
     channel = $bot.set['channels'][self.channel]
+    
+    if channel.length == 0
+      return true
+    end
 
     if channel.include? 'silent' or channel.include? '-commands'
       false
