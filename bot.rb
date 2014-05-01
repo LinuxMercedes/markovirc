@@ -20,9 +20,7 @@ $bot = Markovirc.new do
   
   on :message, /^[^!]/ do |msg|
     msg.connect
-    if not msg.canRespond?
-      logHandle msg
-    end
+    logHandle msg
     if msg.canSpeak? or msg.canRespond? 
       speakRandom msg
     end

@@ -15,6 +15,17 @@ def logHandle( msg )
   userid = 0
   sourceid = 0
 
+  sentences = sever msg.message
+  msg.sentence = []
+
+  sentences.each do |sentence|
+    msg.sentence << ( Sentence.new msg, sentence )
+  end
+
+  if msg.canRespond?
+    return
+  end
+
   res = msg.getArray "SELECT 1 FROM channels WHERE name = ?", msg.channel.name
   if res.size == 0
     msg.getArray "INSERT INTO channels (name) VALUES (?)", msg.channel.name
@@ -56,13 +67,6 @@ Then replace all words with their word id.
 Last create a relation for each word referencing our text.
 """
 def chain( msg, textid )
-  sentences = sever msg.message
-  msg.sentence = []
-
-  sentences.each do |sentence|
-    msg.sentence << ( Sentence.new msg, sentence )
-  end
-
   # Insert our chains
   msg.sentence.each do |sentence|
     sentence.size.times do |i|
