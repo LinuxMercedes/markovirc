@@ -5,6 +5,12 @@ module TYPES
   DIRECT=2
 end
 
+module DIRECTION
+  LEFT=-1
+  RIGHT=1
+end
+
+
 """
 I'm pretty sure sqlite3 handles this natively
 First get chanid, then the userid. Check to see if this is a known source, if not
@@ -108,12 +114,11 @@ def speakNext( msg, sentence, chainlen, dir )
   # we use our source id and sourceid counter (sid / sidi) to help us emulate native database support for
   #   higher length markov chains. 
   sid = -1
-  sidi = -1
+  sidi = 0
 
   start = sentence.length
   while sentence.length < start+25 
     twid = ( dir <= 0 ? sentence.first.wid : sentence.last.wid ) #thiswid
-    res = ""
 
     if not ( twid.is_a? Fixnum or twid.is_a? Integer or twid.is_a? String ) or twid < 1 #FIXME: Sometimes sentences end up with trailing 0's or -1's. This should never happen. Fix it.
       sentence.clean
@@ -121,16 +126,17 @@ def speakNext( msg, sentence, chainlen, dir )
     end
 
     # If we don't already have a source lined up...
-    if sid == -1
+    if sid <= 0
+      res = ""
       if dir <= 0
         res = msg.getArray "SELECT wordid,textid from chains WHERE nextwordid = ? ORDER BY random() LIMIT 1", twid #goin' left, look to the left
       else
         res = msg.getArray "SELECT nextwordid,textid from chains WHERE wordid = ? ORDER BY random() LIMIT 1", twid #goin' right
       end
-
       res = res[0]
 
       if res == nil or res[0] == -1
+        p "Falling out!"
         break
       end
 
@@ -140,22 +146,19 @@ def speakNext( msg, sentence, chainlen, dir )
         sentence << res[0].to_i
       end
 
-      if chainlen > 1
-        sid = res[1] # Due to the query ordering
+      if chainlen > 2 
+        sid = res[1].to_i # Due to the query ordering
         sidi = chainlen-1
       end
     else
       # We know our next word will be from a certain textid, so there should be just one result
       if dir <= 0
-        sentence >> ( msg.getFirst( "SELECT wordid FROM chains WHERE nextwordid = ? AND textid = ?", [twid, sid] ).to_i )
+        sentence >> msg.getFirst_i( "SELECT wordid FROM chains WHERE nextwordid = ? AND textid = ?", [twid, sid] )
       else   
-        sentence << ( msg.getFirst( "SELECT nextwordid FROM chains WHERE wordid = ? AND textid = ?", [twid, sid] ).to_i )
+        sentence << msg.getFirst_i( "SELECT nextwordid FROM chains WHERE wordid = ? AND textid = ?", [twid, sid] )
       end
 
       sidi -= 1
-      if sidi <= 0
-        sid = -1
-      end
     end
   end
 end

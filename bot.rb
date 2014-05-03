@@ -15,7 +15,6 @@ $bot = Markovirc.new do
     $bot.pool.with do |con|
       msg.db = con
       if msg.useCommands?
-        msg.connect
         commandHandle command, args, msg
       end
     end

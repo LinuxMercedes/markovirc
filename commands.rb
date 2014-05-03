@@ -208,7 +208,7 @@ if it's numeric, and returns it as level.
 def sayArgParser( args )
   args.strip!
   word = args
-  level = Random.rand $bot.set['logic']['minchainlength']...$bot.set['logic']['maxchainlength']
+  level = Random.rand $bot.set['logic']['minchainlength']..$bot.set['logic']['maxchainlength']
  
   #Do a bit of black magic to separate a number argument at the end of a !say command from 
   # the requested word
