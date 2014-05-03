@@ -12,17 +12,22 @@ $bot = Markovirc.new do
   end
                                 
   on :message, /^!([a-z]*)(.*)/i do |msg, command, args|
-    if msg.useCommands?
-      msg.connect
-      commandHandle command, args, msg
+    $bot.pool.with do |con|
+      msg.db = con
+      if msg.useCommands?
+        msg.connect
+        commandHandle command, args, msg
+      end
     end
   end
   
   on :message, /^[^!]/ do |msg|
-    msg.connect
-    logHandle msg
-    if msg.canSpeak? or msg.canRespond? 
-      speakRandom msg
+    $bot.pool.with do |con|
+      msg.db = con
+      logHandle msg
+      if msg.canSpeak? or msg.canRespond? 
+        speakRandom msg
+      end
     end
   end
 end

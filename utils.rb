@@ -1,4 +1,5 @@
 require 'settingslogic'
+require 'connection_pool'
 
 # Intelligently split a sentence by punctuation, then split the individual spaces
 # so we get words.
@@ -33,10 +34,11 @@ end
 # gem syntax which I (Billy) have a preference for.
 
 class Markovirc < Cinch::Bot
-  attr_accessor :set
+  attr_accessor :set, :pool
   
   def initialize( )
     @set = Settings.new
+    @pool = ConnectionPool.new( size: 10, timeout: 20 ) { PG::Connection.open( :dbname => @set['database'] ) } 
     super( )
   end
 end
@@ -48,13 +50,6 @@ class Cinch::Message
 
   @db = @sentence = @textid = @sourceid = nil
  
-  # Connect to our database. A message travels through an entire thread, so this is a personal connection. 
-  # FIXME: Add disconnect when deconstructed.
-  def connect( )
-    @db  = PG::Connection.open( :dbname => $bot.set['database'] ) 
-    ObjectSpace.define_finalizer( self, proc { @db.disconnect } )
-  end
-
   def getFirst( query, args=[] )
     res = self.exec( query, args ).values.first
 
