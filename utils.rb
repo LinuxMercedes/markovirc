@@ -52,6 +52,7 @@ class Cinch::Message
   # FIXME: Add disconnect when deconstructed.
   def connect( )
     @db  = PG::Connection.open( :dbname => $bot.set['database'] ) 
+    ObjectSpace.define_finalizer( self, proc { @db.disconnect } )
   end
 
   def getFirst( query, args=[] )
