@@ -9,6 +9,8 @@ class Say
   match /(say) (.+)/, method: :execute
 
   def execute( m, name, word )
+    return if not m.useCommands?
+
     word, chainlen = self.sayArgParser word
 
     # Gets our word and chainlen in the right forms
