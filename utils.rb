@@ -43,20 +43,7 @@ class Markovirc < Cinch::Bot
   end
 end
 
-# This quick monkey patch allows us to allocate a connection to every event individually.
-class Cinch::Handler 
-  alias_method :old_call, :call
-  
-  def call( message, captures, arguments )
-    $bot.pool.with do |conn|
-      message.db = conn
-      self.old_call message, captures, arguments
-    end
-  end
-end
-
 # Message is overloaded to serve as a database query handler.
-
 class Cinch::Message
   attr_accessor :sentence, :textid, :sourceid, :db
 
@@ -101,7 +88,9 @@ class Cinch::Message
       query.sub! /(?!\\)\?/, "$#{i+1}" # Postgres friendly format
     end
     
-    self.db.exec_params query, args
+    self.bot.pool.with do |conn| 
+      conn.exec_params query, args
+    end
   end
 
   def useCommands?( )
