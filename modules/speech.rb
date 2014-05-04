@@ -48,7 +48,10 @@ module Speech
     # We need a new source to "emulate" higher chain lengths. A chainlength of 3 means
     # groups of 3 words will always be from a source text and are guaranteed to be as coherent
     # as their source.
-    def newsrc( )
+    #
+    # See below for notes about the changed algorithm. There are two optional parameters for making
+    # marko chain off of the last/first words of a chain, instead of off of a single word.
+    def newsrc( initial=false, isrcid=-1 )
       res = ""
 
       if @dir == LEFT
@@ -62,15 +65,31 @@ module Speech
         return
       end
 
-      @chainiter = @chainlen # How many more words to pull from this source before a refresh
+      if not initial
+        @chainiter = @chainlen # How many more words to pull from this source before a refresh
+      else
+        @chainiter = (@chainlen/2.0).ceil-1
+        if isrcid != -1
+          @srcid = isrcid
+        end
+        @srcid
+      end
     end
       
     def fill( )
       # For legacy's sake, let's start by going right.
       @dir = RIGHT
 
+      ###########
+      # This part is a change to marko's initial chaining algorithm. 
+      # Prior to this, marko would take a word, drop it in a blank chain, 
+      # then iterate right off of one source id. It would then iterate backwards
+      # starting at that inital word off of ANOTHER sourceid which then led to some
+      # spliced text (or rarely, gold).
+      # 
       # Our first word is already in our chain. Now line up a new source before we go further.
-      self.newsrc
+      initsrc = self.newsrc true
+      ##########
 
       1.upto 2 do |i|
         while self.chain and self.length < 25*i 
@@ -79,7 +98,7 @@ module Speech
           end
         end
         @dir = LEFT
-        self.newsrc
+        self.newsrc true, initsrc
       end
     end
   end

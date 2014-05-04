@@ -16,7 +16,7 @@ logic:
   # nearly verbatim source text.
   minchainlength: 4 
 
-  maxchainlength: 8
+  maxchainlength: 6 
 
   # Percent of messages which markovirc has a chance to reply. Note 
   # that the weights also influence whether he will reply or not too.
