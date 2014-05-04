@@ -11,13 +11,7 @@ $bot = Markovirc.new do
     c.channels = self.set['channels'].keys
     c.nick = self.set['nick']
     c.user = self.set['user'] 
-    c.plugins.plugins = [Say, SayL]
-  end
-                                
-  on :message, /^!([a-z]*)(.*)/i do |msg, command, args|
-    if msg.useCommands?
-      commandHandle command, args, msg
-    end
+    c.plugins.plugins = [Say, SayL, Stats]
   end
   
   on :message, /^[^!]/ do |msg|
@@ -28,7 +22,6 @@ $bot = Markovirc.new do
   end
 end
 
-require_relative 'commands.rb'
 require_relative 'logic.rb'
 
 $bot.start
