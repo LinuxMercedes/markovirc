@@ -60,6 +60,8 @@ class Sentence
       return self
     elsif words.is_a? Array
       wordsarray = words
+    elsif words.is_a? Integer
+      wordsarray << words
     elsif words.is_a? Cinch::Message
       wordsarray = sever( words.message ).first # always returns at least an array with one sentence
     elsif words.is_a? Word
@@ -72,8 +74,6 @@ class Sentence
     wordsarray.each do |word|
       @words << ( Word.new self, word )
     end
-
-    return self
   end
 
   # Drop a new word on the end of our sentence

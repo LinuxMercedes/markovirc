@@ -11,7 +11,7 @@ $bot = Markovirc.new do
     c.channels = self.set['channels'].keys
     c.nick = self.set['nick']
     c.user = self.set['user'] 
-    c.plugins.plugins = [Say]
+    c.plugins.plugins = [Say, SayL]
   end
                                 
   on :message, /^!([a-z]*)(.*)/i do |msg, command, args|

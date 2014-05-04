@@ -5,12 +5,6 @@ module TYPES
   DIRECT=2
 end
 
-module DIRECTION
-  LEFT=-1
-  RIGHT=1
-end
-
-
 """
 I'm pretty sure sqlite3 handles this natively
 First get chanid, then the userid. Check to see if this is a known source, if not
@@ -136,7 +130,6 @@ def speakNext( msg, sentence, chainlen, dir )
       res = res[0]
 
       if res == nil or res[0] == -1
-        p "Falling out!"
         break
       end
 

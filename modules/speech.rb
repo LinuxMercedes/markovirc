@@ -19,6 +19,8 @@ module Speech
       @msg = msg
 
       super msg, word 
+
+      self.fill
     end
     
     # Fill out the left side, working "backwards"
@@ -41,7 +43,6 @@ module Speech
       end
 
       @chainiter -= 1
-      
       true
     end 
 
@@ -101,41 +102,6 @@ module Speech
         self.newsrc true, initsrc
       end
     end
-  end
-
-  # Make sure our passed word is safe for use, if not then passing it to word will throw it in the database.
-  def isSane?( m, word )
-    wid = m.getFirst_i "SELECT id FROM words WHERE word ILIKE ? ORDER BY random() LIMIT 1", word
-
-    if wid == nil
-      msg.reply "I don't know the word: \"#{word}\""
-      false
-    else
-      true
-    end
-  end
-
-  # Sanitizes chainlength to fall into specs
-  def prepare( m, chainlen )
-    xchain = m.bot.set.logic.maxchainlength
-    nchain = m.bot.set.logic.minchainlength
-    
-    # Rope our chain length into whatever config has it set as
-    if not chainlen.is_a? Integer or chainlen <= 0
-      chainlen = Random.new.rand nchain..xchain
-    elsif chainlen > xchain
-      chainlen = xchain
-    elsif chainlen < nchain
-      chainlen = nchain
-    end
-
-    return chainlen
-  end
-
-  # "Fills" our chain
-  def fill( m, word, chainlen )
-    res = Chain.new m, chainlen, word
-    res.chain
   end
 
   """
