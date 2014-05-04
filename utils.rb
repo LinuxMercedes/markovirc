@@ -43,12 +43,24 @@ class Markovirc < Cinch::Bot
   end
 end
 
-# Add a textid and sentence field to the message
+# This quick monkey patch allows us to allocate a connection to every event individually.
+class Cinch::Handler 
+  alias_method :old_call, :call
+  
+  def call( message, captures, arguments )
+    $bot.pool.with do |conn|
+      message.db = conn
+      self.old_call message, captures, arguments
+    end
+  end
+end
+
+# Message is overloaded to serve as a database query handler.
 
 class Cinch::Message
   attr_accessor :sentence, :textid, :sourceid, :db
 
-  @sentence = @textid = @sourceid = nil
+  @sentence = @textid = @sourceid = @db = nil
 
   def getFirst( query, args=[] )
     res = self.exec( query, args ).values.first
@@ -65,30 +77,31 @@ class Cinch::Message
     if res.is_a? Array
       res = res[0]
     end
+    
+    #self.bot.debug query + " args: " + args.inspect + "\n"
 
     res.to_i
   end
 
   def getArray( query, args )
+    print query, args, "\n"
     self.exec( query, args ).values
   end
 
   def exec( query, argsin )
-    self.bot.pool.with do |con|
-      args = Array.new
+    args = Array.new
 
-      if not argsin.is_a? Array
-        args = [ argsin ]
-      else
-        args = argsin
-      end
-
-      args.length.times do |i|
-        query.sub! /(?!\\)\?/, "$#{i+1}" # Postgres friendly format
-      end
-      
-      con.exec_params query, args
+    if not argsin.is_a? Array
+      args = [ argsin ]
+    else
+      args = argsin
     end
+
+    args.length.times do |i|
+      query.sub! /(?!\\)\?/, "$#{i+1}" # Postgres friendly format
+    end
+    
+    self.db.exec_params query, args
   end
 
   def useCommands?( )
