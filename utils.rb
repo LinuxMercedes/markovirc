@@ -48,8 +48,8 @@ end
 class Cinch::Message
   attr_accessor :sentence, :textid, :sourceid, :db
 
-  @db = @sentence = @textid = @sourceid = nil
- 
+  @sentence = @textid = @sourceid = nil
+
   def getFirst( query, args=[] )
     res = self.exec( query, args ).values.first
 
@@ -74,19 +74,21 @@ class Cinch::Message
   end
 
   def exec( query, argsin )
-    args = Array.new
+    self.bot.pool.with do |con|
+      args = Array.new
 
-    if not argsin.is_a? Array
-      args = [ argsin ]
-    else
-      args = argsin
-    end
+      if not argsin.is_a? Array
+        args = [ argsin ]
+      else
+        args = argsin
+      end
 
-    args.length.times do |i|
-      query.sub! /(?!\\)\?/, "$#{i+1}" # Postgres friendly format
+      args.length.times do |i|
+        query.sub! /(?!\\)\?/, "$#{i+1}" # Postgres friendly format
+      end
+      
+      con.exec_params query, args
     end
-    
-    @db.exec_params query, args
   end
 
   def useCommands?( )
@@ -120,6 +122,20 @@ class Cinch::Message
       true
     else
       false
+    end
+  end
+end
+
+def reqdir( dir )
+  Dir.entries( dir ).each do |fn|
+    if fn == '.' or fn == '..'
+      next
+    end
+
+    if File.directory? fn
+      next
+    elsif File.fnmatch '*.rb', fn
+      load File.dirname( __FILE__ ) + "/" + dir + fn
     end
   end
 end

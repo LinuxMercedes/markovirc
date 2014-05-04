@@ -156,12 +156,12 @@ Hash that contains information about each command.
                 [ self.method(:help), "Prints this message.",
                   ["!help <command>:", "  Prints a message about a command or displays all commands with a short summary."]
                 ],
-                "say" => 
-                [ self.method(:say), "Finds something to say related to the specified word.",
-                  ["!say <word or phrase> (optional chain length):", "  Builds something to say from the word provided. If provided, chain length specifies", 
-                   "  If provided, chain length specifies the number of consecutive words per cycle; this increases coherency but reduces creativity.",
-                  "  Default is random from " + $bot.set['logic']['minchainlength'].to_s + " to " + $bot.set['logic']['maxchainlength'].to_s + "." ]
-                ],
+               # "say" => 
+               # [ self.method(:say), "Finds something to say related to the specified word.",
+               #   ["!say <word or phrase> (optional chain length):", "  Builds something to say from the word provided. If provided, chain length specifies", 
+               #    "  If provided, chain length specifies the number of consecutive words per cycle; this increases coherency but reduces creativity.",
+               #   "  Default is random from " + $bot.set['logic']['minchainlength'].to_s + " to " + $bot.set['logic']['maxchainlength'].to_s + "." ]
+               # ],
                 "sayl" => 
                 [ self.method(:sayl), "Finds something to say related to a word similar to the one specified.",
                   ["!say <word or phrase> (optional chain length):", "  Builds something to say from a similar word to the one provided, accepting wildcards (%).",

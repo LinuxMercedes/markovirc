@@ -1,4 +1,5 @@
 require 'forwardable'
+require_relative 'word.rb'
 
 """
 The long awaited sentence class. This class allows easy manipulation of sentences
