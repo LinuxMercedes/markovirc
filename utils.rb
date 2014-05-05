@@ -4,14 +4,29 @@ require 'connection_pool'
 # Intelligently split a sentence by punctuation, then split the individual spaces
 # so we get words.
 def sever( text )
-  sentences = text.split( /[.!?][ ]+/ )
-  sentencewords = []
-  
-  sentences.each do |sentence|
-    sentencewords << sentence.split( /[\s]+/ ).delete_if { |a| a == "" }
+  sentences = text.scan /([^\.!":?,]+)([\.!"?:,]+)/ 
+  sentences.flatten!
+
+  last = 0 
+  while last != sentences.length
+    last = sentences.length
+
+    # Inspect for smashed urls
+    sentences.length.times do |i|
+      if sentences[i] =~ /^[\.!?:]+$/ and sentences.length > i+1 and sentences[i+1][0] !~ /[\s]/
+        sentences[i-1] = sentences[(i-1)..(i+1)].join ''
+        sentences.delete_at i
+        sentences.delete_at i
+        break 
+      end
+    end
   end
-  
-  return sentencewords
+
+  sentences.map! { |x| x.split /\s+/ }
+  sentences.flatten!
+  sentences.delete_if { |x| x == "" }
+
+  return sentences
 end
 
 class Settings < Settingslogic
@@ -71,7 +86,6 @@ class Cinch::Message
   end
 
   def getArray( query, args )
-    print query, args, "\n"
     self.exec( query, args ).values
   end
 
