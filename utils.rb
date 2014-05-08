@@ -51,10 +51,11 @@ end
 # gem syntax which I (Billy) have a preference for.
 
 class Markovirc < Cinch::Bot
-  attr_accessor :set, :pool
+  attr_accessor :set, :pool, :sentence
   
   def initialize( )
     @set = Settings.new
+    @sentence = nil
     @pool = ConnectionPool.new( size: 10, timeout: 20 ) { PG::Connection.open( :dbname => @set['database'] ) } 
     super( )
   end

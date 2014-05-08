@@ -1,3 +1,5 @@
+require_relative 'plugins/say.rb'
+
 # FIXME: Give me a constants file
 module TYPES
   CHANNEL=0
@@ -16,11 +18,8 @@ def logHandle( msg )
   sourceid = 0
 
   sentences = sever msg.message
-  msg.sentence = []
-
-  sentences.each do |sentence|
-    msg.sentence << ( Sentence.new msg, sentence )
-  end
+  
+  msg.sentence = ( Sentence.new msg, sentences )
 
   if msg.canRespond?
     return
@@ -95,11 +94,8 @@ def speakRandom( msg )
     return
   end
 
-  # Mash sentences together into one hot mess
-  words = []
-  msg.sentence.each do |sen|
-    words.push( sen.words ).flatten!
-  end
+  # Wrapper for old code
+  words = msg.sentence.words
 
   # Drop our name if we were pinged and the first word matches
   if words.first.text.match $bot.nick
@@ -133,7 +129,11 @@ def speakRandom( msg )
   # Remove the last (most occuring) 55% of the phrase, rounded down so that there's an extra 
   words = words[0..(words.length*0.45).ceil]
 
+  # Hacky say wrapper
+  say = Say.new $bot 
+  say.execute msg, "say", words[Random.rand(0..(words.size-1))].text # this is a bit slower since it'll look it up twice, but saves time
+
   # Chain length is random from the config
-  chainlen = Random.rand( $bot.set.logic.minchainlength..$bot.set.logic.maxchainlength )
-  speak( msg, words[Random.rand(0..(words.size-1))], chainlen ) 
+  #chainlen = Random.rand( $bot.set.logic.minchainlength..$bot.set.logic.maxchainlength )
+  #speak( msg, words[Random.rand(0..(words.size-1))], chainlen ) 
 end 
