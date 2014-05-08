@@ -9,11 +9,8 @@ class Stats
     return if not msg.useCommands?
 
     args = args.strip
-    if args == ""
-      args = "db"
-    end
 
-    if args == "db"
+    if args == ""
       words = msg.getFirst_i "SELECT count(*) FROM words"
       contexts = msg.getFirst_i "SELECT count(*) FROM chains"
 
@@ -22,8 +19,7 @@ class Stats
     else
       args = args.split " "
 
-      if args[0] == "w"
-        args.delete_at 0
+      if args[0] !~ /\#/
         wid = msg.getFirst "SELECT id FROM words WHERE word = ?", args.join( " " )
         if wid == nil
           msg.reply "I don't know the word \"" + args.join( " " ) + "\""

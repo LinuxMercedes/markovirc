@@ -82,7 +82,7 @@ class Cinch::Message
       res = res[0]
     end
     
-    self.bot.debug query + " args: " + args.inspect + "\n"
+    #self.bot.debug query + " args: " + args.inspect + "\n"
 
     res.to_i
   end
