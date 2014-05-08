@@ -111,7 +111,27 @@ class Sentence
   end
 
   def to_s( )
-    self.join " "
+    strarr = []
+    @words.each do |word|
+      strarr << word.text
+    end
+
+    changed = true
+
+    # If the character is punctuation, merge it left.
+    while strarr.length > 1 and changed
+      strarr.length.times do |j|
+        if j > 0 and strarr[j] =~ /^[\.!"?:,]+$/ #copied straight out of utils
+          strarr[j-1] = strarr[(j-1)..j].join ""
+          strarr.delete_at j
+          changed = true
+          break
+        end
+        changed = false
+      end
+    end
+          
+    strarr.join " "
   end
 
   def +( rhs )

@@ -4,7 +4,9 @@ require 'connection_pool'
 # Intelligently split a sentence by punctuation, then split the individual spaces
 # so we get words.
 def sever( text )
-  sentences = text.scan /([^\.!":?,]+)([\.!"?:,]+)/ 
+  # For now, quotes are stripped since handling them is tricky.
+  text.gsub! /"/, ""
+  sentences = text.scan /([^\.!:?,]+)([\.!?:,]+)/ 
   sentences.flatten!
 
   last = 0 
