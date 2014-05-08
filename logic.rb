@@ -94,9 +94,13 @@ def speakRandom( msg )
     return
   end
 
-  # Wrapper for old code
-  words = msg.sentence.words
-
+  words = []
+  # Strip punctuation
+  msg.sentence.each do |word|
+    if word !~ /^[:,"\.!?]+$/
+      words << word
+    end
+  end
   # Drop our name if we were pinged and the first word matches
   if words.first.text.match $bot.nick
     words.slice! 0
@@ -115,7 +119,7 @@ def speakRandom( msg )
       counts.delete_at i
       words.delete_at i
     else
-      i += 1 
+      i += 1
     end
   end
 
@@ -130,8 +134,12 @@ def speakRandom( msg )
   words = words[0..(words.length*0.45).ceil]
 
   # Hacky say wrapper
-  say = Say.new $bot 
-  say.execute msg, "say", words[Random.rand(0..(words.size-1))].text # this is a bit slower since it'll look it up twice, but saves time
+  $bot.handlers.each do |handler|
+    if handler.event == :message and "!say w".match handler.pattern.to_r
+      handler.call msg, ["say", words[Random.rand(0..(words.size-1))].text ], [] # this is a bit slower since it'll look it up twice, but saves time
+      break
+    end
+  end
 
   # Chain length is random from the config
   #chainlen = Random.rand( $bot.set.logic.minchainlength..$bot.set.logic.maxchainlength )
