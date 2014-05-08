@@ -16,7 +16,7 @@ class Say
     # Gets our word and chainlen in the right forms
     word, chainlen = self.prepare( m, word, chainlen.to_i, ( name == "sayl" ) )
 
-    if word == nil
+    if word == nil or word <= 0
       return
     end
 
@@ -50,7 +50,7 @@ class Say
       wid = m.getFirst_i "SELECT id FROM words WHERE word ILIKE ? ORDER BY random() LIMIT 1", word
     end
       
-    if wid == nil
+    if wid == nil or wid <= 0
       m.reply "I don't know the word: \"#{oword}\""
     end
 
