@@ -18,6 +18,7 @@ def logHandle( msg )
   sourceid = 0
 
   sentences = sever msg.message
+  print "Sentences: ", sentences
   
   msg.sentence = ( Sentence.new msg, sentences )
 
@@ -95,12 +96,14 @@ def speakRandom( msg )
   end
 
   words = []
+
   # Strip punctuation
-  msg.sentence.each do |word|
-    if word !~ /^[:,"\.!?]+$/
+  msg.sentence.words.each do |word|
+    if word.text !~ /^[:,"\.!?]+$/
       words << word
     end
   end
+
   # Drop our name if we were pinged and the first word matches
   if words.first.text.match $bot.nick
     words.slice! 0
@@ -140,8 +143,4 @@ def speakRandom( msg )
       break
     end
   end
-
-  # Chain length is random from the config
-  #chainlen = Random.rand( $bot.set.logic.minchainlength..$bot.set.logic.maxchainlength )
-  #speak( msg, words[Random.rand(0..(words.size-1))], chainlen ) 
 end 

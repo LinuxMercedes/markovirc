@@ -6,8 +6,8 @@ require 'connection_pool'
 def sever( text )
   # For now, quotes are stripped since handling them is tricky.
   text.gsub! /"/, ""
-  sentences = text.scan /([^\.!:?,]+)([\.!?:,]+)/ 
-  sentences.flatten!
+  sentences = text.scan /([^\.!:\?,]+)([\.!\?:,]+)?/ 
+  sentences.flatten!.compact!
 
   last = 0 
   while last != sentences.length
