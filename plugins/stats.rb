@@ -6,7 +6,7 @@ class Stats
   match /stats(.*)/, method: :execute
 
   def execute( msg, args ) 
-    return if not m.useCommands?
+    return if not msg.useCommands?
 
     args = args.strip
     if args == ""
