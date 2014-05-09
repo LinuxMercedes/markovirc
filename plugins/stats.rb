@@ -71,6 +71,17 @@ class Stats
         msg.reply "I know " + (contextslhs+contextsrhs).to_s + " contexts for " + args.join( " " ) + "."
         msg.reply "The most common preceding word is \"" + topbefore + "\" (" + topbeforefreq.to_s + "%) and the most common " +
           "following word is \"" + topnext.to_s + "\" (" + topnextfreq.to_s + "%)."
+      else
+        channelid = msg.getFirst_i "SELECT id FROM channels WHERE name = ?", args[0] 
+        if channelid != nil and channelid > 0
+          contexts = msg.getFirst_i "SELECT count(*) FROM chains
+                                     LEFT JOIN text ON (text.id = chains.textid)
+                                     LEFT JOIN sources ON (text.sourceid = sources.id)
+                                     WHERE channelid = ?", channelid 
+          msg.reply "I have " + contexts.to_s + " contexts for " + args[0] + "." 
+        else
+          msg.reply "I have no contexts for " + args[0] + "."
+        end
       end
     end
   end
