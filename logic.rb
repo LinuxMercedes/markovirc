@@ -18,7 +18,6 @@ def logHandle( msg )
   sourceid = 0
 
   sentences = sever msg.message
-  print "Sentences: ", sentences
   
   msg.sentence = ( Sentence.new msg, sentences )
 

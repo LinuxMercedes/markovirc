@@ -38,10 +38,10 @@ module Speech
 
       if @dir == LEFT
         self >> res
-        @chainiter += 1 if self.first.text =~ /[\.!:?,]/
+        @chainiter += 1 if self.first.text =~ /[\.!:\?,]/
       elsif @dir == RIGHT
         self << res
-        @chainiter += 1 if self.last.text =~ /[\.!:?,]/
+        @chainiter += 1 if self.last.text =~ /[\.!:\?,]/
       end
 
       @chainiter -= 1
