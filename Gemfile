@@ -11,3 +11,6 @@ gem 'connection_pool'
 
 # Our YAML processor
 gem 'settingslogic'
+
+# Threadsafe data structures, currently only for logging
+gem 'thread_safe'

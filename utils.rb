@@ -1,5 +1,6 @@
 require 'settingslogic'
 require 'connection_pool'
+require 'thread_safe'
 
 # Intelligently split a sentence by punctuation, then split the individual spaces
 # so we get words.
@@ -57,15 +58,16 @@ class Markovirc < Cinch::Bot
     @set = Settings.new
     @sentence = nil
     @pool = ConnectionPool.new( size: 10, timeout: 20 ) { PG::Connection.open( :dbname => @set['database'] ) } 
-    @logs = {}
-
-    # Make some arrays for our channels to log stuff into temporarily.
-    @set.channels.keys.each do |channel|
-      print channel, "\n\n"
-      @logs[channel] = []
-    end
+    @logs = ThreadSafe::Hash.new 
 
     super( )
+
+    # Make some arrays for our channels to log stuff into temporarily.
+    # FIXME: Make this a join hook.
+    @set.channels.keys.each do |channel|
+      print channel, "\n\n"
+      @logs[channel] = ThreadSafe::Array.new
+    end
   end
 end
 
