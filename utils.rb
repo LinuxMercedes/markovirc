@@ -51,12 +51,20 @@ end
 # gem syntax which I (Billy) have a preference for.
 
 class Markovirc < Cinch::Bot
-  attr_accessor :set, :pool, :sentence
+  attr_accessor :set, :pool, :sentence, :logs
   
   def initialize( )
     @set = Settings.new
     @sentence = nil
     @pool = ConnectionPool.new( size: 10, timeout: 20 ) { PG::Connection.open( :dbname => @set['database'] ) } 
+    @logs = {}
+
+    # Make some arrays for our channels to log stuff into temporarily.
+    @set.channels.keys.each do |channel|
+      print channel, "\n\n"
+      @logs[channel] = []
+    end
+
     super( )
   end
 end

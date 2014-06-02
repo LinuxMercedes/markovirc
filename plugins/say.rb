@@ -25,6 +25,8 @@ class Say
 
     # Return our finalized product
     m.reply res.to_s
+
+    self.log m, res
   end
 
   # Sanitizes chainlength to fall into specs
@@ -57,5 +59,24 @@ class Say
     return wid, chainlen
   end
 
+  # We push what we said onto a "stack" so we can draw from it for !src later.
+  def log( m, sentence )
+    print "Shit here\n"
+    
+    m.bot.logs.keys do |chan|
+      print "Channel: " + chan + "\n" 
+      m.bot.logs[chan].each do |log|
+        print "  " + log.to_s
+      end
+    end
+
+    # Prep the sentence so it doesn't keep msg in memory.
+    sentence.msg = nil
+    m.bot.logs[m.channel] << sentence  
+
+    if m.bot.logs[m.channel].length > bot.set['history']
+      bot.shift
+    end
+  end
 end
 

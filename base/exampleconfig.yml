@@ -16,7 +16,7 @@ logic:
   # nearly verbatim source text.
   minchainlength: 4 
 
-  maxchainlength: 6 
+  maxchainlength: 8 
 
   # Percent of messages which markovirc has a chance to reply. Note 
   # that the weights also influence whether he will reply or not too.
@@ -58,6 +58,8 @@ logic:
 admins:
   - user!invalid@host
 
+# How many sentences we keep for backflow. This determines how far back !src can go.
+history: 50
 
 # List of channels to join on start.
 # Current flags are -speak, silent, -commands, hilight. -speak disables
