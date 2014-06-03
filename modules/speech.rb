@@ -10,13 +10,15 @@ module Speech
     @chainlen = 0
     @msg = nil
     @dir = 0  
+    @chainids = nil 
 
     def_delegators :@words, :each, :unshift, :first, :last, :[], :size, :length
-    attr_accessor :words, :msg
+    attr_accessor :words, :msg, :chainids
 
     def initialize( msg, word, chainlen ) 
       @chainlen = chainlen
       @msg = msg
+      @chainids = []
 
       super msg, word 
 
@@ -26,21 +28,26 @@ module Speech
     # Fill out the left side, working "backwards"
     def chain( )
       res = -1
-      if @dir == LEFT 
-        res = msg.getFirst_i( "SELECT wordid FROM chains WHERE nextwordid = ? AND textid = ?", [self.first.wid, @srcid] )
-      elsif @dir == RIGHT   
-        res = msg.getFirst_i( "SELECT nextwordid FROM chains WHERE wordid = ? AND textid = ?", [self.last.wid, @srcid] )
+      if @dir == LEFT
+        respack = msg.getArray( "SELECT id,wordid FROM chains WHERE nextwordid = ? AND textid = ?", [self.first.wid, @srcid] )
+      elsif @dir == RIGHT
+        respack = msg.getArray( "SELECT id,nextwordid FROM chains WHERE wordid = ? AND textid = ?", [self.last.wid, @srcid] )
       end
 
-      if res <= 0 or res == nil
+      if respack.size <= 0 or respack == nil
         return false
       end
 
+      res = respack[0][1].to_i
+      cid = respack[0][0].to_i
+
       if @dir == LEFT
         self >> res
+        @chainids.unshift cid
         @chainiter += 1 if self.first.text =~ /[\.!:\?,]/
       elsif @dir == RIGHT
         self << res
+        @chainids.push cid
         @chainiter += 1 if self.last.text =~ /[\.!:\?,]/
       end
 
