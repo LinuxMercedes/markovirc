@@ -61,6 +61,9 @@ admins:
 # How many sentences we keep for backflow. This determines how far back !src can go.
 history: 50
 
+# Base URL to our quote ruby script, must be web accessible.
+quoteurl: "http://brod.es/quote/"
+
 # List of channels to join on start.
 # Current flags are -speak, silent, -commands, hilight. -speak disables
 # speaking randomly in that channel, while the -commands flag disables commands. silent
