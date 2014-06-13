@@ -14,3 +14,6 @@ gem 'settingslogic'
 
 # Threadsafe data structures, currently only for logging
 gem 'thread_safe'
+
+# Source.rb color rotator
+gem 'color-generator'

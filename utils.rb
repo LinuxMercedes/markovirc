@@ -71,11 +71,10 @@ class Markovirc < Cinch::Bot
   end
 end
 
-# Message is overloaded to serve as a database query handler.
-class Cinch::Message
+module DatabaseTools
   attr_accessor :sentence, :textid, :sourceid, :db
 
-  @sentence = @textid = @sourceid = @db = nil
+  @pool = @sentence = @textid = @sourceid = @db = nil
 
   def getFirst( query, args=[] )
     res = self.exec( query, args ).values.first
@@ -115,9 +114,25 @@ class Cinch::Message
       query.sub! /(?!\\)\?/, "$#{i+1}" # Postgres friendly format
     end
     
-    self.bot.pool.with do |conn| 
-      conn.exec_params query, args
+    if @pool != nil
+      @pool.with do |conn| 
+        conn.exec_params query, args
+      end
+    else
+      $conn.exec_params query, args
     end
+  end
+end
+
+# Message is overloaded to serve as a database query handler.
+class Cinch::Message
+  include DatabaseTools
+  alias_method :old_initialize, :initialize
+
+  def initialize( msg, bot )
+    @pool = bot.pool
+
+    old_initialize msg, bot
   end
 
   def useCommands?( )

@@ -49,7 +49,6 @@ class Sentence
     @words = []
     @msg = msg
 
-    #FIXME: these first three options may be borked
     if words.is_a? String
       wordsarray = sever( words ).first
       if not wordsarray.is_a? Array
@@ -112,8 +111,10 @@ class Sentence
 
   def to_s( )
     strarr = []
+    tempwords = []
     @words.each do |word|
       strarr << word.text
+      tempwords << word
     end
 
     changed = true
@@ -122,12 +123,23 @@ class Sentence
     while strarr.length > 1 and changed
       strarr.length.times do |j|
         if j > 0 and strarr[j] =~ /^[\.!"?:,]+$/ #copied straight out of utils
+          strarr[j] = tempwords[j].prefix + strarr[j] + tempwords[j].suffix
+          strarr[j-1] = tempwords[j].prefix + strarr[j-1] + tempwords[j].suffix
           strarr[j-1] = strarr[(j-1)..j].join ""
           strarr.delete_at j
+          tempwords.delete_at j
           changed = true
           break
         end
         changed = false
+      end
+    end
+
+    strarr.length.times do |i|
+      if strarr[i] !~ /\<font color=/
+        strarr[i] = tempwords[i].prefix + strarr[i] + tempwords[i].suffix
+      else
+        i -= 1
       end
     end
           

@@ -28,10 +28,11 @@ class Word
   @text = nil
   @wid = nil
   
-  attr_accessor :text, :wid
+  attr_accessor :text, :wid, :prefix, :suffix
   
   def initialize( sentence, word, wid=nil )
     @sentence = sentence
+    @prefix = @suffix = "" 
 
     if word.is_a? Integer
       @wid = word
