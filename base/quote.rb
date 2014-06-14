@@ -11,9 +11,6 @@ require_relative '/home/aaron/work/markovirc/modules/sentence.rb'
 # Fake message class
 class Message
   include DatabaseTools
-
-  def initialize( )
-  end
 end
 
 # Settings access
@@ -38,6 +35,7 @@ def exec( query, variables )
 end
 
 # When tested in the past, it always returns wordid's in order
+# Translate a list of chain id's into wordid's
 def chain_to_word( chains )
   out = []
   chains.length.times.each do |i|
@@ -82,18 +80,19 @@ end
 
 get '/src/:qid' do
   $conn = PG.connect( :dbname => 'markovirc' )
+  # This gets our string of chain id's
   res = exec( "SELECT chain FROM quotes WHERE id=$1", [ params[:qid] ] )
   msg = Message.new
   
   out = ""
-  chains = []
+  chains = [] # Stores a 2d-array of [ [ word color, word, text source ], ... ]
   generator = ColorGenerator.new saturation: 0.7, lightness: 0.5, seed: params[:qid].to_i
-  chainids = []
+  chainids = [] # Used much later, stores just the chain id's so we don't have to deal with chains
+                # Is 2d but stores like [ [ chainid, chainid#2, chainid#3 ], [ chain id, ... ], ... ] 
+                # Where the order is based on textid (source).
 
   res.split( " " ).each do |r|
     chain = exec( "select wordid,textid from chains where id=$1", r )
-
-    
 
     # keep the same color if we haven't changed text id's
     if chains.length > 0 and chain[1] == chains[-1][2] 
@@ -113,7 +112,6 @@ get '/src/:qid' do
 
   sentence = Sentence.new msg, wids
   i = 0
-  last = -1
 
   sentence.each do |word|
     word.suffix = "</font>"
@@ -123,42 +121,43 @@ get '/src/:qid' do
     i += 1
   end
 
-  out += sentence.to_s + "<br />\n"
+  out += sentence.to_s + "<br />\n<br />\n"
 
-  frags = []
-  colors = []
+  srctext = [] # Stores our original source text (eventually Sentences) for later
+  colors = [] # Stores colors in order of source id for easy zipping in
 
   #Get our source text's chain id's
   tids.uniq.each do |tid|
     sent = exec "SELECT id FROM chains WHERE textid=$1", tid[1]
     sent.delete( sent[-1] )
-    frags << sent.flatten
+    srctext << sent.flatten
     colors << tid[0]
   end
 
+  # This way it the colors match up with the indicies of the srctext.
   colors.uniq!
-  print colors, "\n\n"
 
   #Now that we have both the source text chain id's and the quote's
   #  we can flag text to be colored when it matches, in its entirety,
   #  a chunk of the source text. We tag it with the color it needs.
 
-  frags.length.times.each do |i|
-    ind = index_in frags[i], chainids[i] #Find the first occurance of this chain in this fragment & return index
+  srctext.length.times.each do |i|
+    ind = index_in srctext[i], chainids[i] #Find the first occurance of this chain in this fragment & return index
     len = chainids[i].length
 
-    frags[i] = Sentence.new msg, ( chain_to_word frags[i] ) 
+    print "\n\n", chainids[i], "\tin\t", srctext[i], "\n\n"
+
+    srctext[i] = Sentence.new msg, ( chain_to_word srctext[i] ) 
 
     len.times do |j|
-      #if j+ind >= frags[i].length 
+      #if j+ind >= srctext[i].length 
       #  break
       #end
-      frags[i][ind+j].prefix = "<font color=\"#{colors[i]}\">"
-      frags[i][ind+j].suffix = "</font>" 
+      srctext[i][ind+j].prefix = "<font color=\"#{colors[i]}\">"
+      srctext[i][ind+j].suffix = "</font>" 
     end  
 
-    out += frags[i].to_s + "<br />\n"
-
+    out += srctext[i].to_s + "<br />\n"
   end
 
   out
