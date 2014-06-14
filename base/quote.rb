@@ -37,8 +37,43 @@ def exec( query, variables )
   res
 end
 
-def word_lookup( wid )
-  exec( "SELECT word FROM words WHERE id=$1", wid )
+# When tested in the past, it always returns wordid's in order
+def chain_to_word( chains )
+  out = []
+  chains.length.times.each do |i|
+    sent = exec "SELECT wordid,nextwordid FROM chains WHERE id=$1", chains[i]
+    out << sent[0].to_i
+    if i == chains.length-1
+      out << sent[1].to_i
+    end
+  end
+
+  out
+end
+
+
+def index_in( within, fragment )
+  start = -1
+  j = 0
+  within.length.times.each do |w|
+    if j == fragment.length-1
+      break    
+    elsif fragment[j] == within[w]
+      if start == -1
+        start = w
+      end
+      j += 1
+    elsif fragment[j] != within[w]
+      start = -1
+      j = 0
+    end
+  end
+  
+  if start != -1 and j != fragment.length-1
+    start = -1
+  end
+
+  start
 end
 
 get '/src/' do
@@ -53,14 +88,19 @@ get '/src/:qid' do
   out = ""
   chains = []
   generator = ColorGenerator.new saturation: 0.7, lightness: 0.5, seed: params[:qid].to_i
+  chainids = []
 
   res.split( " " ).each do |r|
-    chain = exec( "SELECT wordid,textid FROM chains WHERE id=$1", r )
+    chain = exec( "select wordid,textid from chains where id=$1", r )
 
-    # Keep the same color if we haven't changed text id's
+    
+
+    # keep the same color if we haven't changed text id's
     if chains.length > 0 and chain[1] == chains[-1][2] 
+      chainids.last << r 
       chains << [ chains[-1][0], chain[0], chain[1] ]
     else
+      chainids << [ r ]
       chains << [ generator.create_hex, chain[0], chain[1] ]
     end
   end
@@ -79,34 +119,46 @@ get '/src/:qid' do
     word.suffix = "</font>"
     word.prefix = "<font color=\"#{chains[i][0]}\">" 
 
-    tids << [ chains[i][0], chains[i][2] ]
+    tids << [ chains[i][0], chains[i][2].to_i ]
     i += 1
   end
 
   out += sentence.to_s + "<br />\n"
 
-  last = -1
-  i = 0
-  # Now get our other source ids (text ids). Assume these text id's are in order.
+  frags = []
+  colors = []
+
+  #Get our source text's chain id's
   tids.uniq.each do |tid|
-    sent = exec "SELECT wordid,nextwordid FROM chains WHERE textid=$1", tid[1]
-    sent.flatten!.uniq!.map! { |c| c = c.to_i }
-    sent.delete sent[-1]
+    sent = exec "SELECT id FROM chains WHERE textid=$1", tid[1]
+    sent.delete( sent[-1] )
+    frags << sent.flatten
+    colors << tid[0]
+  end
 
-    sent = Sentence.new msg, sent
-    if last != -1
-  
-    else 
-      sent.each do |word|
-        if word.text == chains[i][1]
-          word.prefix = "<font color=\"#{chains[i][0]}\""
-          word.suffix = "</font>" 
-          i += 1
-        end
-      end
-    end
+  colors.uniq!
+  print colors, "\n\n"
 
-    out += sent.to_s + "<br />\n"
+  #Now that we have both the source text chain id's and the quote's
+  #  we can flag text to be colored when it matches, in its entirety,
+  #  a chunk of the source text. We tag it with the color it needs.
+
+  frags.length.times.each do |i|
+    ind = index_in frags[i], chainids[i] #Find the first occurance of this chain in this fragment & return index
+    len = chainids[i].length
+
+    frags[i] = Sentence.new msg, ( chain_to_word frags[i] ) 
+
+    len.times do |j|
+      #if j+ind >= frags[i].length 
+      #  break
+      #end
+      frags[i][ind+j].prefix = "<font color=\"#{colors[i]}\">"
+      frags[i][ind+j].suffix = "</font>" 
+    end  
+
+    out += frags[i].to_s + "<br />\n"
+
   end
 
   out

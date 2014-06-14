@@ -136,10 +136,8 @@ class Sentence
     end
 
     strarr.length.times do |i|
-      if strarr[i] !~ /\<font color=/
+      if tempwords[i].prefix != "" and tempwords[i].suffix != "" and strarr[i] != nil
         strarr[i] = tempwords[i].prefix + strarr[i] + tempwords[i].suffix
-      else
-        i -= 1
       end
     end
           
