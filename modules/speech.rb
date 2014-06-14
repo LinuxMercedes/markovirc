@@ -25,7 +25,6 @@ module Speech
       self.fill
     end
     
-    # Fill out the left side, working "backwards"
     def chain( )
       res = -1
       if @dir == LEFT
@@ -43,11 +42,11 @@ module Speech
 
       if @dir == LEFT
         self >> res
-        @chainids.unshift cid
+        @chainids.first.unshift cid
         @chainiter += 1 if self.first.text =~ /[\.!:\?,]/
       elsif @dir == RIGHT
         self << res
-        @chainids.push cid
+        @chainids.last.push cid
         @chainiter += 1 if self.last.text =~ /[\.!:\?,]/
       end
 
@@ -66,13 +65,10 @@ module Speech
 
       if @dir == LEFT
         @srcid = @msg.getFirst_i "SELECT textid from chains WHERE nextwordid = ? ORDER BY random() LIMIT 1", self.first.wid 
+        @chainids.unshift []
       elsif @dir == RIGHT
         @srcid = @msg.getFirst_i "SELECT textid from chains WHERE wordid = ? ORDER BY random() LIMIT 1", self.last.wid
-      end
-
-      if @srcid == nil or @srcid == -1
-        @msg.bot.error "EDGE CASE"
-        return
+        @chainids << []
       end
 
       if not initial

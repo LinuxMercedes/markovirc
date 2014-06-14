@@ -5,6 +5,7 @@ require 'pg'
 require 'settingslogic'
 require 'color-generator'
 require 'cinch'
+require 'json'
 require_relative '/home/aaron/work/markovirc/utils.rb'
 require_relative '/home/aaron/work/markovirc/modules/sentence.rb'
 
@@ -46,6 +47,10 @@ def chain_to_word( chains )
     end
   end
 
+  if out[-1] == -1
+    out.delete -1
+  end
+
   out
 end
 
@@ -82,82 +87,83 @@ get '/src/:qid' do
   $conn = PG.connect( :dbname => 'markovirc' )
   # This gets our string of chain id's
   res = exec( "SELECT chain FROM quotes WHERE id=$1", [ params[:qid] ] )
+  res = JSON.parse res 
   msg = Message.new
   
   out = ""
   chains = [] # Stores a 2d-array of [ [ word color, word, text source ], ... ]
+  tids = []
+  colors = Hash.new # Stores colors in order of source id for easy zipping in
   generator = ColorGenerator.new saturation: 0.7, lightness: 0.5, seed: params[:qid].to_i
-  chainids = [] # Used much later, stores just the chain id's so we don't have to deal with chains
-                # Is 2d but stores like [ [ chainid, chainid#2, chainid#3 ], [ chain id, ... ], ... ] 
-                # Where the order is based on textid (source).
 
-  res.split( " " ).each do |r|
-    chain = exec( "select wordid,textid from chains where id=$1", r )
+  res.length.times.each do |chn|
+    chains << []
+    color = generator.create_hex
+    res[chn].each do |r|
+      chain = exec( "select wordid,textid from chains where id=$1", r )
 
-    # keep the same color if we haven't changed text id's
-    if chains.length > 0 and chain[1] == chains[-1][2] 
-      chainids.last << r 
-      chains << [ chains[-1][0], chain[0], chain[1] ]
-    else
-      chainids << [ r ]
-      chains << [ generator.create_hex, chain[0], chain[1] ]
+      colors[chn] = color
+      tids << chain[1]
+      chains.last << [ color, chain[0], chain[1] ]
     end
   end
   
-  tids = []
   wids = []
+  tids.uniq!
 
   # Push what marko said out.
-  chains.map { |c| wids << c[1].to_i }
+  chains.map { |c| c.map { |d| wids << d[1].to_i } }
 
   sentence = Sentence.new msg, wids
   i = 0
 
+  flatchains = chains.flatten
   sentence.each do |word|
     word.suffix = "</font>"
-    word.prefix = "<font color=\"#{chains[i][0]}\">" 
-
-    tids << [ chains[i][0], chains[i][2].to_i ]
+    word.prefix = "<font color=\"#{flatchains[i*3]}\">" 
     i += 1
   end
 
   out += sentence.to_s + "<br />\n<br />\n"
 
-  srctext = [] # Stores our original source text (eventually Sentences) for later
-  colors = [] # Stores colors in order of source id for easy zipping in
+  srctext = Hash.new # Stores our original source text (eventually Sentences) for later
 
   #Get our source text's chain id's
-  tids.uniq.each do |tid|
-    sent = exec "SELECT id FROM chains WHERE textid=$1", tid[1]
+  tids.each do |tid|
+    sent = exec "SELECT id FROM chains WHERE textid=$1", tid
     sent.delete( sent[-1] )
-    srctext << sent.flatten
-    colors << tid[0]
+    srctext[tid] = sent.flatten
   end
 
-  # This way it the colors match up with the indicies of the srctext.
-  colors.uniq!
+  srcsent = Hash.new
 
   #Now that we have both the source text chain id's and the quote's
   #  we can flag text to be colored when it matches, in its entirety,
   #  a chunk of the source text. We tag it with the color it needs.
 
-  srctext.length.times.each do |i|
-    ind = index_in srctext[i], chainids[i] #Find the first occurance of this chain in this fragment & return index
-    len = chainids[i].length
+  res.length.times.each do |i|
+    tid = exec "SELECT textid FROM chains WHERE id=$1", res[i][0]
+    srctext[tid] = chain_to_word srctext[tid]
+    res[i] = chain_to_word res[i]
 
-    print "\n\n", chainids[i], "\tin\t", srctext[i], "\n\n"
+    ind = index_in srctext[tid], res[i] #Find the first occurance of this chain in this fragment & return index
+    len = res[i].length
 
-    srctext[i] = Sentence.new msg, ( chain_to_word srctext[i] ) 
+    if not srcsent.has_key? tid
+      srcsent[tid] = Sentence.new msg, ( srctext[tid] ) 
+    end
 
     len.times do |j|
       #if j+ind >= srctext[i].length 
       #  break
       #end
-      srctext[i][ind+j].prefix = "<font color=\"#{colors[i]}\">"
-      srctext[i][ind+j].suffix = "</font>" 
+      srcsent[tid][ind+j].prefix = "<font color=\"#{colors[i]}\">"
+      srcsent[tid][ind+j].suffix = "</font>" 
     end  
+  end
 
-    out += srctext[i].to_s + "<br />\n"
+  srcsent.values.each do |src|
+    out += src.to_s + "<br />\n"
   end
 
   out
