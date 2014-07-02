@@ -173,6 +173,12 @@ get '/src/:qid' do
         sid = exec( "SELECT sourceid FROM text WHERE id=$1", tid ) 
         chanid, userid = exec( "SELECT channelid,userid FROM sources WHERE id=$1", sid )
         username = exec( "SELECT hostmask FROM users WHERE id=$1", userid )
+        
+        #Limit username
+        if username.length > 25
+          username = username[0..25].gsub(/\s\w+\s*$/, "") + "..."
+        end
+
         channel = exec( "SELECT name FROM channels WHERE id=$1", chanid )
         srcdeets[tid] = [ username, channel ] 
       end
