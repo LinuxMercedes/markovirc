@@ -5,11 +5,18 @@ class Src
   include Cinch::Plugin
   include Source 
 
-  match /(src|source) (.+)/, method: :execute
+  match /(src|source)( .+)?/, method: :execute
 
   def execute( m, name, args )
-    args = args.strip.to_i
-    
+    if args != nil
+      args = args.strip.to_i
+      if args == 0 or args == nil
+        args = 1
+      end
+    else
+      args = 1
+    end
+
     #We're looking for 1 (most recent message) 2 (two messages ago) or higher.
     if args > $bot.logs[m.channel].size or args < 1
       return
