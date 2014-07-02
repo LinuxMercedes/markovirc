@@ -87,7 +87,7 @@ get '/src/:qid' do
   $conn = PG.connect( :dbname => 'markovirc' )
   # This gets our string of chain id's
   res = exec( "SELECT chain FROM quotes WHERE id=$1", [ params[:qid] ] )
-  res = JSON.parse res 
+  res = JSON.parse res
   msg = Message.new
   
   out = ""
@@ -98,17 +98,20 @@ get '/src/:qid' do
 
   res.length.times.each do |chn|
     chains << []
+    tid = 0
     color = generator.create_hex
     res[chn].each do |r|
       chain = exec( "select wordid,textid from chains where id=$1", r )
 
       colors[chn] = color
-      tids << chain[1]
+      tid = chain[1]
       chains.last << [ color, chain[0], chain[1] ]
     end
+    tids << tid 
   end
-  
+
   wids = []
+  tids_index = Array.new(tids)
   tids.uniq!
 
   # Push what marko said out.
@@ -142,12 +145,19 @@ get '/src/:qid' do
   #  a chunk of the source text. We tag it with the color it needs.
 
   res.length.times.each do |i|
-    tid = exec "SELECT textid FROM chains WHERE id=$1", res[i][0]
-    srctext[tid] = chain_to_word srctext[tid]
+    tid = tids_index[i]
+    #print "TID: ", tid, "\n"
+    #print "src: ", srctext[tid], "\n", res[i], "\n\n"
+    if not srcsent.has_key? tid
+      srctext[tid] = chain_to_word srctext[tid]
+    end
     res[i] = chain_to_word res[i]
 
+    #print "src: ", srctext[tid], "\n", "res: ", res[i], "\n"
+
     ind = index_in srctext[tid], res[i] #Find the first occurance of this chain in this fragment & return index
-    len = res[i].length
+    len = res[i].length-1
+    #print "i: " + i.to_s + "\tind: " + ind.to_s + "\tlen: " + len.to_s + "\n\n"
 
     if not srcsent.has_key? tid
       srcsent[tid] = Sentence.new msg, ( srctext[tid] ) 
@@ -163,7 +173,7 @@ get '/src/:qid' do
   end
 
   srcsent.values.each do |src|
-    out += src.to_s + "<br />\n"
+    out += "TID: " + srcsent.key(src) + "\tSRC: " + src.to_s + "<br />\n"
   end
 
   out
