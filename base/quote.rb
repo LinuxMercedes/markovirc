@@ -159,8 +159,9 @@ get '/src/:qid' do
       #print "src: ", srctext[tid], "\n", "res: ", res[i], "\n"
 
       ind = index_in srctext[tid], res[i] #Find the first occurance of this chain in this fragment & return index
+      len = res[i].length
       if res.length != i+1
-        len = res[i].length-1
+        len -= 1
       end
       #print "i: " + i.to_s + "\tind: " + ind.to_s + "\tlen: " + len.to_s + "\n\n"
 
