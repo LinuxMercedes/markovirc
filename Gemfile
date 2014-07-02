@@ -17,3 +17,11 @@ gem 'thread_safe'
 
 # Source.rb color rotator
 gem 'color-generator'
+
+# Source.rb runs off sinatra
+gem 'sinatra'
+
+# Source.rb / !src encode in json
+gem 'json'
+
+
