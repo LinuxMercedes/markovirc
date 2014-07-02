@@ -6,8 +6,8 @@ require 'settingslogic'
 require 'color-generator'
 require 'cinch'
 require 'json'
-require_relative '/home/aaron/work/markovirc/utils.rb'
-require_relative '/home/aaron/work/markovirc/modules/sentence.rb'
+require_relative '../utils.rb'
+require_relative '../modules/sentence.rb'
 
 # Fake message class
 class Message
@@ -16,7 +16,7 @@ end
 
 # Settings access
 class Settings2 < Settingslogic
-  source "/home/aaron/work/markovirc/config.yml"
+  source "../config.yml"
 end
 
 $set = Settings2.new
