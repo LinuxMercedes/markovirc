@@ -130,7 +130,7 @@ get '/src/:qid' do
       i += 1
     end
 
-    out += sentence.to_s + "<br />\n<br />\n"
+    out += sentence.to_s + "<br />\n<br />\n<br />"
 
     srctext = Hash.new # Stores our original source text (eventually Sentences) for later
 
@@ -142,6 +142,7 @@ get '/src/:qid' do
     end
 
     srcsent = Hash.new
+    srcdeets = Hash.new
 
     #Now that we have both the source text chain id's and the quote's
     #  we can flag text to be colored when it matches, in its entirety,
@@ -167,6 +168,13 @@ get '/src/:qid' do
 
       if not srcsent.has_key? tid
         srcsent[tid] = Sentence.new msg, ( srctext[tid] ) 
+
+        # Fill in information about the source user
+        sid = exec( "SELECT sourceid FROM text WHERE id=$1", tid ) 
+        chanid, userid = exec( "SELECT channelid,userid FROM sources WHERE id=$1", sid )
+        username = exec( "SELECT hostmask FROM users WHERE id=$1", userid )
+        channel = exec( "SELECT name FROM channels WHERE id=$1", chanid )
+        srcdeets[tid] = [ username, channel ] 
       end
 
       len.times do |j|
@@ -178,9 +186,16 @@ get '/src/:qid' do
       end  
     end
 
+    out += "<table cellspacing=\"5\">"
     srcsent.values.each do |src|
-      out += src.to_s + "<br />\n"
+      out += "<tr>"
+
+      ind = srcsent.key src
+      out += "<td>" + srcdeets[ind][0] + "</td>" + "<td>" + srcdeets[ind][1] + "</td>" + "<td>" + src.to_s + "</td>\n"
+
+      out += "</tr>"
     end
+    out += "</table>"
 
   out
   end
