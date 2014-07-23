@@ -47,9 +47,9 @@ class Say
 
     if simto
       word = "%#{word}%"
-      wid = m.getFirst_i "SELECT id FROM words WHERE word SIMILAR TO ? ORDER BY random() LIMIT 1", word
+      wid = m.getFirst_i_rand "id", "words WHERE word SIMILAR TO ?", q
     else
-      wid = m.getFirst_i "SELECT id FROM words WHERE word ILIKE ? ORDER BY random() LIMIT 1", word
+      wid = m.getFirst_i_rand "id", "words WHERE word ILIKE ?", word
     end
       
     if wid == nil or wid <= 0

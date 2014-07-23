@@ -64,10 +64,10 @@ module Speech
       res = ""
 
       if @dir == LEFT
-        @srcid = @msg.getFirst_i "SELECT textid from chains WHERE nextwordid = ? ORDER BY random() LIMIT 1", self.first.wid 
+        @srcid = @msg.getFirst_i_rand "textid", "chains WHERE nextwordid = ?", self.first.wid 
         @chainids.unshift []
       elsif @dir == RIGHT
-        @srcid = @msg.getFirst_i "SELECT textid from chains WHERE wordid = ? ORDER BY random() LIMIT 1", self.last.wid
+        @srcid = @msg.getFirst_i_rand "textid", "chains WHERE wordid = ?", self.last.wid
         @chainids << []
       end
 
