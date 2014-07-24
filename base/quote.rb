@@ -92,7 +92,7 @@ get '/src/:qid' do
     res = exec( "SELECT chain FROM quotes WHERE id=$1", [ params[:qid] ] )
     res = JSON.parse res
     msg = Message.new
-    
+
     out = ""
     chains = [] # Stores a 2d-array of [ [ word color, word, text source ], ... ]
     tids = []
@@ -103,6 +103,7 @@ get '/src/:qid' do
       chains << []
       tid = 0
       color = generator.create_hex
+
       res[chn].each do |r|
         chain = exec( "select wordid,textid from chains where id=$1", r )
 

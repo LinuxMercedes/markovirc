@@ -11,6 +11,9 @@ module Speech
     @msg = nil
     @dir = 0  
     @chainids = nil 
+    @thissentence = [ ] 
+    @thissentenceids = [ ] 
+    @tsiter = -1
 
     def_delegators :@words, :each, :unshift, :first, :last, :[], :size, :length
     attr_accessor :words, :msg, :chainids
@@ -26,19 +29,22 @@ module Speech
     end
     
     def chain( )
-      res = -1
       if @dir == LEFT
-        respack = msg.getArray( "SELECT id,wordid FROM chains WHERE nextwordid = ? AND textid = ?", [self.first.wid, @srcid] )
+        @tsiter -= 1
+
+        if @tsiter < 0 and @chainiter != 0 
+          return false
+        end
       elsif @dir == RIGHT
-        respack = msg.getArray( "SELECT id,nextwordid FROM chains WHERE wordid = ? AND textid = ?", [self.last.wid, @srcid] )
+        @tsiter += 1
+
+        if @tsiter >= @thissentence.size and @chainiter != 0 
+          return false
+        end
       end
 
-      if respack.size <= 0 or respack == nil
-        return false
-      end
-
-      res = respack[0][1].to_i
-      cid = respack[0][0].to_i
+      res = @thissentence[@tsiter].to_i
+      cid = @thissentenceids[@tsiter].to_i
 
       if @dir == LEFT
         self >> res
@@ -62,14 +68,27 @@ module Speech
     # marko chain off of the last/first words of a chain, instead of off of a single word.
     def newsrc( initial=false, isrcid=-1 )
       res = ""
+      twid = -1
 
       if @dir == LEFT
         @srcid = @msg.getFirst_i_rand "textid", "chains WHERE nextwordid = ?", self.first.wid 
+        twid = self.first.wid.to_s
         @chainids.unshift []
       elsif @dir == RIGHT
         @srcid = @msg.getFirst_i_rand "textid", "chains WHERE wordid = ?", self.last.wid
+        twid = self.last.wid.to_s
         @chainids << []
       end
+
+      # Get the full sentence... can't stream since a specific word we need may not be unique in the sentence
+      @thissentence = @msg.getArray( "SELECT wordid FROM chains WHERE textid = ?", @srcid )
+      @thissentenceids = @msg.getArray( "SELECT id FROM chains WHERE textid = ?", @srcid )
+      @thissentence.flatten!
+      @thissentenceids.flatten!
+
+      @tsiter = @thissentence.each_index.select{ |i| @thissentence[i] == twid }.sample
+
+      # Now since there can be several matching wids in a sentence, randomly grab one and choose it
 
       if not initial
         @chainiter = @chainlen # How many more words to pull from this source before a refresh
