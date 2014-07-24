@@ -47,7 +47,7 @@ class Say
 
     if simto
       word = "%#{word}%"
-      wid = m.getFirst_i_rand "id", "words WHERE word SIMILAR TO ?", q
+      wid = m.getFirst_i_rand "id", "words WHERE word SIMILAR TO ?", word
     else
       wid = m.getFirst_i_rand "id", "words WHERE word ILIKE ?", word
     end
