@@ -86,7 +86,11 @@ module Speech
       @thissentence.flatten!
       @thissentenceids.flatten!
 
-      @tsiter = @thissentence.each_index.select{ |i| @thissentence[i] == twid }.sample
+      @tsiter = @thissentence.each_index.select{ |i| @thissentence[i] == twid }
+
+      @tsiter = @tsiter.sample if @tsiter.is_a? Array
+
+      print "ITER: ", @tsiter, "\n\n"
 
       # Now since there can be several matching wids in a sentence, randomly grab one and choose it
 
