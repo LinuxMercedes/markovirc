@@ -113,6 +113,26 @@ module DatabaseTools
     return( self.getFirst_i( "SELECT " + selection + " FROM " + query + " OFFSET floor(RANDOM() * (SELECT count(*) FROM " + query + ")) LIMIT 1", args ) )
   end 
 
+  # Wraps around getFirst_i to return a random int
+  def getFirst_array_rand( selection, query, args )
+    # Double our args since we are querying twice
+    
+    args = [ args ] if not args.is_a? Array
+
+    nargs = Array.new args
+    args.each do |a|
+      nargs << a 
+    end
+
+    args = nargs
+    
+    r = self.getArray( "SELECT " + selection + " FROM " + query + " OFFSET floor(RANDOM() * (SELECT count(*) FROM " + query + ")) LIMIT 1", args ) 
+    
+    r = r[0] if r.is_a? Array and r.size == 1
+
+    r
+  end 
+
   def getArray( query, args )
     self.exec( query, args ).values
   end

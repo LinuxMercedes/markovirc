@@ -94,12 +94,10 @@ module Speech
 
       @tsiter = @tsiter.sample if @tsiter.is_a? Array
 
-      if @tsiter == nil
-        print "\n\nThis sentence: ", @thissentence, "\n\n", "TWID: ", twid, "\n\n"
-        print "This srcid: ", @srcid, "\n\nChain ID's: ", @chainids, "\n\n"
+      # Special catch for the very first run, to put the appropriate chainid in for the word we chained off of 
+      if initial and @chainids.size == 1 and @chainids[0].size == 0
+        @chainids.first << @thissentenceids[@tsiter] 
       end
-
-      print "ITER: ", @tsiter, "\n\n"
 
       # Now since there can be several matching wids in a sentence, randomly grab one and choose it
 
