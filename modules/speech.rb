@@ -85,8 +85,8 @@ module Speech
       end
 
       # Get the full sentence... can't stream since a specific word we need may not be unique in the sentence
-      @thissentence = @msg.getArray( "SELECT wordid FROM chains WHERE textid = ?", @srcid )
-      @thissentenceids = @msg.getArray( "SELECT id FROM chains WHERE textid = ?", @srcid )
+      @thissentence = @msg.getArray( "SELECT wordid FROM chains WHERE textid = ? ORDER BY id ASC", @srcid )
+      @thissentenceids = @msg.getArray( "SELECT id FROM chains WHERE textid = ? ORDER BY id ASC", @srcid )
       @thissentence.flatten!
       @thissentenceids.flatten!
 
