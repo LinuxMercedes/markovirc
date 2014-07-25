@@ -137,7 +137,7 @@ get '/src/:qid' do
 
     #Get our source text's chain id's
     tids.each do |tid|
-      sent = exec "SELECT id FROM chains WHERE textid=$1 ORDER BY ASC", tid
+      sent = exec "SELECT id FROM chains WHERE textid=$1 ORDER BY id ASC", tid
       sent.delete( sent[-1] )
       srctext[tid] = sent.flatten
     end
