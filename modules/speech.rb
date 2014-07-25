@@ -80,6 +80,10 @@ module Speech
         @chainids << []
       end
 
+      if @srcid <= 0
+        return false
+      end
+
       # Get the full sentence... can't stream since a specific word we need may not be unique in the sentence
       @thissentence = @msg.getArray( "SELECT wordid FROM chains WHERE textid = ?", @srcid )
       @thissentenceids = @msg.getArray( "SELECT id FROM chains WHERE textid = ?", @srcid )
@@ -89,6 +93,11 @@ module Speech
       @tsiter = @thissentence.each_index.select{ |i| @thissentence[i] == twid }
 
       @tsiter = @tsiter.sample if @tsiter.is_a? Array
+
+      if @tsiter == nil
+        print "\n\nThis sentence: ", @thissentence, "\n\n", "TWID: ", twid, "\n\n"
+        print "This srcid: ", @srcid, "\n\nChain ID's: ", @chainids, "\n\n"
+      end
 
       print "ITER: ", @tsiter, "\n\n"
 
@@ -101,8 +110,9 @@ module Speech
         if isrcid != -1
           @srcid = isrcid
         end
-        @srcid
       end
+
+      true
     end
       
     def fill( )
@@ -123,11 +133,11 @@ module Speech
       1.upto 2 do |i|
         while self.chain and self.length < 25*i 
           if @chainiter == 0
-            self.newsrc
+            next if not self.newsrc
           end
         end
         @dir = LEFT
-        self.newsrc true, initsrc
+        next if not self.newsrc true, initsrc
       end
     end
   end
