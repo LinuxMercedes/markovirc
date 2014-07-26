@@ -140,7 +140,7 @@ get '/src/:qid' do
       sent = exec "SELECT id FROM chains WHERE textid=$1 ORDER BY id ASC", tid
       sent.delete( sent[-1] )
       sent.flatten! if sent.is_a? Array
-      srctext[tid] = sent.flatten
+      srctext[tid] = sent
     end
 
     srcsent = Hash.new

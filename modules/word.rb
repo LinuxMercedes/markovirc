@@ -72,7 +72,7 @@ class Word
 
     @text = @sentence.msg.getFirst "SELECT word FROM words WHERE id = ?", @wid
     if @text == nil or @text.strip == ""
-      $bot.error "WID " + @wid.to_s + " was passed to a word constructor but doesn't exist in the database."
+      print "ERROR: WID " + @wid.to_s + " was passed to a word constructor but doesn't exist in the database."
     end
   end
 
