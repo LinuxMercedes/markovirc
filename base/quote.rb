@@ -9,6 +9,8 @@ require 'json'
 require_relative '../utils.rb'
 require_relative '../modules/sentence.rb'
 
+set :bind, '0.0.0.0'
+
 # Fake message class
 class Message
   include DatabaseTools
