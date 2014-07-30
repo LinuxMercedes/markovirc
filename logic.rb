@@ -68,12 +68,15 @@ Last create a relation for each word referencing our text.
 def chain( msg, textid )
   sentence = msg.sentence
 
-  # Insert our chains
-  sentence.size.times do |i|
-    if i != sentence.size-1
-      msg.getArray "INSERT INTO chains (wordid,textid,nextwordid) VALUES (?,?,?)", [sentence[i].wid, textid, sentence[i+1].wid]
-    else
-      msg.getArray "INSERT INTO chains (wordid,textid) VALUES (?,?)", [sentence[i].wid, textid]
+  msg.pool.with do |con|
+    name = "insert_#{textid.to_s}"
+    con.prepare name, "INSERT INTO chains (wordid, textid, nextwordid) values ($1, #{textid.to_s}, $2)"
+    sentence.size.times do |i|
+      if i != sentence.size-1
+        con.exec_prepared name, [sentence[i].wid, sentence[i+1].wid]
+      else
+        con.exec_prepared name, [sentence[i].wid, -1]
+      end
     end
   end
 end

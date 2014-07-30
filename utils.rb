@@ -164,6 +164,7 @@ end
 class Cinch::Message
   include DatabaseTools
   alias_method :old_initialize, :initialize
+  attr_accessor :pool
 
   def initialize( msg, bot )
     @pool = bot.pool
