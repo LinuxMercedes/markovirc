@@ -68,7 +68,7 @@ class Say
     $bot.logs[m.channel] << sentence  
 
     if $bot.logs[m.channel].length > $bot.set['history']
-      $bot.shift
+      $bot.delete_at 0
     end
   end
 end
