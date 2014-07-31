@@ -14,8 +14,8 @@ class Stats
       words = msg.getFirst_i "SELECT count(*) FROM words"
       contexts = msg.getFirst_i "SELECT count(*) FROM chains"
 
-      msg.reply "I know " + words.to_s + " words and " + contexts.to_s + " contexts for them, with an average context density of " \
-        + (contexts/words).floor.to_s + "."
+      msg.reply "I know " + words.commas + " words and " + contexts.commas + " contexts for them, with an average context density of " \
+        + (contexts/words).floor.commas + "."
     else
       args = args.split " "
 
@@ -68,7 +68,7 @@ class Stats
           topbefore   = msg.getFirst "SELECT word FROM words WHERE id = ?", topbefore
         end 
 
-        msg.reply "I know " + (contextslhs+contextsrhs).to_s + " contexts for " + args.join( " " ) + "."
+        msg.reply "I know " + (contextslhs+contextsrhs).commas + " contexts for \"" + args.join( " " ) + "\""
         msg.reply "The most common preceding word is \"" + topbefore + "\" (" + topbeforefreq.to_s + "%) and the most common " +
           "following word is \"" + topnext.to_s + "\" (" + topnextfreq.to_s + "%)."
       else
