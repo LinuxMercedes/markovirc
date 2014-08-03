@@ -27,11 +27,11 @@ class Stats
         end
 
         # Get the number of times our word occurs before / after any. 
-        contextslhs   = msg.getFirst_i "SELECT count(*) FROM chains WHERE wordid = ?", wid
+        contextslhs   = msg.getFirst_i "SELECT count(*) FROM chains WHERE wordid = ? and nextwordid != ?", [ wid, "-1" ]
         contextsrhs   = msg.getFirst_i "SELECT count(*) FROM chains WHERE nextwordid = ?", wid
 
         # Get the word which occurs the most before / after our wid.
-        topnext       = msg.getArray "SELECT nextwordid,count(*) FROM chains WHERE wordid = ? GROUP BY nextwordid ORDER BY count(*) DESC LIMIT 1", wid
+        topnext       = msg.getArray "SELECT nextwordid,count(*) FROM chains WHERE wordid = ? AND nextwordid != ? GROUP BY nextwordid ORDER BY count(*) DESC LIMIT 1", [ wid, "-1" ]
         topbefore     = msg.getArray "SELECT wordid,count(*) FROM chains WHERE nextwordid = ? GROUP BY wordid ORDER BY count(*) DESC LIMIT 1", wid
 
         # The query above returns a double array in the format [[topwid, somecount]]
