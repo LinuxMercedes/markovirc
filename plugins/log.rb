@@ -73,7 +73,7 @@ class Log
     
     @msg.textid = textid
 
-    self.chain
+    self.chain textid
   end
 
   """
@@ -85,12 +85,12 @@ class Log
   Then replace all words with their word id.
   Last create a relation for each word referencing our text.
   """
-  def chain( )
+  def chain( textid )
     sentence = @msg.sentence
 
     @msg.pool.with do |con|
-      name = "insert_#{@msg.textid.to_s}"
-      con.prepare name, "INSERT INTO chains (wordid, textid, nextwordid) values ($1, #{@msg.textid.to_s}, $2)"
+      name = "insert_#{textid.to_s}"
+      con.prepare name, "INSERT INTO chains (wordid, textid, nextwordid) values ($1, #{textid.to_s}, $2)"
       sentence.size.times do |i|
         if i != sentence.size-1
           con.exec_prepared name, [sentence[i].wid, sentence[i+1].wid]
