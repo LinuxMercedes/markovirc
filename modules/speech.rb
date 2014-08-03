@@ -69,20 +69,22 @@ module Speech
     def newsrc( initial=false, isrcid=-1 )
       res = ""
       twid = -1
+      @srcid = nil
+
+      # Catch for initial runs 
+      @srcid = isrcid if isrcid != -1
 
       if @dir == LEFT
-        @srcid = @msg.getFirst_i_rand "textid", "chains WHERE nextwordid = ?", self.first.wid 
+        @srcid = @msg.getFirst_i_rand( "textid", "chains WHERE nextwordid = ?", self.first.wid ) if @srcid == nil
         twid = self.first.wid.to_s
         @chainids.unshift []
       elsif @dir == RIGHT
-        @srcid = @msg.getFirst_i_rand "textid", "chains WHERE wordid = ?", self.last.wid
+        @srcid = @msg.getFirst_i_rand( "textid", "chains WHERE wordid = ?", self.last.wid ) if @srcid == nil
         twid = self.last.wid.to_s
         @chainids << []
       end
 
-      if @srcid <= 0
-        return false
-      end
+      return false if @srcid <= 0
 
       # Get the full sentence... can't stream since a specific word we need may not be unique in the sentence
       @thissentence = @msg.getArray( "SELECT wordid FROM chains WHERE textid = ? ORDER BY id ASC", @srcid )
@@ -92,6 +94,7 @@ module Speech
 
       @tsiter = @thissentence.each_index.select{ |i| @thissentence[i] == twid }
 
+      # Now since there can be several matching wids in a sentence, randomly grab one and choose it
       @tsiter = @tsiter.sample if @tsiter.is_a? Array
 
       # Special catch for the very first run, to put the appropriate chainid in for the word we chained off of 
@@ -99,18 +102,13 @@ module Speech
         @chainids.first << @thissentenceids[@tsiter] 
       end
 
-      # Now since there can be several matching wids in a sentence, randomly grab one and choose it
-
       if not initial
         @chainiter = @chainlen # How many more words to pull from this source before a refresh
       else
         @chainiter = (@chainlen/2.0).ceil-1
-        if isrcid != -1
-          @srcid = isrcid
-        end
       end
 
-      true
+      @srcid
     end
       
     def fill( )
