@@ -103,7 +103,7 @@ class Sentence
     # Scan the sentence, breaking up by space:
     s = StringScanner.new sent
     w = ""
-    debug = false
+    debug = true
 
     while not s.eos?
       w = s.scan /[^\s]+/
@@ -117,7 +117,8 @@ class Sentence
 
       # Check if is URL, which we ignore.
       if ( w =~ /([A-Za-z]{2,15}:)?[^\.]+\.[^\.]+.+/ and w =~ URI::regexp ) or w =~ /[\w\._\-!]+\@[\w\._\-!]+/
-        @words << Word.new( self, { :text => w } )
+        space = ( @words.size != 0 )
+        @words << Word.new( self, { :text => w, :space => space } )
         print( "Is URL #{w} ('", s.matched, "')\n" ) if debug
         next
       end
