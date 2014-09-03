@@ -25,56 +25,60 @@ functions:
 """
 
 class Word
-  @text = nil
-  @wid = nil
-  
-  attr_accessor :text, :wid, :prefix, :suffix
-  
-  def initialize( sentence, word, wid=nil )
-    @sentence = sentence
-    @prefix = @suffix = "" 
+  @text     = nil
+  @wid      = nil
+  @space    = true 
 
-    if word.is_a? Integer
-      @wid = word
-      self.getWord
-    elsif word.is_a? String and wid == nil
-      @text = word
-      self.getWid
-    else
-      @text = word
-      @wid = wid.to_i
-    end  
+  @prefix   = ""
+  @suffix   = ""
+
+  @sentence = nil
+  
+  attr_accessor :text, :wid, :prefix, :suffix, :align, :space
+  
+  def initialize( sentence, opt = { } )
+    @sentence = sentence
+
+    @wid      = opt[:wid] if opt.has_key? :wid 
+    @text     = opt[:text] if opt.has_key? :text 
+
+    @prefix   = opt[:prefix] if opt.has_key? :prefix
+    @suffix   = opt[:suffix] if opt.has_key? :suffix
+
+    @space    = opt[:space] if opt.has_key? :space
+
+    self
   end
 
+  # Accessors
+  
   def length( )
     @text.length
   end
 
-  # Accessors
+#  def getWid( )
+#    if @wid != nil
+#      return @wid
+#    end
 
-  def getWid( )
-    if @wid != nil
-      return @wid
-    end
+#    @wid = @sentence.msg.getFirst "SELECT id FROM words WHERE word=?", @text
+#    if wid == nil
+#      @sentence.msg.getArray "INSERT INTO words (word) VALUES (?)", @text
+#      @wid = @sentence.msg.getFirst "SELECT id FROM words WHERE word = ?", @text
+#    end
+#    @wid = @wid.to_i
+#  end
 
-    @wid = @sentence.msg.getFirst "SELECT id FROM words WHERE word=?", @text
-    if wid == nil
-      @sentence.msg.getArray "INSERT INTO words (word) VALUES (?)", @text
-      @wid = @sentence.msg.getFirst "SELECT id FROM words WHERE word = ?", @text
-    end
-    @wid = @wid.to_i
-  end
+#  def getWord( )
+#    if @text != nil
+#      return @text
+#    end
 
-  def getWord( )
-    if @text != nil
-      return @text
-    end
-
-    @text = @sentence.msg.getFirst "SELECT word FROM words WHERE id = ?", @wid
-    if @text == nil or @text.strip == ""
-      print "ERROR: WID " + @wid.to_s + " was passed to a word constructor but doesn't exist in the database."
-    end
-  end
+#    @text = @sentence.msg.getFirst "SELECT word FROM words WHERE id = ?", @wid
+#    if @text == nil or @text.strip == ""
+#      print "ERROR: WID " + @wid.to_s + " was passed to a word constructor but doesn't exist in the database."
+#    end
+#  end
 
   def to_s( )
     @text

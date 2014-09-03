@@ -1,8 +1,9 @@
 require 'forwardable'
+require 'uri'
 require_relative 'word.rb'
 
 """
-The long awaited sentence class. This class allows easy manipulation of sentences
+This class allows easy manipulation of sentences
 without having to fumble with arrays and unshift all the time. This makes life
 so very much easier and the code look much cleaner in the end.
 
@@ -38,58 +39,47 @@ class Sentence
   include Enumerable
   extend Forwardable
 
-  @sid = -1
-  @channel = -1
-
   def_delegators :@words, :each, :unshift, :first, :last, :[], :size, :length
   attr_accessor :words, :msg
 
-  def initialize( msg, words=nil )
+  def initialize( words=nil )
+    @words = [ ]
+
     wordsarray = []
-    @words = []
-    @msg = msg
 
     if words.is_a? String
-      wordsarray = sever( words ).first
-      if not wordsarray.is_a? Array
-        wordsarray = [ wordsarray ]
-      end
-    elsif words.is_a? Array and words.length > 0 and words[0].is_a? Word
-      @words = words
+      self.sever words
       return self
     elsif words.is_a? Array
       wordsarray = words
-    elsif words.is_a? Integer
-      wordsarray << words
-    elsif words.is_a? Cinch::Message
-      wordsarray = sever( words.message ).first # always returns at least an array with one sentence
-    elsif words.is_a? Word
-      @words << words
-      return self
     else
-      return self # Hopefully nil
+      return self
     end
-    
+
     wordsarray.each do |word|
-      @words << ( Word.new self, word )
+      @words << prepare_word( word ) 
     end
   end
 
   # Drop a new word on the end of our sentence
   def <<( word )
-    if not word.is_a? Word
-      word = Word.new self, word
-    end
-
-    words << word
+    words << self.prepare_word( word )
   end
 
   def >>( word )
+    words.unshift self.prepare_word( word )
+  end
+
+  def prepare_word( word )
     if not word.is_a? Word
-      word = Word.new self, word
+      if word.is_a? String
+        word = Word.new self, { :text => word }
+      elsif word.is_a? Integer
+        word = Word.new self, { :wid => word }
+      end
     end
 
-    words.unshift word
+    word
   end
 
   def join( joiner )
@@ -109,39 +99,58 @@ class Sentence
     end 
   end
 
+  def sever( sent )
+    # Scan the sentence, breaking up by space:
+    s = StringScanner.new sent
+    w = ""
+    debug = false
+
+    while not s.eos?
+      w = s.scan /[^\s]+/
+      print( "Matching: '#{w}' ('", s.matched, "')\n" ) if debug
+
+      if w == nil
+        w = s.skip /[\s]+/
+        print( "Skipping: #{w} ('", s.matched, "')\n" ) if debug
+        next
+      end
+
+      # Check if is URL, which we ignore.
+      if ( w =~ /[A-Za-z]{2,15}:[^\.]+\.[^\.]+.+/ and w =~ URI::regexp ) or w =~ /[\w\._\-!]+\@[\w\._\-!]+/
+        @words << Word.new( self, { :text => w } )
+        print( "Is URL #{w} ('", s.matched, "')\n" ) if debug
+        next
+      end
+
+      print( "w is: \"", w, "\"\n" ) if debug
+
+      # Scan further for punctuation
+      s2 = StringScanner.new w
+      while not s2.eos?
+        space = false
+        sep   = "A-Za-z0-9"
+        sepp  = "[#{sep}]"
+        sepn  = "[^#{sep}]"
+
+        w2 = s2.scan /#{sepn}+/
+        w2 = s2.scan( /#{sepp}+/ ) if w2 == nil
+
+        print( "w2 is: \"", w2, "\"\n" ) if debug
+
+        space = true if w =~ /^#{Regexp.quote w2}/
+        @words << Word.new( self, { :text => w2, :space => space } )
+      end
+    end
+  end
+
   def to_s( )
-    strarr = []
-    tempwords = []
-    @words.each do |word|
-      strarr << word.text
-      tempwords << word
+    r = [ ]
+    @words.each do |w|
+      r << " " if w.space
+      r << w.text
     end
 
-    changed = true
-
-    # If the character is punctuation, merge it left.
-    while strarr.length > 1 and changed
-      strarr.length.times do |j|
-        if j > 0 and strarr[j] =~ /^[\.!"?:,]+$/ #copied straight out of utils
-          strarr[j] = tempwords[j].prefix + strarr[j] + tempwords[j].suffix
-          strarr[j-1] = tempwords[j].prefix + strarr[j-1] + tempwords[j].suffix
-          strarr[j-1] = strarr[(j-1)..j].join ""
-          strarr.delete_at j
-          tempwords.delete_at j
-          changed = true
-          break
-        end
-        changed = false
-      end
-    end
-
-    strarr.length.times do |i|
-      if tempwords[i].prefix != "" and tempwords[i].suffix != "" and strarr[i] != nil
-        strarr[i] = tempwords[i].prefix + strarr[i] + tempwords[i].suffix
-      end
-    end
-          
-    strarr.join " "
+    r.join ""
   end
 
   def +( rhs )
