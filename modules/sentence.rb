@@ -116,13 +116,14 @@ class Sentence
       end
 
       # Check if is URL, which we ignore.
-      if ( w =~ /[A-Za-z]{2,15}:[^\.]+\.[^\.]+.+/ and w =~ URI::regexp ) or w =~ /[\w\._\-!]+\@[\w\._\-!]+/
+      if ( w =~ /([A-Za-z]{2,15}:)?[^\.]+\.[^\.]+.+/ and w =~ URI::regexp ) or w =~ /[\w\._\-!]+\@[\w\._\-!]+/
         @words << Word.new( self, { :text => w } )
         print( "Is URL #{w} ('", s.matched, "')\n" ) if debug
         next
       end
 
       print( "w is: \"", w, "\"\n" ) if debug
+      first = true
 
       # Scan further for punctuation
       s2 = StringScanner.new w
@@ -135,9 +136,16 @@ class Sentence
         w2 = s2.scan /#{sepn}+/
         w2 = s2.scan( /#{sepp}+/ ) if w2 == nil
 
-        print( "w2 is: \"", w2, "\"\n" ) if debug
+        print( "  w2 is: \"", w2, "\"\n" ) if debug
 
-        space = true if w =~ /^#{Regexp.quote w2}/ and not @words.size == 0
+        if first and @words.size != 0
+          print( "    Space\n" ) if debug
+          space = true
+          first = false
+        elsif @words.size == 0
+          first = false
+        end
+
         @words << Word.new( self, { :text => w2, :space => space } )
       end
     end
