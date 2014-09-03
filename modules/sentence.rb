@@ -137,7 +137,7 @@ class Sentence
 
         print( "w2 is: \"", w2, "\"\n" ) if debug
 
-        space = true if w =~ /^#{Regexp.quote w2}/
+        space = true if w =~ /^#{Regexp.quote w2}/ and not @words.size == 0
         @words << Word.new( self, { :text => w2, :space => space } )
       end
     end
