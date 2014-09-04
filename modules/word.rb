@@ -33,8 +33,10 @@ class Word
   @suffix   = ""
 
   @sentence = nil
+
+  @cap      = nil
   
-  attr_accessor :text, :wid, :prefix, :suffix, :align, :space
+  attr_accessor :text, :wid, :prefix, :suffix, :align, :space, :cap
   
   def initialize( sentence, opt = { } )
     @sentence = sentence
@@ -47,12 +49,40 @@ class Word
 
     @space    = opt[:space] if opt.has_key? :space
 
+    @cap      = opt[:capmask] if opt.has_key? :capmask
+    @cap      = opt[:cap] if opt.has_key? :cap
+
+    self.genCapMask if @cap == nil and @text != nil
+
     self
+  end
+
+  def genCapMask
+    if @text =~ /^[[:upper:]]{1}/
+      @cap = 0b1
+    else
+      @cap = 0b0
+    end
+
+    first = true
+    @text.split('').each do |l|
+      if first
+        first = false
+        next
+      end
+
+      @cap << 1
+      if l =~ /[[:upper:]]/
+        @cap |= 1
+      else
+        @cap &= 0
+      end
+    end
   end
 
   # Accessors
   
-  def length( )
+  def length
     @text.length
   end
 
@@ -80,11 +110,15 @@ class Word
 #    end
 #  end
 
-  def to_s( )
-    @text
+  def to_s( sentence=false )
+    r = @text
+
+    r = " " + @text if sentence and @space
+
+    r
   end
 
-  def to_i( )
+  def to_i
     @wid
   end
 end

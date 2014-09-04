@@ -1,5 +1,6 @@
 require 'forwardable'
 require 'uri'
+require 'strscan'
 require_relative 'word.rb'
 
 """
@@ -91,7 +92,7 @@ class Sentence
     words.join joiner
   end
   
-  def clean( )
+  def clean
     @words.each do |word|
       if not word.wid.is_a? Integer or word.wid < 1 or not word.text.is_a? String
         @words.delete word
@@ -152,14 +153,8 @@ class Sentence
     end
   end
 
-  def to_s( )
-    r = [ ]
-    @words.each do |w|
-      r << " " if w.space
-      r << w.text
-    end
-
-    r.join ""
+  def to_s
+    @words.map{ |w| w.to_s( true ) }.join ""
   end
 
   def +( rhs )
