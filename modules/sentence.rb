@@ -103,7 +103,7 @@ class Sentence
     # Scan the sentence, breaking up by space:
     s = StringScanner.new sent
     w = ""
-    debug = true
+    debug = false
 
     while not s.eos?
       w = s.scan /[^\s]+/
@@ -130,7 +130,7 @@ class Sentence
       s2 = StringScanner.new w
       while not s2.eos?
         space = false
-        sep   = "A-Za-z0-9"
+        sep   = "[:alpha:]0-9"
         sepp  = "[#{sep}]"
         sepn  = "[^#{sep}]"
 
