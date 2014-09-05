@@ -1,11 +1,8 @@
-
-require 'cinch'
 require "test/unit"
 
-require_relative '../utils.rb'
 require_relative '../modules/sentence.rb'
 
-class SentenceTest < Test::Unit::TestCase
+class SeverTest < Test::Unit::TestCase
   def test_unicode
     s = "David Cameron: Taxes will rise unless we can raid bank accounts ( ﾟ∀ﾟ)ｱﾊﾊ八八ﾉヽﾉヽﾉヽﾉ ＼"
     e = %w(David Cameron : Taxes will rise unless we can raid bank accounts ( ﾟ ∀ ﾟ ) ｱﾊﾊ八八ﾉヽﾉヽﾉヽﾉ ＼)
@@ -81,7 +78,7 @@ class SentenceTest < Test::Unit::TestCase
     e = %w(以 下 是 经 过 上 述 调 整 后 的 《 第 一 批 异 体 字 整 理 表 》 ， 它 由 原 来 的 810 组 异 体 字 减 少 到 796 组 ，淘 汰 的 异 体 字 由 原 来 的 1053 个 减 少 到 1027 个 。)
 
     #self.assert_sentence s, e
-    #This requires some special severing... With my understanding of mandarin, each word would need to be separate.
+    #This requires some special severing... With my understanding of mandarin, each bit would need to be separate.
   end
 
   def test_code_rst
@@ -92,14 +89,14 @@ class SentenceTest < Test::Unit::TestCase
   end
 
   def assert_sentence( base_sentence, array )
-    print "\n\n"
     # Run sentence in, through, and back out
     sentence = Sentence.new base_sentence  
 
-    print "Sentence in: ", base_sentence, "\n"
-    print "Sentence out: ", sentence.to_s, "\n\n"
+    #print "\n\n"
+    #print "Sentence in: ", base_sentence, "\n"
+    #print "Sentence out: ", sentence.to_s, "\n\n"
 
-    print "Sentence parts: ", sentence.words.map{ |w| w.text }, "\n\n"
+    #print "Sentence parts: ", sentence.words.map{ |w| w.text }, "\n\n"
 
     # Check that the array's sizes are equal
     assert_equal array.size, sentence.size
