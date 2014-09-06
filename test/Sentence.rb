@@ -7,11 +7,14 @@ class SentenceTest < Test::Unit::TestCase
   def initialize( test_class )
     @randAll = (32..126).to_a.map! { |w| w.chr }
     @randAlp = (0..9).to_a + ("A".."Z").to_a + ("a".."z").to_a
+    @maxRandWordSize = 10
+    @minRandWordSize = 3
+    @maxSentenceSize = 100
 
     super
   end
 
-  def rand_word size=50, type=:all
+  def rand_word( type=:all )
     a = ""
     if type == :all
       a = @randAll
@@ -19,15 +22,15 @@ class SentenceTest < Test::Unit::TestCase
       a = @randAlp
     end
 
-    a[0, rand(size)+1].join ""
+    a.shuffle[0, rand(@maxRandWordSize-@minRandWordSize)+@minRandWordSize].join ""
   end
 
-  def rand_array( size=(1+rand(1000)), word_size=50 )
+  def rand_array( size=(1+rand(1000)), type=:all )
     if size < 1
       size = 1
     end
 
-    (1..size).to_a.map { self.rand_word word_size }
+    (1..size).to_a.map { self.rand_word type }
   end
 
   def test_init_nil
@@ -66,7 +69,7 @@ class SentenceTest < Test::Unit::TestCase
 
     # Test 
     i = s.size
-    a.map { |w| s << w; i += 1; assert_equal s.size, i }
+    a.map { |w| s << w; i += 1; assert_equal s.size, i, ( "Failed to assert equality at " + i.to_s ) }
 
     self.assert_sent_equal_array s, e
   end
@@ -80,22 +83,48 @@ class SentenceTest < Test::Unit::TestCase
 
     # Test
     i = s.size
-    a.map { |w| s >> w; i += 1; assert_equal s.size, i }
+    a.map { |w| s >> w; i += 1; assert_equal s.size, i, ( "Failed to assert equality at " + i.to_s ) }
 
     self.assert_sent_equal_array s, e
   end
 
-  def test_rand_create
-    (1..500).to_a.each do |i|
-      sent = self.rand_array i, 10 
-      s_array = Sentence.new sent
+  def test_rand_create_from_string_with_symbols
+    (1..@maxSentenceSize).to_a.each do |i|
+      sent = self.rand_array i
       s_string = Sentence.new sent.join " "
 
-      assert( s_array.size >= sent.size ) 
-      assert( s_string.size >= sent.size )
+      assert( s_string.size >= sent.size, ( "Failed to assert >= at " + i.to_s + " with other size " + s_string.size.to_s ) )
     end 
   end
 
+  def test_rand_create_from_array_with_symbols
+    (1..@maxSentenceSize).to_a.each do |i|
+      sent = self.rand_array i, :alpha
+      s_array = Sentence.new sent
+
+      assert( s_array.size >= sent.size, ( "Failed to assert >= at " + i.to_s + " with other size " + s_array.size.to_s ) )
+      # Eventually assert that == ^
+    end
+  end
+
+  def test_rand_create_from_string_alphanumeric
+    (1..(@maxSentenceSize*2)).to_a.each do |i|
+      sent = self.rand_array i, :alpha
+      s_string = Sentence.new sent.join " "
+
+      assert_equal( s_string.size, sent.size, ( "Failed to assert equality at " + i.to_s + " with other size " + s_string.size.to_s ) )
+    end
+  end
+
+  def test_rand_create_from_array_alphanumeric
+    (1..(@maxSentenceSize*2)).to_a.each do |i|
+      sent = self.rand_array i
+      s_array = Sentence.new sent
+
+      assert_equal( s_array.size, sent.size, ( "Failed to assert equality at " + i.to_s + " with other size " + s_array.size.to_s ) )
+    end
+  end
+  
   def assert_sent_equal_array( sentence, array )
     # Check that the array's sizes are equal
     assert_equal array.size, sentence.size
