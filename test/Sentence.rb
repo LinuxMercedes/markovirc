@@ -99,7 +99,7 @@ class SentenceTest < Test::Unit::TestCase
 
   def test_rand_create_from_array_with_symbols
     (1..@maxSentenceSize).to_a.each do |i|
-      sent = self.rand_array i, :alpha
+      sent = self.rand_array i
       s_array = Sentence.new sent
 
       assert( s_array.size >= sent.size, ( "Failed to assert >= at " + i.to_s + " with other size " + s_array.size.to_s ) )
@@ -108,7 +108,7 @@ class SentenceTest < Test::Unit::TestCase
   end
 
   def test_rand_create_from_string_alphanumeric
-    (1..(@maxSentenceSize*2)).to_a.each do |i|
+    (1..(@maxSentenceSize)).to_a.each do |i|
       sent = self.rand_array i, :alpha
       s_string = Sentence.new sent.join " "
 
@@ -117,8 +117,8 @@ class SentenceTest < Test::Unit::TestCase
   end
 
   def test_rand_create_from_array_alphanumeric
-    (1..(@maxSentenceSize*2)).to_a.each do |i|
-      sent = self.rand_array i
+    (1..(@maxSentenceSize)).to_a.each do |i|
+      sent = self.rand_array i, :alpha
       s_array = Sentence.new sent
 
       assert_equal( s_array.size, sent.size, ( "Failed to assert equality at " + i.to_s + " with other size " + s_array.size.to_s ) )

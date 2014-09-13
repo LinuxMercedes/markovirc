@@ -24,6 +24,22 @@ class SeverTest < Test::Unit::TestCase
     self.assert_sentence s, e
   end
 
+  def test_domain
+    s = "brod.es is my personal domain name."
+    e = %w(brod . es is my personal domain name .)
+
+    self.assert_sentence s, e
+  end
+
+  def test_domain
+    s = "http://brod.es is my personal domain name."
+    e = %w(http://brod.es is my personal domain name .)
+
+    self.assert_sentence s, e
+  end
+
+
+
   def test_temperature
     s = "huh I'd still want you to be taught and read up on Eight Floppy Drives | Lo: 53.53°F"
     e = %w(huh I ' d still want you to be taught and read up on Eight Floppy Drives | Lo : 53 . 53 ° F)

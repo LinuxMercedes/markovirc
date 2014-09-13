@@ -1,3 +1,5 @@
+require 'forwardable'
+
 """
 The Word type is simplifies accessing word ids and getting word test. Before this,
 it was necessary to run the same query over and over to get the same values. This 
@@ -25,21 +27,23 @@ functions:
 """
 
 class Word
-  @text     = nil
-  @wid      = nil
-  @space    = true 
+  extend Forwardable
 
-  @prefix   = ""
-  @suffix   = ""
-
-  @sentence = nil
-
-  @cap      = nil
-  
+  def_delegators :@text, :size, :length 
   attr_accessor :text, :wid, :prefix, :suffix, :align, :space, :cap
-  
+
   def initialize( sentence, opt = { } )
     @sentence = sentence
+    @text     = nil
+    @wid      = nil
+    @space    = true 
+
+    @prefix   = ""
+    @suffix   = ""
+
+    @sentence = nil
+
+    @cap      = nil
 
     @wid      = opt[:wid] if opt.has_key? :wid 
     @text     = opt[:text] if opt.has_key? :text 
@@ -59,32 +63,20 @@ class Word
 
   def genCapMask
     if @text =~ /^[[:upper:]]{1}/
-      @cap = 0b1
+      @cap = 1
     else
-      @cap = 0b0
+      @cap = 0
     end
 
-    first = true
-    @text.split('').each do |l|
-      if first
-        first = false
-        next
-      end
-
-      @cap << 1
+    @text[1..@text.size].split('').each do |l|
+      @cap <<= 1
       if l =~ /[[:upper:]]/
-        @cap |= 1
-      else
-        @cap &= 0
+        @cap += 1
       end
     end
   end
 
   # Accessors
-  
-  def length
-    @text.length
-  end
 
 #  def getWid( )
 #    if @wid != nil
