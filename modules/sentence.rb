@@ -46,13 +46,17 @@ class Sentence
   def prepare_word( word )
     if not word.is_a? Word
       if word.is_a? String
-        word = Word.new self, { :text => word }
+        word = self.word { :text => word }
       elsif word.is_a? Integer
-        word = Word.new self, { :wid => word }
+        word = self.word { :wid => word }
       end
     end
 
     word
+  end
+
+  def word( args=nil ):
+    Word.new self, args
   end
 
   def sever( sent )

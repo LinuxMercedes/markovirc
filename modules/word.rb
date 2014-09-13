@@ -35,21 +35,13 @@ class Word
   def initialize( sentence, opt = { } )
     @sentence = sentence
     @text     = nil
-    @wid      = nil
     @space    = true 
-
-    @prefix   = ""
-    @suffix   = ""
 
     @sentence = nil
 
     @cap      = nil
 
-    @wid      = opt[:wid] if opt.has_key? :wid 
     @text     = opt[:text] if opt.has_key? :text 
-
-    @prefix   = opt[:prefix] if opt.has_key? :prefix
-    @suffix   = opt[:suffix] if opt.has_key? :suffix
 
     @space    = opt[:space] if opt.has_key? :space
 
@@ -57,8 +49,6 @@ class Word
     @cap      = opt[:cap] if opt.has_key? :cap
 
     self.genCapMask if @cap == nil and @text != nil
-
-    self
   end
 
   def genCapMask
@@ -75,32 +65,6 @@ class Word
       end
     end
   end
-
-  # Accessors
-
-#  def getWid( )
-#    if @wid != nil
-#      return @wid
-#    end
-
-#    @wid = @sentence.msg.getFirst "SELECT id FROM words WHERE word=?", @text
-#    if wid == nil
-#      @sentence.msg.getArray "INSERT INTO words (word) VALUES (?)", @text
-#      @wid = @sentence.msg.getFirst "SELECT id FROM words WHERE word = ?", @text
-#    end
-#    @wid = @wid.to_i
-#  end
-
-#  def getWord( )
-#    if @text != nil
-#      return @text
-#    end
-
-#    @text = @sentence.msg.getFirst "SELECT word FROM words WHERE id = ?", @wid
-#    if @text == nil or @text.strip == ""
-#      print "ERROR: WID " + @wid.to_s + " was passed to a word constructor but doesn't exist in the database."
-#    end
-#  end
 
   def to_s( sentence=false )
     r = @text
