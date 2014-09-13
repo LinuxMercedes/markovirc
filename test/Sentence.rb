@@ -60,6 +60,15 @@ class SentenceTest < Test::Unit::TestCase
     self.assert_sent_equal_array s, e
   end
 
+  def test_create_from_single_word
+    s = "Hello"
+    e = %w(Hello)
+
+    s = Sentence.new s
+
+    self.assert_sent_equal_array s, e 
+  end
+
   def test_append
     s = "This is a test sentence." 
     e = %w(This is a test sentence . With a few extra bits tacked on here . This will just keep going on and on .)
