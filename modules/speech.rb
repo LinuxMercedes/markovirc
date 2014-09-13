@@ -1,10 +1,6 @@
-require_relative '../modules/chain.rb'
+require_relative './chain.rb'
 
 module Speech
-  LEFT = -1
-  RIGHT = 1
-
-
   """
   Wrapper for some common say functions. Grabs the last argument,
   if it's numeric, and returns it as level.

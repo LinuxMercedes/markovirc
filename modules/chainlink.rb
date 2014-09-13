@@ -1,31 +1,29 @@
 require_relative './word.rb'
 
 class ChainLink < Word
-  @wid = -1
-
-  @prefix   = ""
-  @suffix   = ""
-
   attr_accessor :text, :wid, :prefix, :suffix, :space, :cap
 
   def initialize( sentence, opt={} )
     super sentence, opt
 
+    @wid      = -1
     @wid      = opt[:wid] if opt.has_key? :wid 
 
+    @prefix   = ""
+    @suffix   = ""
     @prefix   = opt[:prefix] if opt.has_key? :prefix
     @suffix   = opt[:suffix] if opt.has_key? :suffix
 
-    if ( opt.has_key? :get_wid or opt.has_key? :add_wid ) and @wid != nil
+    if ( opt.has_key? :get_wid or opt.has_key? :add_wid ) and @text != nil
       self.getWid( opt )
-    elsif ( opt.has_key? :get_word or opt.has_key? :add_word ) and @word != nil
+    elsif ( opt.has_key? :get_word ) and @wid != nil
       self.getWord( opt )
     end
   end
 
   # Accessors
   def getWid( opt={} )
-    if @wid != nil
+    if @wid != -1
       return @wid
     end
 
@@ -43,7 +41,7 @@ class ChainLink < Word
     end
 
     @text = @sentence.msg.getFirst "SELECT word FROM words WHERE id = ?", @wid
-    if @text == nil or @text.strip == "" )
+    if @text == nil or @text.strip == ""
       print "ERROR: WID '" + @wid.to_s + "' was passed to a ChainLink constructor but doesn't exist in the database.\n"
     end
   end

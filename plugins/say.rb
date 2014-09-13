@@ -21,7 +21,7 @@ class Say
     end
 
     # Chains off of our word with n=chainlen
-    res = Chain.new m, word, chainlen
+    res = Chain.new word, m, chainlen
 
     # Return our finalized product
     m.reply res.to_s

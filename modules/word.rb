@@ -33,13 +33,14 @@ class Word
   attr_accessor :text, :space, :cap
 
   def initialize( sentence, opt = { } )
-    @sentence = sentence
     @text     = nil
     @space    = true 
 
     @sentence = nil
 
     @cap      = nil
+
+    @sentence = sentence
 
     @text     = opt[:text] if opt.has_key? :text 
 

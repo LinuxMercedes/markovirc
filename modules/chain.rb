@@ -11,20 +11,25 @@ class Chain < Sentence
   @thissentenceids = [ ] 
   @tsiter = -1
 
+  LEFT = -1
+  RIGHT = 1
+
+  def_delegators :@words, :each, :unshift, :first, :last, :[], :size, :length
   attr_accessor :words, :msg, :chainids
 
-  def initialize( word, msg, chainlen ) 
+  def initialize( word, msg, chainlen=-1 ) 
     @chainlen = chainlen
     @msg = msg
     @chainids = []
 
-    super msg, word 
+    super word 
 
-    self.fill
+    self.fill if chainlen != -1
   end
 
   def word( args=nil )
-    ChainLink.new args 
+    args[:add_wid] = true if @chainlen == -1
+    ChainLink.new self, args
   end
   
   def chain( )

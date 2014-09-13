@@ -34,8 +34,7 @@ class Log
     sourceid = 0
 
     # Sentences store internally for use in RandomSpeak and other plugins on this thread
-    sentences = sever @msg.message
-    @msg.sentence = ( Sentence.new @msg, sentences )
+    @msg.sentence = ( Chain.new @msg.message, @msg )
 
     # We don't log when we're pinged
     return if @msg.canRespond?
@@ -119,8 +118,11 @@ class Log
 
     words = []
 
+    #FIXME: Temporarily disabled due to class issues
+    return
+
     # Strip punctuation
-    @msg.sentence.words.each do |word|
+    @msg.sentence.each do |word|
       if word.text !~ /^[:,"\.!?]+$/
         words << word
       end
