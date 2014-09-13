@@ -33,7 +33,7 @@ class WordTest < Test::Unit::TestCase
   end
 
   def test_init_word
-    w = Word.new nil, { :text => "Test" }
+    w = Word.new nil, { text: "Test" }
 
     assert_equal w.text, "Test" 
     
@@ -42,13 +42,13 @@ class WordTest < Test::Unit::TestCase
   end
 
   def test_capmask_single
-    w = Word.new nil, { :text => "Word" }
+    w = Word.new nil, { text: "Word" }
 
     assert_equal 0b1000, w.cap
   end
 
   def test_capmask_many
-    w = Word.new nil, { :text => "wOrDs" }
+    w = Word.new nil, { text: "wOrDs" }
 
     assert_equal 0b01010, w.cap
   end
@@ -58,7 +58,7 @@ class WordTest < Test::Unit::TestCase
     (0...100000).to_a.each do
       word = self.rand_word :alph
 
-      w = Word.new nil, { :text => word }
+      w = Word.new nil, { text: word }
 
       ((w.size-1)..0).to_a.each do |i|
         if word[i] =~ /[[:upper:]]/

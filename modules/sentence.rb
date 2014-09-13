@@ -46,17 +46,17 @@ class Sentence
   def prepare_word( word )
     if not word.is_a? Word
       if word.is_a? String
-        word = self.word { :text => word }
+        word = self.word( { text: word } )
       elsif word.is_a? Integer
-        word = self.word { :wid => word }
+        word = self.word( { id: word } )
       end
     end
 
     word
   end
 
-  def word( args=nil ):
-    Word.new self, args
+  def word( args=nil )
+    Word.new( self, args )
   end
 
   def sever( sent )
@@ -78,7 +78,7 @@ class Sentence
       # Check if is URL, which we ignore.
       if ( w =~ /([A-Za-z]{2,15}:)?[^\.]+\.[^\.]+.+/ and w =~ URI::regexp ) or w =~ /[\w\._\-!]+\@[\w\._\-!]+/
         space = ( @words.size != 0 )
-        @words << Word.new( self, { :text => w, :space => space } )
+        @words << self.word( { text: w, space: space } )
         print( "Is URL #{w} ('", s.matched, "')\n" ) if debug
         next
       end
@@ -107,7 +107,7 @@ class Sentence
           first = false
         end
 
-        @words << Word.new( self, { :text => w2, :space => space } )
+        @words << self.word( { text: w2, space: space } )
       end
     end
   end
