@@ -27,9 +27,6 @@ class WordTest < Test::Unit::TestCase
     w = Word.new nil
     
     assert_equal w.text, nil
-    assert_equal w.wid, nil  
-    assert_equal w.prefix, ""
-    assert_equal w.suffix, ""
     
     assert_equal w.to_s, nil 
     assert_equal w.to_i, nil
@@ -39,9 +36,6 @@ class WordTest < Test::Unit::TestCase
     w = Word.new nil, { :text => "Test" }
 
     assert_equal w.text, "Test" 
-    assert_equal w.wid, nil  
-    assert_equal w.prefix, ""
-    assert_equal w.suffix, ""
     
     assert_equal w.to_s, "Test"    
     assert_equal w.to_i, nil

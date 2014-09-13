@@ -30,7 +30,7 @@ class Word
   extend Forwardable
 
   def_delegators :@text, :size, :length 
-  attr_accessor :text, :wid, :prefix, :suffix, :align, :space, :cap
+  attr_accessor :text, :space, :cap
 
   def initialize( sentence, opt = { } )
     @sentence = sentence

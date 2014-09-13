@@ -6,6 +6,8 @@ class ChainLink < Word
   @prefix   = ""
   @suffix   = ""
 
+  attr_accessor :text, :wid, :prefix, :suffix, :space, :cap
+
   def initialize( sentence, opt={} )
     super sentence, opt
 
