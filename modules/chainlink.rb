@@ -8,6 +8,7 @@ class ChainLink < Word
 
     @wid      = -1
     @wid      = opt[:wid] if opt.has_key? :wid 
+    @wid      = opt[:id] if opt.has_key? :id 
 
     @prefix   = ""
     @suffix   = ""
@@ -16,7 +17,7 @@ class ChainLink < Word
 
     if ( opt.has_key? :get_wid or opt.has_key? :add_wid ) and @text != nil
       self.getWid( opt )
-    elsif ( opt.has_key? :get_word ) and @wid != nil
+    elsif @wid != nil
       self.getWord( opt )
     end
   end

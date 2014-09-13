@@ -23,6 +23,8 @@ class Sentence
     if words.is_a? String
       self.sever words
       return self
+    elsif words.is_a? Integer
+      wordsarray << words
     elsif words.is_a? Array
       wordsarray = words
     else

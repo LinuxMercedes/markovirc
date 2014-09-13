@@ -14,7 +14,7 @@ class Say
     word, chainlen = self.sayArgParser word
 
     # Gets our word and chainlen in the right forms
-    word, chainlen = self.prepare( m, word, chainlen.to_i, ( name == "sayl" ) )
+    word, chainlen = self.prepare( word, m, chainlen.to_i, ( name == "sayl" ) )
 
     if word == nil or word <= 0
       return
@@ -30,7 +30,7 @@ class Say
   end
 
   # Sanitizes chainlength to fall into specs
-  def prepare( m, word, chainlen, simto )
+  def prepare( word, m, chainlen, simto )
     xchain = m.bot.set.logic.maxchainlength
     nchain = m.bot.set.logic.minchainlength
     wid = -1
