@@ -24,9 +24,10 @@ class TextProcessor < Workers::Worker
         txt = conn.exec_params( "SELECT text FROM text WHERE id=$1", [ id ] ).values.first.first
 
         txt = sever txt
+        print "TXT: ", txt, "\n"
 
         # Go through each wid and make sure we've got it
-        words = conn.exec("SELECT id,word FROM words WHERE word in ('" + txt.map{ |w| conn.escape_string w }.join("','") + "')").values
+        words = conn.exec("SELECT id,word FROM words WHERE word in ('" + txt.uniq.map{ |w| conn.escape_string w }.join("','") + "')").values
         idhash = Hash.new
 
         words.each do |w|
@@ -34,7 +35,7 @@ class TextProcessor < Workers::Worker
         end
 
         # Prepare a query to insert tons of words if idhash.size != txt.size
-        if txt.size != idhash.size
+        if txt.uniq.size != idhash.size
           insertwid = [ ]
           txt.each do |w|
             if not idhash.has_key? w and not insertwid.include? w
@@ -43,6 +44,7 @@ class TextProcessor < Workers::Worker
           end
 
           values = "('" + insertwid.map{ |w| conn.escape_string w }.join("'),('") + "')" 
+          print "VALUES: ", values, "\n"
 
           i = 0
           conn.exec("INSERT INTO words (word) VALUES #{values} RETURNING id").values.each do |w|
@@ -114,7 +116,7 @@ timer = Workers::PeriodicTimer.new 1 do
     end
   end
 
-  if $pool.queue_size > $pool.size and $pool.size < 2
+  if $pool.queue_size > $pool.size and $pool.size < 3 
     $pool.expand 1
   elsif $pool.queue_size == 0 and $pool.size > 1
     $pool.contract 1
