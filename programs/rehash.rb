@@ -11,43 +11,45 @@ class TextProcessor < Workers::Worker
     case event.command
     when :newtext
       begin
-        puts "New text! #{event.data}"
-        break
-        id = txt[0] 
-        txt = txt[1]
+        # New id is data
+        id = event.data
 
-        percent = id.to_f/(texts.length-1)*100
-        res = percent.round 0
-        if res > $last
-          print res, "%\n"
-          $last = res 
-        end
+        # Open our own connection 
+        conn = PG::Connection.open dbname: 'markovirc' 
+
+        # Grab the text
+        txt = conn.exec_params( "SELECT text FROM text WHERE id=$1", [ id ] ).values.first.first
 
         out = sever txt
-        sentence = []
+
+        # Go through each wid and make sure we've got it
+        sentence = [ ]
         out.each do |word|
-          wid = ( conn.exec_params "SELECT id FROM words WHERE word=$1", [word] ).values 
-          wid = wid[0]
+          wid = ( conn.exec_params "SELECT id FROM words WHERE word=$1", [ word ] ).values.first.first
           
           if wid == nil
-            while wid == nil
-              conn.exec_params "INSERT INTO words (word) VALUES ($1)", [word]
-              wid = ( conn.exec_params "SELECT id FROM words WHERE word = $1", [word] ).values
-              wid = wid[0][0].to_i
-            end
+            conn.exec_params "INSERT INTO words (word) VALUES ($1)", [ word ]
+            wid = ( conn.exec_params "SELECT id FROM words WHERE word = $1", [ word ] ).values.first.first.to_i
           else
-            wid = wid[0].to_i
+            wid = wid.to_i
           end
           sentence << wid
         end
 
+        # Prepare a query to slam into the database over and over
+        name = "insert_#{id.to_s}"
+        conn.prepare name, "INSERT INTO chains (wordid, textid, nextwordid) values ($1, #{id.to_s}, $2)"
         sentence.size.times do |i|
           if i != sentence.size-1
-            conn.exec_params "INSERT INTO chains (wordid,textid,nextwordid) VALUES ($1,$2,$3)", [sentence[i], id, sentence[i+1]]
+            conn.exec_prepared name, [ sentence[i], sentence[i+1] ]
           else
-            conn.exec_params "INSERT INTO chains (wordid,textid) VALUES ($1,$2)", [sentence[i], id]
+            conn.exec_prepared name, [ sentence[i], -1 ]
           end
         end
+
+        # If we're still here we are finished
+        conn.exec_params "UPDATE text SET processed=TRUE WHERE id=$1", [ id ]
+        print "Finished processing #", id, "\n"
       end
     end
   end
@@ -68,16 +70,16 @@ class TextPool <  Workers::Pool
 end
 
 # Our pool for future workers
-$pool = TextPool.new worker_class: TextProcessor
-$check_conn = PG::Connection.open( :dbname => 'markovirc', :size => 1 ) 
+$pool = TextPool.new worker_class: TextProcessor, size: 1
+$check_conn = PG::Connection.open dbname: 'markovirc' 
 
 timer = Workers::PeriodicTimer.new 1 do
   # Check for new work
-  print "Checking"
+  print "Checking\n"
   texts = $check_conn.exec( "SELECT id FROM text WHERE processed=FALSE" ).values
   texts.flatten!
 
-  print "No work..." if texts.size == 0
+  print "No work...\n\n" if texts.size == 0
 
   texts.each do |i|
     if not $pool.queued.include? i

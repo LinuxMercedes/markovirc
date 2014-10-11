@@ -72,8 +72,6 @@ class Log
     textid = @msg.getFirst "SELECT id FROM text WHERE sourceid = ? AND time = ? AND text = ?", [sourceid, @msg.time.to_i, @msg.message]
     
     @msg.textid = textid
-
-    self.chain textid
   end
 
   """
