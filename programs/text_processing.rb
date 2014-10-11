@@ -18,13 +18,13 @@ class TextProcessor < Workers::Worker
         conn = PG::Connection.open dbname: 'markovirc' 
 
         # Delete anything with our textid already
-        conn.exec_params( "DELETE FROM chains WHERE textid=$1", [ id ] )
+        conn.exec( "DELETE FROM chains WHERE textid=#{id.to_s}" )
 
         # Grab the text
-        txt = conn.exec_params( "SELECT text FROM text WHERE id=$1", [ id ] ).values.first.first
+        txt = conn.exec( "SELECT text FROM text WHERE id=#{id.to_s}" ).values.first.first
 
         txt = sever txt
-        print "TXT: ", txt, "\n"
+        #print "TXT: ", txt, "\n"
 
         # Go through each wid and make sure we've got it
         words = conn.exec("SELECT id,word FROM words WHERE word in ('" + txt.uniq.map{ |w| conn.escape_string w }.join("','") + "')").values
@@ -44,7 +44,7 @@ class TextProcessor < Workers::Worker
           end
 
           values = "('" + insertwid.map{ |w| conn.escape_string w }.join("'),('") + "')" 
-          print "VALUES: ", values, "\n"
+          #print "VALUES: ", values, "\n"
 
           i = 0
           conn.exec("INSERT INTO words (word) VALUES #{values} RETURNING id").values.each do |w|
@@ -74,7 +74,8 @@ class TextProcessor < Workers::Worker
         end
 
         # If we're still here we are finished
-        conn.exec_params "UPDATE text SET processed=TRUE WHERE id=$1", [ id ]
+        conn.exec "UPDATE text SET processed=TRUE WHERE id=#{id.to_s}"
+        conn.close
         p "Finished processing #" + id.to_s
       end
     end
@@ -83,6 +84,8 @@ end
 
 class TextPool <  Workers::Pool
   attr_accessor :queued
+
+  DEFAULT_POOL_SIZE = 1
 
   def initialize( options = { } )
     @queued = [ ]
@@ -99,14 +102,10 @@ class TextPool <  Workers::Pool
   end
 end
 
-# Our pool for future workers
-$pool = TextPool.new worker_class: TextProcessor, size: 1
-$check_conn = PG::Connection.open dbname: 'markovirc' 
-
 timer = Workers::PeriodicTimer.new 1 do
   if $pool.queue_size < $pool.size
     # Check for new work
-    texts = $check_conn.exec( "SELECT id FROM text WHERE processed=FALSE" ).values
+    texts = $check_conn.exec( "SELECT id FROM text WHERE processed=FALSE LIMIT 50" ).values
     texts.flatten!
 
     texts.each do |i|
@@ -116,11 +115,17 @@ timer = Workers::PeriodicTimer.new 1 do
     end
   end
 
-  if $pool.queue_size > $pool.size and $pool.size < 3 
+  if $pool.queue_size > $pool.size and $pool.size < Facter.countprocessors 
     $pool.expand 1
   elsif $pool.queue_size == 0 and $pool.size > 1
     $pool.contract 1
   end
+
+  print "Pool size: ", $pool.size, "\n\n"
 end
+
+# Our pool for future workers
+$pool = TextPool.new( worker_class: TextProcessor, size: 1 )
+$check_conn = PG::Connection.open dbname: 'markovirc' 
 
 $pool.join
