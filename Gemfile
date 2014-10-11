@@ -24,4 +24,5 @@ gem 'sinatra'
 # Source.rb / !src encode in json
 gem 'json'
 
-
+# Handles queued sentences for processing
+gem 'rufus-scheduler'

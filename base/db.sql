@@ -10,14 +10,14 @@ SET check_function_bodies = false;
 SET client_min_messages = warning;
 
 --
--- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: 
+-- Name: plpgsql; Type: EXTENSION; Schema: -; 
 --
 
 CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
 
 
 --
--- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: 
+-- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; 
 --
 
 COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
@@ -30,7 +30,7 @@ SET default_tablespace = '';
 SET default_with_oids = false;
 
 --
--- Name: chains; Type: TABLE; Schema: public; Owner: aaron; Tablespace: 
+-- Name: chains; Type: TABLE; Schema: public;  Tablespace: 
 --
 
 CREATE TABLE chains (
@@ -41,10 +41,8 @@ CREATE TABLE chains (
 );
 
 
-ALTER TABLE public.chains OWNER TO aaron;
-
 --
--- Name: chains_id_seq; Type: SEQUENCE; Schema: public; Owner: aaron
+-- Name: chains_id_seq; Type: SEQUENCE; Schema: public; 
 --
 
 CREATE SEQUENCE chains_id_seq
@@ -55,17 +53,15 @@ CREATE SEQUENCE chains_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.chains_id_seq OWNER TO aaron;
-
 --
--- Name: chains_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: aaron
+-- Name: chains_id_seq; Type: SEQUENCE OWNED BY; Schema: public; 
 --
 
 ALTER SEQUENCE chains_id_seq OWNED BY chains.id;
 
 
 --
--- Name: channels; Type: TABLE; Schema: public; Owner: aaron; Tablespace: 
+-- Name: channels; Type: TABLE; Schema: public;  Tablespace: 
 --
 
 CREATE TABLE channels (
@@ -74,10 +70,8 @@ CREATE TABLE channels (
 );
 
 
-ALTER TABLE public.channels OWNER TO aaron;
-
 --
--- Name: channels_id_seq; Type: SEQUENCE; Schema: public; Owner: aaron
+-- Name: channels_id_seq; Type: SEQUENCE; Schema: public; 
 --
 
 CREATE SEQUENCE channels_id_seq
@@ -88,17 +82,46 @@ CREATE SEQUENCE channels_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.channels_id_seq OWNER TO aaron;
-
 --
--- Name: channels_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: aaron
+-- Name: channels_id_seq; Type: SEQUENCE OWNED BY; Schema: public; 
 --
 
 ALTER SEQUENCE channels_id_seq OWNED BY channels.id;
 
 
 --
--- Name: sources; Type: TABLE; Schema: public; Owner: aaron; Tablespace: 
+-- Name: quotes; Type: TABLE; Schema: public;  Tablespace: 
+--
+
+CREATE TABLE quotes (
+    id integer NOT NULL,
+    channelid integer,
+    "time" timestamp without time zone DEFAULT now(),
+    chain pg_catalog.text
+);
+
+
+--
+-- Name: quotes_id_seq; Type: SEQUENCE; Schema: public; 
+--
+
+CREATE SEQUENCE quotes_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: quotes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; 
+--
+
+ALTER SEQUENCE quotes_id_seq OWNED BY quotes.id;
+
+
+--
+-- Name: sources; Type: TABLE; Schema: public;  Tablespace: 
 --
 
 CREATE TABLE sources (
@@ -109,10 +132,8 @@ CREATE TABLE sources (
 );
 
 
-ALTER TABLE public.sources OWNER TO aaron;
-
 --
--- Name: sources_id_seq; Type: SEQUENCE; Schema: public; Owner: aaron
+-- Name: sources_id_seq; Type: SEQUENCE; Schema: public; 
 --
 
 CREATE SEQUENCE sources_id_seq
@@ -123,41 +144,28 @@ CREATE SEQUENCE sources_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.sources_id_seq OWNER TO aaron;
-
 --
--- Name: sources_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: aaron
+-- Name: sources_id_seq; Type: SEQUENCE OWNED BY; Schema: public; 
 --
 
 ALTER SEQUENCE sources_id_seq OWNED BY sources.id;
 
 
 --
--- Name: test; Type: TABLE; Schema: public; Owner: aaron; Tablespace: 
---
-
-CREATE TABLE test (
-);
-
-
-ALTER TABLE public.test OWNER TO aaron;
-
---
--- Name: text; Type: TABLE; Schema: public; Owner: aaron; Tablespace: 
+-- Name: text; Type: TABLE; Schema: public;  Tablespace: 
 --
 
 CREATE TABLE text (
     id integer NOT NULL,
     sourceid integer,
     "time" integer,
-    text pg_catalog.text
+    text pg_catalog.text,
+    processed boolean DEFAULT false NOT NULL
 );
 
 
-ALTER TABLE public.text OWNER TO aaron;
-
 --
--- Name: text_id_seq; Type: SEQUENCE; Schema: public; Owner: aaron
+-- Name: text_id_seq; Type: SEQUENCE; Schema: public; 
 --
 
 CREATE SEQUENCE text_id_seq
@@ -168,17 +176,15 @@ CREATE SEQUENCE text_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.text_id_seq OWNER TO aaron;
-
 --
--- Name: text_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: aaron
+-- Name: text_id_seq; Type: SEQUENCE OWNED BY; Schema: public; 
 --
 
 ALTER SEQUENCE text_id_seq OWNED BY text.id;
 
 
 --
--- Name: users; Type: TABLE; Schema: public; Owner: aaron; Tablespace: 
+-- Name: users; Type: TABLE; Schema: public;  Tablespace: 
 --
 
 CREATE TABLE users (
@@ -188,10 +194,8 @@ CREATE TABLE users (
 );
 
 
-ALTER TABLE public.users OWNER TO aaron;
-
 --
--- Name: users_id_seq; Type: SEQUENCE; Schema: public; Owner: aaron
+-- Name: users_id_seq; Type: SEQUENCE; Schema: public; 
 --
 
 CREATE SEQUENCE users_id_seq
@@ -202,17 +206,15 @@ CREATE SEQUENCE users_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.users_id_seq OWNER TO aaron;
-
 --
--- Name: users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: aaron
+-- Name: users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; 
 --
 
 ALTER SEQUENCE users_id_seq OWNED BY users.id;
 
 
 --
--- Name: words; Type: TABLE; Schema: public; Owner: aaron; Tablespace: 
+-- Name: words; Type: TABLE; Schema: public;  Tablespace: 
 --
 
 CREATE TABLE words (
@@ -221,10 +223,8 @@ CREATE TABLE words (
 );
 
 
-ALTER TABLE public.words OWNER TO aaron;
-
 --
--- Name: words_id_seq; Type: SEQUENCE; Schema: public; Owner: aaron
+-- Name: words_id_seq; Type: SEQUENCE; Schema: public; 
 --
 
 CREATE SEQUENCE words_id_seq
@@ -235,59 +235,64 @@ CREATE SEQUENCE words_id_seq
     CACHE 1;
 
 
-ALTER TABLE public.words_id_seq OWNER TO aaron;
-
 --
--- Name: words_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: aaron
+-- Name: words_id_seq; Type: SEQUENCE OWNED BY; Schema: public; 
 --
 
 ALTER SEQUENCE words_id_seq OWNED BY words.id;
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: aaron
+-- Name: id; Type: DEFAULT; Schema: public; 
 --
 
 ALTER TABLE ONLY chains ALTER COLUMN id SET DEFAULT nextval('chains_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: aaron
+-- Name: id; Type: DEFAULT; Schema: public; 
 --
 
 ALTER TABLE ONLY channels ALTER COLUMN id SET DEFAULT nextval('channels_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: aaron
+-- Name: id; Type: DEFAULT; Schema: public; 
+--
+
+ALTER TABLE ONLY quotes ALTER COLUMN id SET DEFAULT nextval('quotes_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; 
 --
 
 ALTER TABLE ONLY sources ALTER COLUMN id SET DEFAULT nextval('sources_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: aaron
+-- Name: id; Type: DEFAULT; Schema: public; 
 --
 
 ALTER TABLE ONLY text ALTER COLUMN id SET DEFAULT nextval('text_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: aaron
+-- Name: id; Type: DEFAULT; Schema: public; 
 --
 
 ALTER TABLE ONLY users ALTER COLUMN id SET DEFAULT nextval('users_id_seq'::regclass);
 
 
 --
--- Name: id; Type: DEFAULT; Schema: public; Owner: aaron
+-- Name: id; Type: DEFAULT; Schema: public; 
 --
 
 ALTER TABLE ONLY words ALTER COLUMN id SET DEFAULT nextval('words_id_seq'::regclass);
 
 
 --
--- Name: chains_pkey; Type: CONSTRAINT; Schema: public; Owner: aaron; Tablespace: 
+-- Name: chains_pkey; Type: CONSTRAINT; Schema: public;  Tablespace: 
 --
 
 ALTER TABLE ONLY chains
@@ -295,7 +300,7 @@ ALTER TABLE ONLY chains
 
 
 --
--- Name: channels_pkey; Type: CONSTRAINT; Schema: public; Owner: aaron; Tablespace: 
+-- Name: channels_pkey; Type: CONSTRAINT; Schema: public;  Tablespace: 
 --
 
 ALTER TABLE ONLY channels
@@ -303,7 +308,15 @@ ALTER TABLE ONLY channels
 
 
 --
--- Name: sources_pkey; Type: CONSTRAINT; Schema: public; Owner: aaron; Tablespace: 
+-- Name: quotes_pkey; Type: CONSTRAINT; Schema: public;  Tablespace: 
+--
+
+ALTER TABLE ONLY quotes
+    ADD CONSTRAINT quotes_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: sources_pkey; Type: CONSTRAINT; Schema: public; Owner: n; Tablespace: 
 --
 
 ALTER TABLE ONLY sources
@@ -311,7 +324,7 @@ ALTER TABLE ONLY sources
 
 
 --
--- Name: text_pkey; Type: CONSTRAINT; Schema: public; Owner: aaron; Tablespace: 
+-- Name: text_pkey; Type: CONSTRAINT; Schema: public;  Tablespace: 
 --
 
 ALTER TABLE ONLY text
@@ -319,7 +332,7 @@ ALTER TABLE ONLY text
 
 
 --
--- Name: users_pkey; Type: CONSTRAINT; Schema: public; Owner: aaron; Tablespace: 
+-- Name: users_pkey; Type: CONSTRAINT; Schema: public;  Tablespace: 
 --
 
 ALTER TABLE ONLY users
@@ -327,7 +340,7 @@ ALTER TABLE ONLY users
 
 
 --
--- Name: words_pkey; Type: CONSTRAINT; Schema: public; Owner: aaron; Tablespace: 
+-- Name: words_pkey; Type: CONSTRAINT; Schema: public;  Tablespace: 
 --
 
 ALTER TABLE ONLY words
@@ -335,18 +348,52 @@ ALTER TABLE ONLY words
 
 
 --
--- Name: words_word_index; Type: INDEX; Schema: public; Owner: aaron; Tablespace: 
+-- Name: chains_nextwordid_index; Type: INDEX; Schema: public;  Tablespace: 
+--
+
+CREATE INDEX chains_nextwordid_index ON chains USING btree (nextwordid);
+
+
+--
+-- Name: chains_nextwordid_textid_index; Type: INDEX; Schema: public;  Tablespace: 
+--
+
+CREATE INDEX chains_nextwordid_textid_index ON chains USING btree (textid, nextwordid);
+
+
+--
+-- Name: chains_nextwordid_textid_index_new; Type: INDEX; Schema: public;  Tablespace: 
+--
+
+CREATE INDEX chains_nextwordid_textid_index_new ON chains USING btree (nextwordid, textid);
+
+
+--
+-- Name: chains_wordid_index; Type: INDEX; Schema: public;  Tablespace: 
+--
+
+CREATE INDEX chains_wordid_index ON chains USING btree (wordid);
+
+
+--
+-- Name: chains_wordid_textid_index; Type: INDEX; Schema: public;  Tablespace: 
+--
+
+CREATE INDEX chains_wordid_textid_index ON chains USING btree (wordid, textid);
+
+
+--
+-- Name: channels_name_index; Type: INDEX; Schema: public;  Tablespace: 
+--
+
+CREATE INDEX channels_name_index ON channels USING btree (name);
+
+
+--
+-- Name: words_word_index; Type: INDEX; Schema: public;  Tablespace: 
 --
 
 CREATE INDEX words_word_index ON words USING btree (word);
-
-
---
--- Name: srcid; Type: FK CONSTRAINT; Schema: public; Owner: aaron
---
-
-ALTER TABLE ONLY chains
-    ADD CONSTRAINT srcid FOREIGN KEY (textid) REFERENCES text(id);
 
 
 --
