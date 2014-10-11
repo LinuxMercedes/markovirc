@@ -5,6 +5,12 @@ require 'cinch'
 require_relative '../modules/sentence.rb'
 require_relative '../utils.rb'
 
+if $ARGV.size == 0
+  $threads = 5
+else
+  $threads = $ARGV[0]
+end
+
 class TextProcessor < Workers::Worker
   private
   def process_event( event )
@@ -22,6 +28,7 @@ class TextProcessor < Workers::Worker
 
         # Grab the text
         txt = conn.exec( "SELECT text FROM text WHERE id=#{id.to_s}" ).values.first.first
+        #print "TXT:", txt, "\n"
 
         txt = sever txt
         #print "TXT: ", txt, "\n"
@@ -88,9 +95,9 @@ class TextPool <  Workers::Pool
   DEFAULT_POOL_SIZE = 1
 
   def initialize( options = { } )
-    @queued = [ ]
-
     super options 
+    
+    @queued = [ ]
   end
   def enqueue( command, data=nil )
     @queued << data
@@ -114,18 +121,10 @@ timer = Workers::PeriodicTimer.new 1 do
       end
     end
   end
-
-  if $pool.queue_size > $pool.size and $pool.size < Facter.countprocessors 
-    $pool.expand 1
-  elsif $pool.queue_size == 0 and $pool.size > 1
-    $pool.contract 1
-  end
-
-  print "Pool size: ", $pool.size, "\n\n"
 end
 
 # Our pool for future workers
-$pool = TextPool.new( worker_class: TextProcessor, size: 1 )
+$pool = TextPool.new( worker_class: TextProcessor, size: $threads.to_i )
 $check_conn = PG::Connection.open dbname: 'markovirc' 
 
 $pool.join
