@@ -8,7 +8,11 @@ def sever( text )
   # For now, quotes are stripped since handling them is tricky.
   text.gsub! /"/, ""
   sentences = text.scan /([^\.!:\?,]+)([\.!\?:,]+)?/ 
-  sentences.flatten!.compact!
+  # If it's only punctuation, it returns nil
+  sentences = [ text ] if sentences.size == 0
+
+  sentences.flatten!
+  sentences.compact!
 
   last = 0 
   while last != sentences.length
