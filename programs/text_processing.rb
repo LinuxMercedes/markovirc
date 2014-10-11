@@ -5,6 +5,7 @@ require 'cinch'
 require_relative '../modules/sentence.rb'
 require_relative '../utils.rb'
 
+$lastwork = -1
 if $ARGV.size == 0
   $threads = 5
 else
@@ -83,7 +84,6 @@ class TextProcessor < Workers::Worker
         # If we're still here we are finished
         conn.exec "UPDATE text SET processed=TRUE WHERE id=#{id.to_s}"
         conn.close
-        p "Finished processing #" + id.to_s
       end
     end
   end
@@ -111,10 +111,13 @@ end
 
 timer = Workers::PeriodicTimer.new 1 do
   if $pool.queue_size < $pool.size
+    $rate = ( $threads.to_i * 50 ) / ( Time.now.to_f - $lastwork )
+    $lastwork = Time.now.to_i
     # Check for new work
-    texts = $check_conn.exec( "SELECT id FROM text WHERE processed=FALSE LIMIT 50" ).values
+    texts = $check_conn.exec( "SELECT id FROM text WHERE processed=FALSE LIMIT #{$threads.to_i*100}" ).values
     texts.flatten!
 
+    print "Current rate: ", $rate, " sentences/s\n"
     texts.each do |i|
       if not $pool.queued.include? i
         $pool.enqueue :newtext, i
