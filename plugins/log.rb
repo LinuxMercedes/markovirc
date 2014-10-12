@@ -34,69 +34,35 @@ class Log
     sourceid = 0
 
     # Sentences store internally for use in RandomSpeak and other plugins on this thread
-    sentences = sever @msg.message
-    @msg.sentence = ( Sentence.new @msg, sentences )
+    #sentences = sever @msg.message
+    #@msg.sentence = ( Sentence.new @msg, sentences )
 
     # We don't log when we're pinged
     return if @msg.canRespond?
 
     #### Store our channel if it doesn't exist, otherwise get it
-    res = @msg.getArray "SELECT 1 FROM channels WHERE name = ?", @msg.channel.name
-    if res.size == 0
-      @msg.getArray "INSERT INTO channels (name) VALUES (?)", @msg.channel.name
+    chanid = @msg.getFirst "SELECT 1 FROM channels WHERE name = ?", @msg.channel.name
+    if chanid == nil 
+      chanid = @msg.getFirst "INSERT INTO channels (name) VALUES (?) RETURNING id", @msg.channel.name
     end
-
-    chanid = @msg.getFirst "SELECT id FROM channels WHERE name = ?", @msg.channel.name
 
     #### Get our UserID, store if it doesn't exist
-    res = @msg.getArray "SELECT 1 FROM users WHERE hostmask = ?", (@msg.user.name + "@" + @msg.user.host)
-    if res.size == 0
-      @msg.getArray "INSERT INTO users (hostmask) VALUES (?)", (@msg.user.name + "@" + @msg.user.host)
-    end
-
     userid = @msg.getFirst "SELECT id FROM users WHERE hostmask = ?", (@msg.user.name + "@" + @msg.user.host)
+    if userid == nil
+      userid = @msg.getFirst "INSERT INTO users (hostmask) VALUES (?) RETURNING id", (@msg.user.name + "@" + @msg.user.host)
+    end
 
     #### Get SourceID, which uniquely identifies a user in a channel
-    res = @msg.getArray "SELECT 1 FROM sources WHERE channelid = ? AND userid = ?", [chanid, userid]
-    if res.size == 0
-      @msg.getArray "INSERT INTO sources (channelid,userid,type) VALUES (?,?,?)", [chanid, userid, CHANNEL]
+    sourceid = @msg.getFirst "SELECT id FROM sources WHERE channelid = ? AND userid = ?", [chanid, userid]
+    if sourceid == nil
+      sourceid = @msg.getFirst "INSERT INTO sources (channelid,userid,type) VALUES (?,?,?) RETURNING id", [chanid, userid, CHANNEL]
     end
 
-    sourceid = @msg.getFirst "SELECT id FROM sources WHERE userid = ? AND channelid = ?", [userid, chanid]
+    print "\n\nsourceid: ", sourceid, "\n userid: ", userid, "\nchainid: ", chanid, "\n\n"
 
     #### Store our textid
     # Store our source text for future rehashing / referencing
-    @msg.getArray "INSERT INTO text (sourceid, time, text) VALUES (?,?,?)", [sourceid, @msg.time.to_i, @msg.message]
-
-    # and get our sourceid from it
-    textid = @msg.getFirst "SELECT id FROM text WHERE sourceid = ? AND time = ? AND text = ?", [sourceid, @msg.time.to_i, @msg.message]
-    
-    @msg.textid = textid
-  end
-
-  """
-  Chain
-  Create our chain and throw it into main.chains
-
-  We take our base text and split it up into sentences by punctuation.
-  Next split the sentences by space into a 2d array.
-  Then replace all words with their word id.
-  Last create a relation for each word referencing our text.
-  """
-  def chain( textid )
-    sentence = @msg.sentence
-
-    @msg.pool.with do |con|
-      name = "insert_#{textid.to_s}"
-      con.prepare name, "INSERT INTO chains (wordid, textid, nextwordid) values ($1, #{textid.to_s}, $2)"
-      sentence.size.times do |i|
-        if i != sentence.size-1
-          con.exec_prepared name, [sentence[i].wid, sentence[i+1].wid]
-        else
-          con.exec_prepared name, [sentence[i].wid, -1]
-        end
-      end
-    end
+    @msg.textid = @msg.getFirst "INSERT INTO text (sourceid, time, text) VALUES (?,?,?) RETURNING id", [sourceid, @msg.time.to_i, @msg.message]
   end
 
   """
@@ -114,6 +80,8 @@ class Log
     if Random.rand > $bot.set.logic.replyrate and not @msg.canRespond?
       return
     end
+
+    return
 
     words = []
 

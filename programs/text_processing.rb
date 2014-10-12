@@ -27,6 +27,7 @@ class TextProcessor < Workers::Worker
       begin
         # New id is data
         id = event.data
+        print "ID: ", id, "\n"
 
         # Delete anything with our textid already
         @conn.exec( "DELETE FROM chains WHERE textid=#{id.to_s}" )
@@ -88,7 +89,8 @@ class TextProcessor < Workers::Worker
         end
 
         values = values.join(",")
-        @conn.exec "INSERT INTO chains (wordid, nextwordid, textid) VALUES #{values}"
+        print "INSERT INTO chains (wordid, nextwordid, textid) VALUES #{values}\n\n"
+        exit
 
         # If we're still here we are finished
         @conn.exec "UPDATE text SET processed=TRUE WHERE id=#{id.to_s}"
@@ -96,6 +98,7 @@ class TextProcessor < Workers::Worker
       rescue Exception => e
         @conn.exec "UPDATE text SET processed=FALSE WHERE id=#{event.data.to_s}"
         print "Error: ", e.to_s, "\n"
+        raise e
       end
     end
   end
@@ -124,14 +127,14 @@ end
 timer = Workers::PeriodicTimer.new 1 do
   if $pool.queue_size < $pool.size*10
     numperthread = 100
-    $rate = ( $threads.to_i * numperthread - $pool.queue_size ) / ( Time.now.to_f - $lastwork )
-    $lastwork = Time.now.to_i
+    #$rate = ( $threads.to_i * numperthread - $pool.queue_size ) / ( Time.now.to_f - $lastwork )
+    #$lastwork = Time.now.to_i
     # Check for new work
     texts = $check_conn.exec( "SELECT id FROM text WHERE processed=FALSE LIMIT #{$threads.to_i*numperthread}" ).values
     texts.flatten!
 
-    print "\nCurrent rate: ", $rate, " sentences/s\n"
-    print "Workers: ", $pool.size, "\n"
+    #print "\nCurrent rate: ", $rate, " sentences/s\n"
+    print "\Workers: ", $pool.size, "\n"
     left = $check_conn.exec( "SELECT count(*) FROM text WHERE processed=FALSE" ).values.first.first
     print "Remaining: ", left, "\n\n"
     texts.each do |i|
