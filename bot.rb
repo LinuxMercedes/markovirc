@@ -11,7 +11,7 @@ $bot = Markovirc.new do
     c.channels = self.set['channels'].keys
     c.nick = self.set['nick']
     c.user = self.set['user'] 
-    c.plugins.plugins = [Say, SayL, Stats, Src, Log, RandomSpeech]
+    c.plugins.plugins = [Say, SayL, Stats, Src, Log, RandomSpeech, Queued]
   end
 end
 
