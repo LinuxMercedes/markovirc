@@ -6,7 +6,7 @@ require_relative '../modules/sentence.rb'
 require_relative '../utils.rb'
 
 $lastwork = -1
-if $ARGV.size == 0
+if $ARGV == nil or $ARGV.size == 0
   $threads = 5
 else
   $threads = $ARGV[0]
@@ -66,7 +66,7 @@ class TextProcessor < Workers::Worker
         txt = [ ]
         wids = [ ]
 
-        txt.each do |w|
+        oldtxt.each do |w|
           wids << idhash[w]
         end
 
@@ -74,7 +74,7 @@ class TextProcessor < Workers::Worker
         name = "insert_#{id.to_s}"
         conn.prepare name, "INSERT INTO chains (wordid, textid, nextwordid) values ($1, #{id.to_s}, $2)"
         wids.size.times do |i|
-          if i != sentence.size-1
+          if i != wids.size-1
             conn.exec_prepared name, [ wids[i], wids[i+1] ]
           else
             conn.exec_prepared name, [ wids[i], -1 ]
@@ -111,10 +111,11 @@ end
 
 timer = Workers::PeriodicTimer.new 1 do
   if $pool.queue_size < $pool.size
-    $rate = ( $threads.to_i * 50 ) / ( Time.now.to_f - $lastwork )
+    numperthread = 100
+    $rate = ( $threads.to_i * numperthread ) / ( Time.now.to_f - $lastwork )
     $lastwork = Time.now.to_i
     # Check for new work
-    texts = $check_conn.exec( "SELECT id FROM text WHERE processed=FALSE LIMIT #{$threads.to_i*100}" ).values
+    texts = $check_conn.exec( "SELECT id FROM text WHERE processed=FALSE LIMIT #{$threads.to_i*numperthread}" ).values
     texts.flatten!
 
     print "Current rate: ", $rate, " sentences/s\n"
