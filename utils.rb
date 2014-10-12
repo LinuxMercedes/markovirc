@@ -69,7 +69,6 @@ class Markovirc < Cinch::Bot
     # Make some arrays for our channels to log stuff into temporarily.
     # FIXME: Make this a join hook.
     @set.channels.keys.each do |channel|
-      print channel, "\n\n"
       @logs[channel] = ThreadSafe::Array.new
     end
   end
@@ -152,18 +151,18 @@ module DatabaseTools
 
     # Replace our ?'s with our args in order. Escape them and use exec
     # for compatibility with jruby_pg and pg.
-    args.size.times do |i|
+    args.each do |arg|
       query.sub! /(?!\\)\?/ do
-        if argsin[i].is_a? String
+        if arg.is_a? String
           if @pool != nil
             @pool.with do |conn|
-              "'" + conn.escape_string( argsin[i] ) + "'"
+              "'" + conn.escape_string( arg ) + "'"
             end
           else
-            "'" + $conn.escape_string( argsin[i] ) + "'"
+            "'" + $conn.escape_string( arg ) + "'"
           end
         else
-          argsin[i]
+          arg.to_s
         end
       end
     end

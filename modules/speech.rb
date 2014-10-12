@@ -143,7 +143,7 @@ module Speech
   if it's numeric, and returns it as level.
   """
   def sayArgParser( args )
-    args.strip!
+    args = args.strip
     word = args
     level = nil
    

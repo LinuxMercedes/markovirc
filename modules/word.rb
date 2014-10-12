@@ -70,7 +70,7 @@ class Word
       return @text
     end
 
-    @text = @sentence.msg.getFirst "SELECT word FROM words WHERE id = ?", @wid
+    @text = @sentence.msg.getFirst "SELECT word FROM words WHERE id = ?", @wid.to_i
     if @text == nil or @text.strip == ""
       print "ERROR: WID " + @wid.to_s + " was passed to a word constructor but doesn't exist in the database."
     end
