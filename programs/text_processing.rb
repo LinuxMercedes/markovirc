@@ -5,6 +5,8 @@ require 'cinch'
 require_relative '../modules/sentence.rb'
 require_relative '../utils.rb'
 
+$stdout.sync = false
+
 $lastwork = -1
 if $ARGV == nil or $ARGV.size == 0
   $threads = 5
@@ -27,7 +29,7 @@ class TextProcessor < Workers::Worker
       begin
         # New id is data
         id = event.data
-        print "ID: ", id, "\n"
+        #print "ID: ", id, "\n"
 
         # Delete anything with our textid already
         @conn.exec( "DELETE FROM chains WHERE textid=#{id.to_s}" )
@@ -40,6 +42,10 @@ class TextProcessor < Workers::Worker
         #print "TXT:", txt, "\n"
 
         txt = sever txt
+        if txt.size == 0
+          exit
+          # Weird shit
+        end
         #print "TXT: ", txt, "\n"
 
         # Go through each wid and make sure we've got it
@@ -89,16 +95,16 @@ class TextProcessor < Workers::Worker
         end
 
         values = values.join(",")
-        print "INSERT INTO chains (wordid, nextwordid, textid) VALUES #{values}\n\n"
-        exit
-
-        # If we're still here we are finished
-        @conn.exec "UPDATE text SET processed=TRUE WHERE id=#{id.to_s}"
+        @conn.exec "INSERT INTO chains (wordid, nextwordid, textid) VALUES #{values}"
+        print "."
         $stdout.flush
       rescue Exception => e
-        @conn.exec "UPDATE text SET processed=FALSE WHERE id=#{event.data.to_s}"
-        print "Error: ", e.to_s, "\n"
-        raise e
+        if e.to_s != "exit"
+          @conn.exec "UPDATE text SET processed=FALSE WHERE id=#{event.data.to_s}"
+        end
+        #print "Error: ", e.to_s, "\n"
+        print "!"
+        $stdout.flush
       end
     end
   end
