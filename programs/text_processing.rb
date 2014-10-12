@@ -69,24 +69,28 @@ class TextProcessor < Workers::Worker
         oldtxt = txt
         txt = [ ]
         wids = [ ]
+        values = [ ]
 
         oldtxt.each do |w|
           wids << idhash[w]
         end
 
         # Prepare a query to slam into the database over and over
-        name = "insert_#{id.to_s}"
-        @conn.prepare name, "INSERT INTO chains (wordid, textid, nextwordid) values ($1, #{id.to_s}, $2)"
         wids.size.times do |i|
           if i != wids.size-1
-            @conn.exec_prepared name, [ wids[i], wids[i+1] ]
+            values << ("(" + [ wids[i], wids[i+1], id ].join(",") + ")" )
           else
-            @conn.exec_prepared name, [ wids[i], -1 ]
+            values << ("(" + [ wids[i], -1, id ].join(",") + ")" )
           end
         end
 
+        values = values.join(",")
+        @conn.exec "INSERT INTO chains (wordid, nextwordid, textid) VALUES #{values}"
+
         # If we're still here we are finished
         @conn.exec "UPDATE text SET processed=TRUE WHERE id=#{id.to_s}"
+      rescue Exception => e
+        print "Error: ", e.to_s, "\n"
       end
     end
   end
@@ -95,7 +99,7 @@ end
 class TextPool <  Workers::Pool
   attr_accessor :queued
 
-  DEFAULT_POOL_SIZE = 1
+  DEFAULT_POOL_SIZE = $threads 
 
   def initialize( options = { } )
     super options 
@@ -113,8 +117,8 @@ class TextPool <  Workers::Pool
 end
 
 timer = Workers::PeriodicTimer.new 1 do
-  if $pool.queue_size < $pool.size
-    numperthread = 100
+  if $pool.queue_size == 0
+    numperthread = 50
     $rate = ( $threads.to_i * numperthread ) / ( Time.now.to_f - $lastwork )
     $lastwork = Time.now.to_i
     # Check for new work
@@ -122,6 +126,7 @@ timer = Workers::PeriodicTimer.new 1 do
     texts.flatten!
 
     print "Current rate: ", $rate, " sentences/s\n"
+    print "Workers: ", $pool.size, "\n"
     texts.each do |i|
       if not $pool.queued.include? i
         $pool.enqueue :newtext, i
