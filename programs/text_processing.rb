@@ -13,7 +13,14 @@ else
 end
 
 class TextProcessor < Workers::Worker
+  def initialize( options = {} )
+    @conn = PG::Connection.open dbname: 'markovirc'
+    
+    super options
+  end
+
   private
+
   def process_event( event )
     case event.command
     when :newtext
@@ -21,21 +28,18 @@ class TextProcessor < Workers::Worker
         # New id is data
         id = event.data
 
-        # Open our own connection 
-        conn = PG::Connection.open dbname: 'markovirc' 
-
         # Delete anything with our textid already
-        conn.exec( "DELETE FROM chains WHERE textid=#{id.to_s}" )
+        @conn.exec( "DELETE FROM chains WHERE textid=#{id.to_s}" )
 
         # Grab the text
-        txt = conn.exec( "SELECT text FROM text WHERE id=#{id.to_s}" ).values.first.first
+        txt = @conn.exec( "SELECT text FROM text WHERE id=#{id.to_s}" ).values.first.first
         #print "TXT:", txt, "\n"
 
         txt = sever txt
         #print "TXT: ", txt, "\n"
 
         # Go through each wid and make sure we've got it
-        words = conn.exec("SELECT id,word FROM words WHERE word in ('" + txt.uniq.map{ |w| conn.escape_string w }.join("','") + "')").values
+        words = @conn.exec("SELECT id,word FROM words WHERE word in ('" + txt.uniq.map{ |w| @conn.escape_string w }.join("','") + "')").values
         idhash = Hash.new
 
         words.each do |w|
@@ -51,11 +55,11 @@ class TextProcessor < Workers::Worker
             end
           end
 
-          values = "('" + insertwid.map{ |w| conn.escape_string w }.join("'),('") + "')" 
+          values = "('" + insertwid.map{ |w| @conn.escape_string w }.join("'),('") + "')" 
           #print "VALUES: ", values, "\n"
 
           i = 0
-          conn.exec("INSERT INTO words (word) VALUES #{values} RETURNING id").values.each do |w|
+          @conn.exec("INSERT INTO words (word) VALUES #{values} RETURNING id").values.each do |w|
             idhash[insertwid[i]] = w.first
             i += 1
           end
@@ -72,18 +76,17 @@ class TextProcessor < Workers::Worker
 
         # Prepare a query to slam into the database over and over
         name = "insert_#{id.to_s}"
-        conn.prepare name, "INSERT INTO chains (wordid, textid, nextwordid) values ($1, #{id.to_s}, $2)"
+        @conn.prepare name, "INSERT INTO chains (wordid, textid, nextwordid) values ($1, #{id.to_s}, $2)"
         wids.size.times do |i|
           if i != wids.size-1
-            conn.exec_prepared name, [ wids[i], wids[i+1] ]
+            @conn.exec_prepared name, [ wids[i], wids[i+1] ]
           else
-            conn.exec_prepared name, [ wids[i], -1 ]
+            @conn.exec_prepared name, [ wids[i], -1 ]
           end
         end
 
         # If we're still here we are finished
-        conn.exec "UPDATE text SET processed=TRUE WHERE id=#{id.to_s}"
-        conn.close
+        @conn.exec "UPDATE text SET processed=TRUE WHERE id=#{id.to_s}"
       end
     end
   end
