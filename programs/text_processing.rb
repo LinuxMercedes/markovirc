@@ -1,9 +1,8 @@
 require 'pg'
 require 'workers'
-require 'cinch'
 
 require_relative '../modules/sentence.rb'
-require_relative '../utils.rb'
+require_relative '../modules/sever.rb'
 
 $stdout.sync = false
 
@@ -140,9 +139,9 @@ timer = Workers::PeriodicTimer.new 1 do
     texts.flatten!
 
     #print "\nCurrent rate: ", $rate, " sentences/s\n"
-    print "\Workers: ", $pool.size, "\n"
+    #print "\Workers: ", $pool.size, "\n"
     left = $check_conn.exec( "SELECT count(*) FROM text WHERE processed=FALSE" ).values.first.first
-    print "Remaining: ", left, "\n\n"
+    #print "Remaining: ", left, "\n\n"
     texts.each do |i|
       $pool.enqueue :newtext, i
     end
