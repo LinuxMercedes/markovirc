@@ -49,7 +49,7 @@ class Say
       word = "%#{word}%"
       wid = m.getFirst_i_rand "id", "words WHERE word SIMILAR TO ?", word
     else
-      wid = m.getFirst_i_rand "id", "words WHERE word ILIKE ?", word
+      wid = m.getFirst_i_rand "id", "words WHERE word = ?", word
     end
       
     if wid == nil or wid <= 0
