@@ -19,13 +19,55 @@ class Stats
     else
       args = args.split " "
 
-      if args[0] !~ /\#/
+      # Flip between various types of stats searches
+      # Regex search for some specific type
+      if args[0] =~ /^(?<type>[u#w])?\/(?<regex>[^\/]*)\/(?<mod>[i!]+)?$/
+        m = Regexp.last_match
+        type = m[:type]
+        mod = m[:mod]
+        regex = m[:regex]
+        type = "w" if type == "" or type == nil
+        mod = "" if mod == nil
+        mod = mod.split ""
+        c = 0
+        name = ""
+        operator = ( mod.include?('!') ? '!' : '' ) + "~" + ( mod.include?('i') ? '*' : '' ) 
+
+        print "Type: ", type.inspect, " mod: ", mod, " operator: ", operator, " regex: ", regex, "\n\n"
+
+        if type == "u"
+          name = "users"
+          c = msg.getFirst_i( "SELECT count(id) FROM #{name} WHERE hostmask " + operator + " ?", regex )
+        elsif type == "w"
+          name = "words"
+          c = msg.getFirst_i( "SELECT count(id) FROM #{name} WHERE word " + operator + " ?", regex )
+        elsif type == "#"
+          name = "channels"
+          c = msg.getFirst_i( "SELECT count(id) FROM #{name} WHERE name" + operator + " ?", regex )
+        end
+
+        name = "hostmasks" if name == "users"
+        msg.reply "There #{( c == 1 ) ? "is" : "are"} #{c} #{c == 1 ? name[0..-2] : name} that match#{ c == 1 ? "es" : "" } that regex." 
+
+      elsif args[0] =~ /^\#[^\s]+$/
+        channelid = msg.getFirst_i "SELECT id FROM channels WHERE name = ?", args[0] 
+
+        if channelid != nil and channelid > 0
+          contexts = msg.getFirst_i "SELECT count(*) FROM chains
+                                     LEFT JOIN text ON (text.id = chains.textid)
+                                     LEFT JOIN sources ON (text.sourceid = sources.id)
+                                     WHERE channelid = ?", channelid 
+          msg.reply "I have " + contexts.to_s + " contexts for " + args[0] + "." 
+        else
+          msg.reply "I have no contexts for " + args[0] + "."
+        end
+      else
         wid = msg.getFirst "SELECT id FROM words WHERE word = ?", args.join( " " )
+
         if wid == nil
           msg.reply "I don't know the word \"" + args.join( " " ) + "\""
           return
         end
-
         # Get the number of times our word occurs before / after any. 
         contextslhs   = msg.getFirst_i "SELECT count(*) FROM chains WHERE wordid = ? and nextwordid != ?", [ wid, "-1" ]
         contextsrhs   = msg.getFirst_i "SELECT count(*) FROM chains WHERE nextwordid = ?", wid
@@ -71,17 +113,6 @@ class Stats
         msg.reply "I know " + (contextslhs+contextsrhs).commas + " contexts for \"" + args.join( " " ) + "\""
         msg.reply "The most common preceding word is \"" + topbefore + "\" (" + topbeforefreq.to_s + "%) and the most common " +
           "following word is \"" + topnext.to_s + "\" (" + topnextfreq.to_s + "%)."
-      else
-        channelid = msg.getFirst_i "SELECT id FROM channels WHERE name = ?", args[0] 
-        if channelid != nil and channelid > 0
-          contexts = msg.getFirst_i "SELECT count(*) FROM chains
-                                     LEFT JOIN text ON (text.id = chains.textid)
-                                     LEFT JOIN sources ON (text.sourceid = sources.id)
-                                     WHERE channelid = ?", channelid 
-          msg.reply "I have " + contexts.to_s + " contexts for " + args[0] + "." 
-        else
-          msg.reply "I have no contexts for " + args[0] + "."
-        end
       end
     end
   end
