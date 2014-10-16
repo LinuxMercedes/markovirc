@@ -17,7 +17,7 @@ class Stats
       channels = msg.getFirst_i "SELECT MAX(id) FROM channels"
       users = msg.getFirst_i "SELECT MAX(id) FROM users"
 
-      msg.reply( "I have #{contexts.commas} contexts for #{words.commas} (~#{(contexts.to_f/words).sigfig 3} ea) for them. " +
+      msg.reply( "I have #{contexts.commas} contexts for #{words.commas} words (~#{(contexts.to_f/words).sigfig 3} ea). " +
        "I have recorded #{texts.commas} individual messages on #{channels.commas} channels from #{users.commas} users." )
       
       
