@@ -1,10 +1,6 @@
 module RegexParser
   def parseRegex( msgin )
-    if msgin =~ /^(?<type>[u#w])?\/(?<regex>.*)\/(?<mod>[i!]+)?$/
-      m = Regexp.last_match
-      type = m[:type]
-      mod = m[:mod]
-      regex = m[:regex]
+    if /^(?<type>[u#w])?\/(?<regex>.*)\/(?<mod>[i!]+)?$/ =~ msgin
       type = "w" if type == "" or type == nil
       mod = "" if mod == nil
       mod = mod.split ""

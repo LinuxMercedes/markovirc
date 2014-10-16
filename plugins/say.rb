@@ -1,20 +1,23 @@
 require 'cinch'
-
+require_relative '../modules/regexparser.rb'
 require_relative '../modules/speech.rb'
 
 class Say
   include Cinch::Plugin
   include Speech
+  include RegexParser
 
-  match /(say)[l]? (.+)/, method: :execute
+  match /(say[l]?) (.+)/, method: :execute
 
   def execute( m, name, word )
     return if not m.useCommands?
 
-    word, chainlen = self.sayArgParser word
+    word, chainlen, type, regexinfo = self.sayArgParser word
+
+    type = "simto" if name == "sayl" and type != "regex"
 
     # Gets our word and chainlen in the right forms
-    word, chainlen = self.prepare( m, word, chainlen.to_i, ( name == "sayl" ) )
+    word, chainlen = self.prepare( m, word, chainlen, type, regexinfo )
 
     if word == nil or word <= 0
       return
@@ -30,7 +33,7 @@ class Say
   end
 
   # Sanitizes chainlength to fall into specs
-  def prepare( m, word, chainlen, simto )
+  def prepare( m, word, chainlen, type, regexinfo )
     xchain = m.bot.set.logic.maxchainlength
     nchain = m.bot.set.logic.minchainlength
     wid = -1
@@ -45,9 +48,11 @@ class Say
       chainlen = nchain
     end
 
-    if simto
+    if type == "simto"
       word = "%#{word}%"
       wid = m.getFirst_i_rand "id", "words WHERE word SIMILAR TO ?", word
+    elsif type == "regex"
+      wid = m.getFirst_i_rand "id", "words WHERE word " + regexinfo[:op] + " ?", regexinfo[:regex]
     else
       wid = m.getFirst_i_rand "id", "words WHERE word = ?", word
     end

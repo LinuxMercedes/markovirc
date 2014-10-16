@@ -145,19 +145,25 @@ module Speech
   def sayArgParser( args )
     args = args.strip
     word = args
-    level = nil
+    type = ""
+    operator = ""
+
+    # Args can take several forms, usually something like this
+    # !say /match/ #
+    # !say word #
+    # !say word or !say match
+    # !say wo%d
    
-    #Do a bit of black magic to separate a number argument at the end of a !say command from 
-    # the requested word
-    if args.match /[ ]+/
-      args = args.split /[ ]+/
-      args.delete ""
-      if args[-1] =~ /[0-9]{1,2}/
-        word = args[0...-1].join " "
-        level = args[-1].to_i
-      end
+    /^(?<word>.+)(?<level>\s[0-9]+)?$/ =~ args
+    level.strip! if level != nil
+
+    regexinfo = self.parseRegex word
+    if regexinfo != nil
+      type = "regex"
+    else
+      type = "word"
     end
     
-    return word, level
+    return word, level, type, regexinfo
   end
 end
