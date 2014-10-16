@@ -1,7 +1,9 @@
 require 'cinch'
+require_relative '../modules/regexparser.rb'
 
 class Stats
   include Cinch::Plugin
+  include RegexParser 
 
   match /stats(.*)/, method: :execute
 
@@ -19,25 +21,19 @@ class Stats
 
       msg.reply( "I have #{contexts.commas} contexts for #{words.commas} words (~#{(contexts.to_f/words).sigfig 3} ea). " +
        "I have recorded #{texts.commas} individual messages on #{channels.commas} channels from #{users.commas} users." )
-      
-      
-      
     else
       args = args.split " "
 
       # Flip between various types of stats searches
       # Regex search for some specific type
-      if args[0] =~ /^(?<type>[u#w])?\/(?<regex>[^\/]*)\/(?<mod>[i!]+)?$/
-        m = Regexp.last_match
-        type = m[:type]
-        mod = m[:mod]
-        regex = m[:regex]
-        type = "w" if type == "" or type == nil
-        mod = "" if mod == nil
-        mod = mod.split ""
+      parsed = self.parseRegex args.join " "
+      if parsed != nil
+        type = parsed[:type]
+        mod = parsed[:mod]
+        regex = parsed[:regex]
+        operator = parsed[:operator]
         c = 0
         name = ""
-        operator = ( mod.include?('!') ? '!' : '' ) + "~" + ( mod.include?('i') ? '*' : '' ) 
 
         print "Type: ", type.inspect, " mod: ", mod, " operator: ", operator, " regex: ", regex, "\n\n"
 
