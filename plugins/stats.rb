@@ -11,8 +11,8 @@ class Stats
     args = args.strip
 
     if args == ""
-      words = msg.getFirst_i "SELECT count(*) FROM words"
-      contexts = msg.getFirst_i "SELECT count(*) FROM chains"
+      words = msg.getFirst_i "SELECT lastval('words_id_seq')"
+      contexts = msg.getFirst_i "SELECT lastval('chains_id_seq')"
 
       msg.reply "I know " + words.commas + " words and " + contexts.commas + " contexts for them, with an average context density of " \
         + (contexts/words).floor.commas + "."
