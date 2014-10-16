@@ -6,7 +6,7 @@ class Say
   include Cinch::Plugin
   include Speech
 
-  match /(say) (.+)/, method: :execute
+  match /(say)[l]? (.+)/, method: :execute
 
   def execute( m, name, word )
     return if not m.useCommands?

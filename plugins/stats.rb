@@ -11,11 +11,17 @@ class Stats
     args = args.strip
 
     if args == ""
-      words = msg.getFirst_i "SELECT lastval('words_id_seq')"
-      contexts = msg.getFirst_i "SELECT lastval('chains_id_seq')"
+      words = msg.getFirst_i "SELECT MAX(id) FROM words"
+      contexts = msg.getFirst_i "SELECT MAX(id) FROM chains"
+      texts = msg.getFirst_i "SELECT MAX(id) FROM text"
+      channels = msg.getFirst_i "SELECT MAX(id) FROM channels"
+      users = msg.getFirst_i "SELECT MAX(id) FROM users"
 
-      msg.reply "I know " + words.commas + " words and " + contexts.commas + " contexts for them, with an average context density of " \
-        + (contexts/words).floor.commas + "."
+      msg.reply( "I have #{contexts.commas} contexts for #{words.commas} (~#{(contexts.to_f/words).sigfig 3} ea) for them. " +
+       "I have recorded #{texts.commas} individual messages on #{channels.commas} channels from #{users.commas} users." )
+      
+      
+      
     else
       args = args.split " "
 
@@ -57,7 +63,7 @@ class Stats
                                      LEFT JOIN text ON (text.id = chains.textid)
                                      LEFT JOIN sources ON (text.sourceid = sources.id)
                                      WHERE channelid = ?", channelid 
-          msg.reply "I have " + contexts.to_s + " contexts for " + args[0] + "." 
+          msg.reply "I have " + contexts.commas + " contexts for " + args[0] + "." 
         else
           msg.reply "I have no contexts for " + args[0] + "."
         end
