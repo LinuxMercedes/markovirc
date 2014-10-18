@@ -13,6 +13,24 @@ else
   $threads = $ARGV[0]
 end
 
+
+def break_up arr
+  r = [ ]
+  arr.size.times do |i|
+    if i != 0
+      r << arr[i-1..i]
+    else
+      r << [ nil, arr[i] ]
+    end
+
+    if i == arr.size-1
+      r << [ arr[i], nil ]
+    end
+  end
+
+  r
+end
+
 class TextProcessor < Workers::Worker
   def initialize( options = {} )
     @conn = PG::Connection.open dbname: 'markovirc'
@@ -31,7 +49,7 @@ class TextProcessor < Workers::Worker
         #print "ID: ", id, "\n"
 
         # Delete anything with our textid already
-        @conn.exec( "DELETE FROM chains WHERE textid=#{id.to_s}" )
+        #@conn.exec( "DELETE FROM chains WHERE textid=#{id.to_s}" )
 
         # Set this line as processed
         @conn.exec( "UPDATE text SET processed=TRUE WHERE id=#{id.to_s}" )
@@ -84,24 +102,32 @@ class TextProcessor < Workers::Worker
           wids << idhash[w]
         end
 
-        # Prepare a query to slam into the database over and over
-        wids.size.times do |i|
-          if i != wids.size-1
-            values << ("(" + [ wids[i], wids[i+1], id ].join(",") + ")" )
+        # Go through and break up the wids properly
+        wids = break_up wids
+
+
+        last = nil
+        wids.reverse.each do |wid,nextwid|
+          id = @conn.exec "SELECT id FROM chains WHERE wid=$1 AND nextwid=$2 AND nextchain=$3", [ wid, nextwid, last ]
+
+          if id.values.first == nil
+            id = @conn.exec "INSERT INTO chains (wid,nextwid,nextchain,count) VALUES ($1,$2,$3,1) RETURNING id", [ wid, nextwid, last ]
           else
-            values << ("(" + [ wids[i], -1, id ].join(",") + ")" )
+            @conn.exec "UPDATE chains SET count=(count+1) WHERE id=$1", [ id ]
           end
+
+          last = id.values.first.first 
         end
 
+
         values = values.join(",")
-        @conn.exec "INSERT INTO chains (wordid, nextwordid, textid) VALUES #{values}"
         print "."
         $stdout.flush
       rescue Exception => e
         if e.to_s != "exit"
           @conn.exec "UPDATE text SET processed=FALSE WHERE id=#{event.data.to_s}"
         end
-        #print "Error: ", e.to_s, "\n"
+        #print "\nError: ", e.to_s, "\n"
         print "!"
         $stdout.flush
       end
