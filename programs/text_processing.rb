@@ -31,9 +31,20 @@ def break_up arr
   r
 end
 
+def nil_to_null str
+  if str == nil
+    "NULL"
+  else
+    str
+  end
+end
+
 class TextProcessor < Workers::Worker
   def initialize( options = {} )
     @conn = PG::Connection.open dbname: 'markovirc'
+    @conn.exec "PREPARE increment_count (int) AS UPDATE chains SET count=(count+1) WHERE id=$1" 
+    @conn.exec "PREPARE chain_insert (int,int,int) AS INSERT INTO CHAINS (wid,nextwid,nextchain,count) VALUES ($1,$2,$3,1) RETURNING id"
+    @conn.exec "PREPARE chain_select (int,int,int) AS SELECT id FROM chains WHERE wid=$1 AND nextwid=$2 AND nextchain=$3"
     
     super options
   end
@@ -108,12 +119,12 @@ class TextProcessor < Workers::Worker
 
         last = nil
         wids.reverse.each do |wid,nextwid|
-          id = @conn.exec "SELECT id FROM chains WHERE wid=$1 AND nextwid=$2 AND nextchain=$3", [ wid, nextwid, last ]
+          id = @conn.exec "EXECUTE chain_select(#{nil_to_null(wid)},#{nil_to_null(nextwid)},#{nil_to_null(last)})"
 
           if id.values.first == nil
-            id = @conn.exec "INSERT INTO chains (wid,nextwid,nextchain,count) VALUES ($1,$2,$3,1) RETURNING id", [ wid, nextwid, last ]
+            id = @conn.exec "EXECUTE chain_insert(#{nil_to_null(wid)},#{nil_to_null(nextwid)},#{nil_to_null(last)})"
           else
-            @conn.exec "UPDATE chains SET count=(count+1) WHERE id=$1", [ id ]
+            @conn.exec "EXECUTE increment_count(#{nil_to_null(id.to_s)})"
           end
 
           last = id.values.first.first 
