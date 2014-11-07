@@ -45,6 +45,9 @@ class TextProcessor < Workers::Worker
     @conn.exec "PREPARE increment_count (int) AS UPDATE chains SET count=(count+1) WHERE id=$1" 
     @conn.exec "PREPARE chain_insert (int,int,int) AS INSERT INTO CHAINS (wid,nextwid,nextchain,count) VALUES ($1,$2,$3,1) RETURNING id"
     @conn.exec "PREPARE chain_select (int,int,int) AS SELECT id FROM chains WHERE wid=$1 AND nextwid=$2 AND nextchain=$3"
+
+    @conn.exec "PREPARE chain_select_lastnull (int) AS SELECT id FROM chains WHERE wid=$1 AND nextwid IS NULL AND nextchain IS NULL"
+    @conn.exec "PREPARE chain_select_firstnull (int, int) AS SELECT id FROM chains WHERE wid IS NULL AND nextwid=$1 AND nextchain=$2"
     
     super options
   end
@@ -117,14 +120,24 @@ class TextProcessor < Workers::Worker
         wids = break_up wids
 
 
+        # Work backwards so we know what the next chain is since it was done already. The last chain
+        # just has NULLs
         last = nil
         wids.reverse.each do |wid,nextwid|
-          id = @conn.exec "EXECUTE chain_select(#{nil_to_null(wid)},#{nil_to_null(nextwid)},#{nil_to_null(last)})"
+          id = nil
+
+          if wid == nil
+            id = @conn.exec "EXECUTE chain_select_firstnull(#{nextwid},#{last})"
+          elsif nextwid == nil and last == nil
+            id = @conn.exec "EXECUTE chain_select_lastnull(#{wid})"
+          else
+            id = @conn.exec "EXECUTE chain_select(#{wid},#{nextwid},#{last})"
+          end
 
           if id.values.first == nil
             id = @conn.exec "EXECUTE chain_insert(#{nil_to_null(wid)},#{nil_to_null(nextwid)},#{nil_to_null(last)})"
           else
-            @conn.exec "EXECUTE increment_count(#{nil_to_null(id.to_s)})"
+            @conn.exec "EXECUTE increment_count(#{id.values.first.first})"
           end
 
           last = id.values.first.first 
