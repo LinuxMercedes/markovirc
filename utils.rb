@@ -117,23 +117,26 @@ module DatabaseTools
       args = argsin
     end
 
+
+    # Escape args which contain ?
+    args.map! { |a| a.to_s.gsub( /\?/, '\\?' ) }
+
     # Replace our ?'s with our args in order. Escape them and use exec
     # for compatibility with jruby_pg and pg.
     args.each do |arg|
-      query.sub! /(?!\\)\?/ do
-        if arg.is_a? String
-          if @pool != nil
-            @pool.with do |conn|
-              "'" + conn.escape_string( arg ) + "'"
-            end
-          else
-            "'" + $conn.escape_string( arg ) + "'"
+      query.sub! /(?<!\\)\?/ do
+        if @pool != nil
+          @pool.with do |conn|
+            "'" + conn.escape_string( arg ) + "'"
           end
         else
-          arg.to_s
+          "'" + $conn.escape_string( arg ) + "'"
         end
       end
     end
+
+    # Now go back and change any escaped ?s to regular ?s (we escape already escaped ?s twice)
+    query.gsub! /\\\?/, '?'
     
     # Check whether we're using a pool or a global connection
     if @pool != nil
