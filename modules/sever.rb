@@ -1,8 +1,11 @@
 # Intelligently split a sentence by punctuation, then split the individual spaces
 # so we get words.
 def sever( text )
-  # For now, quotes are stripped since handling them is tricky.
+  # Quotes are stripped as alignment is tricky.
   text.gsub! /"/, ""
+  # Switch encoding to remove color
+  text = text.encode( 'UTF-8', :invalid => :replace, :undef => :replace, :replace => '' )
+
   sentences = text.scan /([^\.!:\?,]+)([\.!\?:,]+)?/ 
   # If it's only punctuation, it returns nil
   sentences = [ text ] if sentences.size == 0
