@@ -15,11 +15,12 @@ class Stats
     if args == ""
       words = msg.getFirst_i "SELECT MAX(id) FROM words"
       contexts = msg.getFirst_i "SELECT MAX(id) FROM chains"
+      totcontexts = msg.getFirst_i "SELECT SUM(count) FROM chains"
       texts = msg.getFirst_i "SELECT MAX(id) FROM text"
       channels = msg.getFirst_i "SELECT MAX(id) FROM channels"
       users = msg.getFirst_i "SELECT MAX(id) FROM users"
 
-      msg.reply( "I have #{contexts.commas} contexts for #{words.commas} words (~#{(contexts.to_f/words).sigfig 3} ea). " +
+      msg.reply( "I have #{contexts.commas} unique contexts and #{totcontexts.commas} total for #{words.commas} words (~#{(contexts.to_f/words).sigfig 3} and ~#{(totcontexts.to_f/words).sigfig 3} ea). " +
        "I have recorded #{texts.commas} individual messages on #{channels.commas} channels from #{users.commas} users." )
     else
       args = args.split " "
@@ -35,7 +36,7 @@ class Stats
         c = 0
         name = ""
 
-        print "Type: ", type.inspect, " mod: ", mod, " operator: ", operator, " regex: ", regex, "\n\n"
+        #print "Type: ", type.inspect, " mod: ", mod, " operator: ", operator, " regex: ", regex, "\n\n"
 
         if type == "u"
           name = "users"
@@ -51,18 +52,6 @@ class Stats
         name = "hostmasks" if name == "users"
         msg.reply "There #{( c == 1 ) ? "is" : "are"} #{c} #{c == 1 ? name[0..-2] : name} that match#{ c == 1 ? "es" : "" } that regex." 
 
-      elsif args[0] =~ /^\#[^\s]+$/
-        channelid = msg.getFirst_i "SELECT id FROM channels WHERE name = ?", args[0] 
-
-        if channelid != nil and channelid > 0
-          contexts = msg.getFirst_i "SELECT count(*) FROM chains
-                                     LEFT JOIN text ON (text.id = chains.textid)
-                                     LEFT JOIN sources ON (text.sourceid = sources.id)
-                                     WHERE channelid = ?", channelid 
-          msg.reply "I have " + contexts.commas + " contexts for " + args[0] + "." 
-        else
-          msg.reply "I have no contexts for " + args[0] + "."
-        end
       else
         wid = msg.getFirst "SELECT id FROM words WHERE word = ?", args.join( " " )
 
@@ -71,19 +60,19 @@ class Stats
           return
         end
         # Get the number of times our word occurs before / after any. 
-        contextslhs   = msg.getFirst_i "SELECT count(*) FROM chains WHERE wordid = ? and nextwordid != ?", [ wid, "-1" ]
-        contextsrhs   = msg.getFirst_i "SELECT count(*) FROM chains WHERE nextwordid = ?", wid
+        contextslhs   = msg.getFirst_i "SELECT count(id) FROM chains WHERE wid = ?", wid
+        contextsrhs   = msg.getFirst_i "SELECT count(id) FROM chains WHERE nextwordid = ?", wid
 
         # Get the word which occurs the most before / after our wid.
-        topnext       = msg.getArray "SELECT nextwordid,count(*) FROM chains WHERE wordid = ? AND nextwordid != ? GROUP BY nextwordid ORDER BY count(*) DESC LIMIT 1", [ wid, "-1" ]
-        topbefore     = msg.getArray "SELECT wordid,count(*) FROM chains WHERE nextwordid = ? GROUP BY wordid ORDER BY count(*) DESC LIMIT 1", wid
+        topnext       = msg.getArray "SELECT nextwid,count(id) FROM chains WHERE wid = ? GROUP BY nextwid ORDER BY count(id) DESC LIMIT 1", wid
+        topbefore     = msg.getArray "SELECT wid,count(id) FROM chains WHERE nextwid = ? GROUP BY wid ORDER BY count(id) DESC LIMIT 1", wid
 
         # The query above returns a double array in the format [[topwid, somecount]]
         topnext       = topnext[0][0].to_i
         topbefore     = topbefore[0][0].to_i
 
-        topnexttimes  = msg.getFirst_i "SELECT count(*) FROM chains WHERE wordid = ? AND nextwordid = ?", [ wid, topnext ]
-        topbeforetimes  = msg.getFirst_i "SELECT count(*) FROM chains WHERE wordid = ? AND nextwordid = ?", [ topbefore, wid ]
+        topnexttimes  = msg.getFirst_i "SELECT count(*) FROM chains WHERE wid = ? AND nextwid = ?", [ wid, topnext ]
+        topbeforetimes  = msg.getFirst_i "SELECT count(*) FROM chains WHERE wid = ? AND nextwid = ?", [ topbefore, wid ]
 
         # Use the overloaded float class to give us x sigfigs.
         if topnexttimes == 0
