@@ -24,12 +24,13 @@ class Say
     end
 
     # Chains off of our word with n=chainlen
-    res = Chain.new m, word, chainlen
+    res = Chain.new m, word
+    res.fill m, chainlen
 
     # Return our finalized product
     m.reply res.to_s
 
-    self.log m, res
+    #self.log m, res
   end
 
   # Sanitizes chainlength to fall into specs
@@ -62,19 +63,6 @@ class Say
     end
 
     return wid, chainlen
-  end
-
-  # We push what we said onto a "stack" so we can draw from it for !src later.
-  def log( m, sentence )
-    # Prep the sentence so it doesn't keep msg in memory.
-    sentence.msg = nil
-
-    # Pop it on our psuedostack
-    $bot.logs[m.channel] << sentence  
-
-    if $bot.logs[m.channel].length > $bot.set['history']
-      $bot.delete_at 0
-    end
   end
 end
 

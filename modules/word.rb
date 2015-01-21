@@ -28,11 +28,13 @@ class Word
   @text = nil
   @wid = nil
   
-  attr_accessor :text, :wid, :prefix, :suffix
+  attr_accessor :text, :wid, :prefix, :suffix, :chainid
   
-  def initialize( sentence, word, wid=nil )
+  def initialize( sentence, word, args = { } )
     @sentence = sentence
     @prefix = @suffix = "" 
+    wid = args['wid']
+    @chainid = args['chainid']
 
     if word.is_a? Integer
       @wid = word
@@ -44,6 +46,10 @@ class Word
       @text = word
       @wid = wid.to_i
     end  
+  end
+
+  def setChain( chain )
+    @chainid = chain
   end
 
   def length( )
