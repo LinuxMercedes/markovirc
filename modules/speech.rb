@@ -28,11 +28,12 @@ module Speech
     Fills our chain out to the right. This also grabs and controls our chainlen.
     """
     def fillRight( m, chainlen )
-      chainiterator = chainlen
+      @chainiterator = chainlen
       new = true
-      while self.chainRight( m, chainiterator, new )
+      while self.chainRight( m, new )
         new = !new if new
-        chainiterator = chainlen and new = !new if chainiterator <= 0
+        print "\nCHAIN ITERATOR: ", @chainiterator, "\n\n"
+        @chainiterator = chainlen and new = !new if @chainiterator <= 0
       end
     end
 
@@ -45,7 +46,7 @@ module Speech
     """
     Gets a new word for us and appends it to our words.
     """
-    def chainRight( m, chainiterator, newsource=false )
+    def chainRight( m, newsource=false )
       lastword = @words.last
       wid = nil
 
@@ -54,23 +55,37 @@ module Speech
       if newsource 
         print "New source\n"
         res = m.exec( "SELECT id,sum(count) OVER (ORDER BY id) FROM chains WHERE wid=? ORDER BY id;", [ lastword.wid ] ) 
-        max = res.values.last.last
+        max = res.values.last
+        if max.is_a? Array
+          max = max.last
+        end
+        # This will be the number below our choice
+        choice = rand(max.to_i)
 
-        lastword.setChain( res.field_values("sum").bsearch { |i| i.to_i >= rand(max.to_i) } )
+        lastword.setChain( res.field_values("sum").bsearch { |i| i.to_i >= choice } )
         wid = lastword.wid
+        print "\tlastword.chainid:", lastword.chainid, "\n"
       else
         print "Not new source (chainid=", lastword.chainid, ")\n"
-        res = m.getFirst( "SELECT id,wid FROM chains WHERE id=(SELECT nextchain FROM chains WHERE id=?)", [ lastword.chainid ] )
-        print "res: ", res, "\n"
-        self << Word.new( self, res, { 'wid' => res['wid'], 'chainid' => res['id'] } )     
+        nextid = m.getFirst_i( "SELECT nextchain FROM chains WHERE id=?", lastword.chainid )
+        print "\tNextid: ", nextid, "\n"
+
+        res = m.getArray( "SELECT id,wid FROM chains WHERE id=?", [ nextid ] ).first
+        print "\tID and WID query res: ", res, "\n"
+        return false if res == nil
+
+        self << Word.new( self, res[1].to_i, { 'wid' => res[1].to_i, 'chainid' => res[0].to_i } )     
+
         wid = self.last.wid
+        chainid = self.last.wid
+        print "\tlastword.chainid:", lastword.chainid, "\n"
       end
 
-      chainiterator -= 1
+      @chainiterator -= 1
 
-      print "lastword.wid: ", lastword.wid, "\n\n"
+      print "\tlastword.wid: ", lastword.wid, "\n\n"
 
-      return ( wid != nil )
+      return ( wid != nil and wid != 0 )
     end
 
 
