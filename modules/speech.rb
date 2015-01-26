@@ -20,14 +20,15 @@ module Speech
     Chain a sentence out in both directions. 
     """
     def fill( m, chainlen )
-      self.fillLeft m, chainlen
       self.fillRight m, chainlen
+      self.fillLeft m, chainlen
     end
 
     """
     Fills our chain out to the right. This also grabs and controls our chainlen.
     """
     def fillRight( m, chainlen )
+      print "="*40, "\nCHAIN RIGHT\n", "="*40, "\n"
       @chainiterator = chainlen
       new = true
       while self.chainRight( m, new )
@@ -41,6 +42,14 @@ module Speech
     Fills our chain out to the left.
     """
     def fillLeft( m, chainlen )
+      print "="*40, "\nCHAIN LEFT\n", "="*40, "\n"
+      @chainiterator = chainlen
+      new = true
+      while self.chainLeft( m, new )
+        new = !new if new
+        print "\nCHAIN ITERATOR: ", @chainiterator, "\n\n"
+        @chainiterator = chainlen and new = !new if @chainiterator <= 0
+      end
     end
 
     """
@@ -90,7 +99,42 @@ module Speech
 
 
     def chainLeft( m, chainiterator, newsource=false )
-      return false
+      firstword = @words.first
+      wid = nil
+
+      # Get leftmost word's chainid, if we don't have it, get a random one.
+      if newsource 
+        print "New source\n"
+        res = m.exec( "SELECT id,sum(count) OVER (ORDER BY id) FROM chains WHERE nextwid=? ORDER BY id;", [ firstword.wid ] ) 
+        max = res.values.first
+        if max.is_a? Array
+          max = max.first
+        end
+        # This will be the number below our choice
+        choice = rand(max.to_i)
+
+        firstword.setChain( res.field_values("sum").bsearch { |i| i.to_i >= choice } )
+        wid = firstword.wid
+        print "\tfirstword.chainid:", firstword.chainid, "\n"
+      else
+        print "Not new source (chainid=", firstword.chainid, ")\n"
+
+        res = m.getArray( "SELECT id,wid FROM chains WHERE nextchain=?", [ firstword.chainid ] ).first
+        print "\tID and WID query res: ", res, "\n"
+        return false if res == nil
+
+        self.unshift Word.new( self, res[1].to_i, { 'wid' => res[1].to_i, 'chainid' => res[0].to_i } )     
+
+        wid = self.first.wid
+        chainid = self.first.wid
+        print "\tfirstword.chainid:", firstword.chainid, "\n"
+      end
+
+      @chainiterator -= 1
+
+      print "\tfirstword.wid: ", firstword.wid, "\n\n"
+
+      return ( wid != nil and wid != 0 )
     end
   end
 
