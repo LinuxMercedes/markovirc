@@ -28,7 +28,7 @@ module Speech
       # Starts at half so we don't splce the sentence down the middle.
       @chainiterator = chainlen / 2
       new = true
-      while self.chain( m, new, :right )
+      while self.chain( m, new, :right ) and @words.size < 80
         new = !new if new
         print "\nCHAIN ITERATOR: ", @chainiterator, "\n\n"
         @chainiterator = chainlen and new = !new if @chainiterator <= 0
@@ -44,7 +44,7 @@ module Speech
       @chainiterator = chainlen / 2
       # False so we use our original source.
       new = false
-      while self.chain( m, new, :left )
+      while self.chain( m, new, :left ) and @words.size < 80
         new = !new if new
         print "\nCHAIN ITERATOR: ", @chainiterator, "\n\n"
         @chainiterator = chainlen and new = !new if @chainiterator <= 0
@@ -56,7 +56,8 @@ module Speech
     """
     def chain( m, newsource=false, dir )
       nextword = ( dir == :left ? @words.first : @words.last ) 
-      # New source aggregate wid
+      # New source aggregate id 
+      aggid = ( dir == :left ? "nextchain" : "id" )
       aggwid = ( dir == :left ? "nextwid" : "wid" )
       # Next chain id 
       nextcid = ( dir == :right ? "nextchain" : "id" )
@@ -69,16 +70,23 @@ module Speech
       # Always first call of a sentence.
       if newsource 
         print "New source\n"
-        res = m.exec( "SELECT #{aggwid},sum(count) OVER (ORDER BY id) FROM chains WHERE #{aggwid}=? ORDER BY #{aggwid}", [ nextword.wid ] ) 
+        res = m.exec( "SELECT #{aggid},sum(count) OVER (ORDER BY #{aggid}) FROM chains WHERE #{aggwid}=? ORDER BY #{aggid}", 
+                      [ nextword.wid ] ) 
         print "\tRandom choice res.size: ", res.to_a.size, "\n"
         max = res.to_a.last['sum']  
         print "\tmax value: ", max, "\n"
 
         # This will be the number below our choice
         choice = rand max.to_i 
-
-        #FIXME: I fear going left will break this vv
-        nextword.setChain( res.field_values("sum").bsearch { |i| i.to_i >= choice } )
+        # This is our sum to our id
+        choice = res.field_values("sum").bsearch { |i| i.to_i >= choice } 
+        res.values.each do |id, sum|
+          if sum == choice
+            print "\tFound chain\n"
+            nextword.setChain( id )
+            break
+          end
+        end
         print "\tnextword.chainid: ", nextword.chainid, "\n"
       else
         print "Not new source (chainid=", nextword.chainid, ")\n"
