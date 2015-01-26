@@ -25,7 +25,8 @@ module Speech
     """
     def fillRight( m, chainlen )
       print "="*40, "\nCHAIN RIGHT\n", "="*40, "\n"
-      @chainiterator = chainlen
+      # Starts at half so we don't splce the sentence down the middle.
+      @chainiterator = chainlen / 2
       new = true
       while self.chain( m, new, :right )
         new = !new if new
@@ -39,8 +40,10 @@ module Speech
     """
     def fillLeft( m, chainlen )
       print "="*40, "\nCHAIN LEFT\n", "="*40, "\n"
-      @chainiterator = chainlen
-      new = true
+      # Starts at half to avoid splicing the sentence down the middle.
+      @chainiterator = chainlen / 2
+      # False so we use our original source.
+      new = false
       while self.chain( m, new, :left )
         new = !new if new
         print "\nCHAIN ITERATOR: ", @chainiterator, "\n\n"
