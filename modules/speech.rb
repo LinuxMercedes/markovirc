@@ -81,7 +81,7 @@ module Speech
 
         res = m.getArray( "SELECT id,wid FROM chains WHERE id=?", [ nextid ] ).first
         print "\tID and WID query res: ", res, "\n"
-        return false if res == nil
+        return false if res == nil or res[1] == nil
 
         self << Word.new( self, res[1].to_i, { 'wid' => res[1].to_i, 'chainid' => res[0].to_i } )     
 
@@ -121,7 +121,7 @@ module Speech
 
         res = m.getArray( "SELECT id,wid FROM chains WHERE nextchain=?", [ firstword.chainid ] ).first
         print "\tID and WID query res: ", res, "\n"
-        return false if res == nil
+        return false if res == nil or res[1] == nil
 
         self.unshift Word.new( self, res[1].to_i, { 'wid' => res[1].to_i, 'chainid' => res[0].to_i } )     
 
