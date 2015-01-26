@@ -104,6 +104,7 @@ module Speech
         print "\tnew chainid:", nextword.chainid, "\n"
       end
 
+      # Avoid chaining off of punctuation/symbols.
       @chainiterator -= 1 if nextword.text !~ /,\.!\?\(\)\{\}-_<>\+=\*\$#@/
 
       print "\tnew wid: ", nextword.wid, "\n\n"

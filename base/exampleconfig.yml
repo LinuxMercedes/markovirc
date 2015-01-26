@@ -10,6 +10,9 @@ database: markovirc
 # cause it to report "invalid password."
 authpass:
 
+# Remove to disable logging. This is the subfolder in logs/ name.
+logging: freenode
+
 logic:
   # Markov chain length. Higher means more coherent, but in turn less
   # random. The stock chainlength 4 is very coherent and typically 8 is

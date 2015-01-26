@@ -1,4 +1,5 @@
 require 'cinch'
+require 'fileutils'
 require 'pg'
 
 require_relative "utils.rb"
@@ -13,6 +14,19 @@ $bot = Markovirc.new do
     c.user = self.set['user'] 
     c.plugins.plugins = [Say, SayL, Stats, Src, Log, RandomSpeech, Queued]
   end
+end
+
+# Configure Logging
+if $bot.set.has_key? 'logging'
+  dir = File.expand_path( "./logs/#{$bot.set['logging']}/" )
+  FileUtils.mkdir_p dir
+  file = "#{dir}/#{Time.now.strftime("%Y%m%d")}.log" 
+  $bot.info "Logging to \"#{file}\"\n"
+  $bot.loggers << Cinch::Logger::FormattedLogger.new( File.open( file, "a" ) )
+  $bot.loggers.level = :debug
+  $bot.info "="*40 + "\n"
+  $bot.info "Started logging to \"#{file}\"\n"
+  $bot.info "="*40 + "\n"
 end
 
 $bot.start
