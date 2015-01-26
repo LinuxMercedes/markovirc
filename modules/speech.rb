@@ -46,7 +46,7 @@ module Speech
       new = false
       while self.chain( m, new, :left ) and @words.size < 80
         new = !new if new
-        print "\nCHAIN ITERATOR: ", @chainiterator, "\n\n"
+        print "CHAIN ITERATOR: ", @chainiterator, "\n"
         @chainiterator = chainlen and new = !new if @chainiterator <= 0
       end
     end
@@ -94,19 +94,19 @@ module Speech
         print "\tID and WID query res: ", res, "\n"
         return false if res == nil or res[1] == nil
 
-        newword = Word.new( self, res[1].to_i, { 'wid' => res[1].to_i, 'chainid' => res[0].to_i } )     
+        nextword = Word.new( self, res[1].to_i, { 'wid' => res[1].to_i, 'chainid' => res[0].to_i } )     
         if dir == :left
-          @words.unshift newword
+          @words.unshift nextword
         else
-          @words << newword
+          @words << nextword
         end
 
-        print "\tnextword.chainid:", nextword.chainid, "\n"
+        print "\tnew chainid:", nextword.chainid, "\n"
       end
 
-      @chainiterator -= 1
+      @chainiterator -= 1 if nextword.text !~ /,\.!\?\(\)\{\}-_<>\+=\*\$#@/
 
-      print "\tlastword.wid: ", nextword.wid, "\n\n"
+      print "\tnew wid: ", nextword.wid, "\n\n"
 
       return ( nextword.wid != nil )
     end
