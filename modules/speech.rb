@@ -12,10 +12,6 @@ module Speech
       super msg, words 
     end
     
-    def chain( )
-
-    end 
-      
     """
     Chain a sentence out in both directions. 
     """
@@ -31,7 +27,7 @@ module Speech
       print "="*40, "\nCHAIN RIGHT\n", "="*40, "\n"
       @chainiterator = chainlen
       new = true
-      while self.chainRight( m, new )
+      while self.chain( m, new, :right )
         new = !new if new
         print "\nCHAIN ITERATOR: ", @chainiterator, "\n\n"
         @chainiterator = chainlen and new = !new if @chainiterator <= 0
@@ -45,7 +41,7 @@ module Speech
       print "="*40, "\nCHAIN LEFT\n", "="*40, "\n"
       @chainiterator = chainlen
       new = true
-      while self.chainLeft( m, new )
+      while self.chain( m, new, :left )
         new = !new if new
         print "\nCHAIN ITERATOR: ", @chainiterator, "\n\n"
         @chainiterator = chainlen and new = !new if @chainiterator <= 0
@@ -55,46 +51,53 @@ module Speech
     """
     Gets a new word for us and appends it to our words.
     """
-    def chainRight( m, newsource=false )
-      lastword = @words.last
-      wid = nil
+    def chain( m, newsource=false, dir )
+      nextword = ( dir == :left ? @words.first : @words.last ) 
+      # New source aggregate wid
+      aggwid = ( dir == :left ? "nextwid" : "wid" )
+      # Next chain id 
+      nextcid = ( dir == :right ? "nextchain" : "id" )
+      # Next word id
+      nextwid = ( dir == :right ? "nextwid" : "wid" )
+      # Our critera for the new parameters
+      nextcriteria = ( dir == :left ? "nextchain" : "id" )
 
       # Get rightmost word's chainid, if we don't have it, get a random one.
       # Always first call of a sentence.
       if newsource 
         print "New source\n"
-        res = m.exec( "SELECT id,sum(count) OVER (ORDER BY id) FROM chains WHERE wid=? ORDER BY id;", [ lastword.wid ] ) 
-        max = res.values.last
-        if max.is_a? Array
-          max = max.last
-        end
+        res = m.exec( "SELECT id,sum(count) OVER (ORDER BY id) FROM chains WHERE #{aggwid}=? ORDER BY id", [ nextword.wid ] ) 
+        print "\tRandom choice res.size: ", res.to_a.size, "\n"
+        max = res.to_a.last['sum']  
+        print "\tmax value: ", max, "\n"
+
         # This will be the number below our choice
-        choice = rand(max.to_i)
+        choice = rand max.to_i 
 
-        lastword.setChain( res.field_values("sum").bsearch { |i| i.to_i >= choice } )
-        wid = lastword.wid
-        print "\tlastword.chainid:", lastword.chainid, "\n"
+        #FIXME: I fear going left will break this vv
+        nextword.setChain( res.field_values("sum").bsearch { |i| i.to_i >= choice } )
+        print "\tnextword.chainid: ", nextword.chainid, "\n"
       else
-        print "Not new source (chainid=", lastword.chainid, ")\n"
-        nextid = m.getFirst_i( "SELECT nextchain FROM chains WHERE id=?", lastword.chainid )
-        print "\tNextid: ", nextid, "\n"
-
-        res = m.getArray( "SELECT id,wid FROM chains WHERE id=?", [ nextid ] ).first
+        print "Not new source (chainid=", nextword.chainid, ")\n"
+        res = m.getArray( "SELECT #{nextcid},#{nextwid} FROM chains WHERE #{nextcriteria}=?", [ nextword.chainid ] ).first
         print "\tID and WID query res: ", res, "\n"
         return false if res == nil or res[1] == nil
 
-        self << Word.new( self, res[1].to_i, { 'wid' => res[1].to_i, 'chainid' => res[0].to_i } )     
+        newword = Word.new( self, res[1].to_i, { 'wid' => res[1].to_i, 'chainid' => res[0].to_i } )     
+        if dir == :left
+          @words.unshift newword
+        else
+          @words << newword
+        end
 
-        wid = self.last.wid
-        chainid = self.last.wid
-        print "\tlastword.chainid:", lastword.chainid, "\n"
+        print "\tnextword.chainid:", nextword.chainid, "\n"
       end
 
       @chainiterator -= 1
 
-      print "\tlastword.wid: ", lastword.wid, "\n\n"
+      print "\tlastword.wid: ", nextword.wid, "\n\n"
 
-      return ( wid != nil and wid != 0 )
+      return ( nextword.wid != nil )
     end
 
 
