@@ -69,7 +69,7 @@ module Speech
       # Always first call of a sentence.
       if newsource 
         print "New source\n"
-        res = m.exec( "SELECT id,sum(count) OVER (ORDER BY id) FROM chains WHERE #{aggwid}=? ORDER BY id", [ nextword.wid ] ) 
+        res = m.exec( "SELECT #{aggwid},sum(count) OVER (ORDER BY id) FROM chains WHERE #{aggwid}=? ORDER BY #{aggwid}", [ nextword.wid ] ) 
         print "\tRandom choice res.size: ", res.to_a.size, "\n"
         max = res.to_a.last['sum']  
         print "\tmax value: ", max, "\n"
