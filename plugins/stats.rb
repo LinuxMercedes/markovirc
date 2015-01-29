@@ -64,15 +64,27 @@ class Stats
         contextsrhs   = msg.getFirst_i "SELECT sum(count) FROM chains WHERE nextwid = ?", wid
 
         # Get the word which occurs the most before / after our wid.
-        topnext       = msg.getArray "SELECT nextwid,sum(count) FROM chains WHERE wid = ? GROUP BY nextwid ORDER BY sum DESC LIMIT 1", wid
-        topbefore     = msg.getArray "SELECT wid,sum(count) FROM chains WHERE nextwid = ? GROUP BY wid ORDER BY sum DESC LIMIT 1", wid
+        topnext       = msg.getFirst "SELECT nextwid,sum(count) FROM chains WHERE wid = ? GROUP BY nextwid ORDER BY sum DESC LIMIT 1", wid
+        topbefore     = msg.getFirst "SELECT wid,sum(count) FROM chains WHERE nextwid = ? GROUP BY wid ORDER BY sum DESC LIMIT 1", wid
 
-        # The query above returns a double array in the format [[topwid, somecount]]
-        topnext       = topnext[0][0].to_i
-        topbefore     = topbefore[0][0].to_i
+        $bot.debug "topnext results: " + topnext.inspect
+        $bot.debug "topbefore results: " + topbefore.inspect
 
-        topnexttimes  = msg.getFirst_i "SELECT count(*) FROM chains WHERE wid = ? AND nextwid = ?", [ wid, topnext ]
-        topbeforetimes  = msg.getFirst_i "SELECT count(*) FROM chains WHERE wid = ? AND nextwid = ?", [ topbefore, wid ]
+        topnexttimes = nil
+        topbeforetimes=nil
+
+        if topnext == nil
+          topnexttimes  = msg.getFirst_i "SELECT count(*) FROM chains WHERE wid = ? AND nextwid IS NULL", [ wid ]
+        else
+          topnexttimes  = msg.getFirst_i "SELECT count(*) FROM chains WHERE wid = ? AND nextwid = ?", [ wid, topnext ]
+        end
+
+        if topbefore == nil
+          topbeforetimes  = msg.getFirst_i "SELECT count(*) FROM chains WHERE wid IS NULL AND nextwid = ?", [ wid ]
+        else
+          topbeforetimes  = msg.getFirst_i "SELECT count(*) FROM chains WHERE wid = ? AND nextwid = ?", [ topbefore, wid ]
+
+        end
 
         # Use the overloaded float class to give us x sigfigs.
         if topnexttimes == 0
@@ -89,17 +101,20 @@ class Stats
 
         # Gracefully handle if this word is commonly at the end of a sentence (nextword == -1) or at the beginning
         # (no nextwordid's point to it) 
-        if topnext == nil or topnext == "-1" or topnext == -1
+        if topnext == nil
           topnext     = ""
         else
           topnext     = msg.getFirst "SELECT word FROM words WHERE id = ?", topnext
         end
 
-        if topbefore == nil or topbefore == -1
+        if topbefore == nil 
           topbefore   = ""
         else
           topbefore   = msg.getFirst "SELECT word FROM words WHERE id = ?", topbefore
         end 
+
+        $bot.debug "topbefore word: " + topbefore.to_s
+        $bot.debug "topafter word: " + topnext.to_s
 
         msg.reply "I know " + (contextslhs+contextsrhs).commas + " contexts for \"" + args.join( " " ) + "\""
         msg.reply "The most common preceding word is \"" + topbefore + "\" (" + topbeforefreq.to_s + "%) and the most common " +
