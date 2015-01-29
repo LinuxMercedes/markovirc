@@ -70,23 +70,10 @@ module Speech
       # Always first call of a sentence.
       if newsource 
         print "New source\n"
-        res = m.exec( "SELECT #{aggid},sum(count) OVER (ORDER BY #{aggid}) FROM chains WHERE #{aggwid}=? ORDER BY #{aggid}", 
-                      [ nextword.wid ] ) 
-        print "\tRandom choice res.size: ", res.to_a.size, "\n"
-        max = res.to_a.last['sum']  
-        print "\tmax value: ", max, "\n"
+        self.setupSelect( m )
+        id = m.getFirst_i( "SELECT selectchain#{( dir == :left ? "left" : "right" )}(?);", nextword.wid ) 
 
-        # This will be the number below our choice
-        choice = rand max.to_i 
-        # This is our sum to our id
-        choice = res.field_values("sum").bsearch { |i| i.to_i >= choice } 
-        res.values.each do |id, sum|
-          if sum == choice
-            print "\tFound chain\n"
-            nextword.setChain( id )
-            break
-          end
-        end
+        nextword.setChain( id )
         print "\tnextword.chainid: ", nextword.chainid, "\n"
       else
         print "Not new source (chainid=", nextword.chainid, ")\n"
@@ -112,44 +99,56 @@ module Speech
       return ( nextword.wid != nil )
     end
 
+    def setupSelect( m )
+      m.exec( "
+        CREATE OR REPLACE FUNCTION selectchainright (bigint)
+          RETURNS bigint AS $$
+          DECLARE
+            maxsum BIGINT;
+            res    BIGINT;
+          BEGIN
+            DROP TABLE IF EXISTS widcache_$1;
+            CREATE TEMP TABLE widcache_$1 AS (
+              SELECT id,sum(count) OVER (ORDER BY id) 
+                FROM chains
+                WHERE wid=$1
+                ORDER BY id
+            );
+            maxsum := ( SELECT max(sum) 
+                     FROM widcache_$1 );
+            res := ( SELECT id
+              FROM widcache_$1
+              WHERE sum >= FLOOR(RANDOM() * maxsum)
+              LIMIT 1 );
 
-    def chainLeft( m, chainiterator, newsource=false )
-      firstword = @words.first
-      wid = nil
+            RETURN res;
+          ROLLBACK;
+          END;
+        $$ LANGUAGE plpgsql;
+        CREATE OR REPLACE FUNCTION selectchainleft (bigint)
+          RETURNS bigint AS $$
+          DECLARE
+            maxsum BIGINT;
+            res    BIGINT;
+          BEGIN
+            DROP TABLE IF EXISTS widcache_$1;
+            CREATE TEMP TABLE widcache_$1 AS (
+              SELECT nextchain,sum(count) OVER (ORDER BY nextchain) 
+                FROM chains
+                WHERE nextwid=$1
+                ORDER BY nextchain
+            );
+            maxsum := ( SELECT max(sum) 
+                     FROM widcache_$1 );
+            res := ( SELECT nextchain
+              FROM widcache_$1
+              WHERE sum >= FLOOR(RANDOM() * maxsum)
+              LIMIT 1 );
 
-      # Get leftmost word's chainid, if we don't have it, get a random one.
-      if newsource 
-        print "New source\n"
-        res = m.exec( "SELECT id,sum(count) OVER (ORDER BY id) FROM chains WHERE nextwid=? ORDER BY id;", [ firstword.wid ] ) 
-        max = res.values.first
-        if max.is_a? Array
-          max = max.first
-        end
-        # This will be the number below our choice
-        choice = rand(max.to_i)
-
-        firstword.setChain( res.field_values("sum").bsearch { |i| i.to_i >= choice } )
-        wid = firstword.wid
-        print "\tfirstword.chainid:", firstword.chainid, "\n"
-      else
-        print "Not new source (chainid=", firstword.chainid, ")\n"
-
-        res = m.getArray( "SELECT id,wid FROM chains WHERE nextchain=?", [ firstword.chainid ] ).first
-        print "\tID and WID query res: ", res, "\n"
-        return false if res == nil or res[1] == nil
-
-        self.unshift Word.new( self, res[1].to_i, { 'wid' => res[1].to_i, 'chainid' => res[0].to_i } )     
-
-        wid = self.first.wid
-        chainid = self.first.wid
-        print "\tfirstword.chainid:", firstword.chainid, "\n"
-      end
-
-      @chainiterator -= 1
-
-      print "\tfirstword.wid: ", firstword.wid, "\n\n"
-
-      return ( wid != nil and wid != 0 )
+            RETURN res;
+          ROLLBACK;
+          END;
+        $$ LANGUAGE plpgsql;", [ ] );
     end
   end
 
