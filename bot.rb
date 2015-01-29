@@ -21,12 +21,12 @@ if $bot.set.has_key? 'logging'
   dir = File.expand_path( "./logs/#{$bot.set['logging']}/" )
   FileUtils.mkdir_p dir
   file = "#{dir}/#{Time.now.strftime("%Y%m%d")}.log" 
-  $bot.info "Logging to \"#{file}\"\n"
+  $bot.info "Logging to \"#{file}\""
   $bot.loggers << Cinch::Logger::FormattedLogger.new( File.open( file, "a" ) )
   $bot.loggers.level = :debug
-  $bot.info "="*40 + "\n"
-  $bot.info "Started logging to \"#{file}\"\n"
-  $bot.info "="*40 + "\n"
+  $bot.info "="*40 
+  $bot.info "Started logging to \"#{file}\""
+  $bot.info "="*40 
 end
 
 $bot.start

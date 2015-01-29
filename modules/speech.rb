@@ -1,4 +1,5 @@
 require_relative '../modules/sentence.rb'
+require 'cinch'
 
 module Speech
   LEFT = -1
@@ -24,13 +25,15 @@ module Speech
     Fills our chain out to the right. This also grabs and controls our chainlen.
     """
     def fillRight( m, chainlen )
-      print "="*40, "\nCHAIN RIGHT\n", "="*40, "\n"
+      $bot.debug "="*40
+      $bot.debug "CHAIN RIGHT"
+      $bot.debug "="*40 
       # Starts at half so we don't splce the sentence down the middle.
       @chainiterator = chainlen / 2
       new = true
       while self.chain( m, new, :right ) and @words.size < 80
         new = !new if new
-        print "\nCHAIN ITERATOR: ", @chainiterator, "\n\n"
+        $bot.debug "CHAIN ITERATOR: " + @chainiterator.to_s
         @chainiterator = chainlen and new = !new if @chainiterator <= 0
       end
     end
@@ -39,14 +42,16 @@ module Speech
     Fills our chain out to the left.
     """
     def fillLeft( m, chainlen )
-      print "="*40, "\nCHAIN LEFT\n", "="*40, "\n"
+      $bot.debug "="*40
+      $bot.debug "CHAIN LEFT"
+      $bot.debug "="*40 
       # Starts at half to avoid splicing the sentence down the middle.
       @chainiterator = chainlen / 2
       # False so we use our original source.
       new = false
       while self.chain( m, new, :left ) and @words.size < 80
         new = !new if new
-        print "CHAIN ITERATOR: ", @chainiterator, "\n"
+        $bot.debug "CHAIN ITERATOR: " + @chainiterator.to_s
         @chainiterator = chainlen and new = !new if @chainiterator <= 0
       end
     end
@@ -69,16 +74,16 @@ module Speech
       # Get rightmost word's chainid, if we don't have it, get a random one.
       # Always first call of a sentence.
       if newsource 
-        print "New source\n"
+        $bot.debug "New source"
         self.setupSelect( m )
         id = m.getFirst_i( "SELECT selectchain#{( dir == :left ? "left" : "right" )}(?);", nextword.wid ) 
 
         nextword.setChain( id )
-        print "\tnextword.chainid: ", nextword.chainid, "\n"
+        $bot.debug "\tnextword.chainid: " + nextword.chainid.to_s
       else
-        print "Not new source (chainid=", nextword.chainid, ")\n"
+        $bot.debug "Not new source (chainid=" + nextword.chainid.to_s + ")"
         res = m.getArray( "SELECT #{nextcid},#{nextwid} FROM chains WHERE #{nextcriteria}=?", [ nextword.chainid ] ).first
-        print "\tID and WID query res: ", res, "\n"
+        $bot.debug "\tID and WID query res: " + res.to_s 
         return false if res == nil or res[1] == nil
 
         nextword = Word.new( self, res[1].to_i, { 'wid' => res[1].to_i, 'chainid' => res[0].to_i } )     
@@ -88,13 +93,13 @@ module Speech
           @words << nextword
         end
 
-        print "\tnew chainid:", nextword.chainid, "\n"
+        $bot.debug "\tnew chainid:" + nextword.chainid.to_s
       end
 
       # Avoid chaining off of punctuation/symbols.
       @chainiterator -= 1 if nextword.text !~ /,\.!\?\(\)\{\}-_<>\+=\*\$#@/
 
-      print "\tnew wid: ", nextword.wid, "\n\n"
+      $bot.debug "\tnew wid: " + nextword.wid.to_s 
 
       return ( nextword.wid != nil )
     end
