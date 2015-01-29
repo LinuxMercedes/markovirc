@@ -75,7 +75,6 @@ module Speech
       # Always first call of a sentence.
       if newsource 
         $bot.debug "New source"
-        self.setupSelect( m )
         id = m.getFirst_i( "SELECT selectchain#{( dir == :left ? "left" : "right" )}(?);", nextword.wid ) 
 
         nextword.setChain( id )
@@ -103,59 +102,6 @@ module Speech
 
       return ( nextword.wid != nil )
     end
-
-    def setupSelect( m )
-      m.exec( "
-        CREATE OR REPLACE FUNCTION selectchainright (bigint)
-          RETURNS bigint AS $$
-          DECLARE
-            maxsum BIGINT;
-            res    BIGINT;
-          BEGIN
-            DROP TABLE IF EXISTS widcache_$1;
-            CREATE TEMP TABLE widcache_$1 AS (
-              SELECT id,sum(count) OVER (ORDER BY id) 
-                FROM chains
-                WHERE wid=$1
-                ORDER BY id
-            );
-            maxsum := ( SELECT max(sum) 
-                     FROM widcache_$1 );
-            res := ( SELECT id
-              FROM widcache_$1
-              WHERE sum >= FLOOR(RANDOM() * maxsum)
-              LIMIT 1 );
-
-            RETURN res;
-          ROLLBACK;
-          END;
-        $$ LANGUAGE plpgsql;
-        CREATE OR REPLACE FUNCTION selectchainleft (bigint)
-          RETURNS bigint AS $$
-          DECLARE
-            maxsum BIGINT;
-            res    BIGINT;
-          BEGIN
-            DROP TABLE IF EXISTS widcache_$1;
-            CREATE TEMP TABLE widcache_$1 AS (
-              SELECT nextchain,sum(count) OVER (ORDER BY nextchain) 
-                FROM chains
-                WHERE nextwid=$1
-                ORDER BY nextchain
-            );
-            maxsum := ( SELECT max(sum) 
-                     FROM widcache_$1 );
-            res := ( SELECT nextchain
-              FROM widcache_$1
-              WHERE sum >= FLOOR(RANDOM() * maxsum)
-              LIMIT 1 );
-
-            RETURN res;
-          ROLLBACK;
-          END;
-        $$ LANGUAGE plpgsql;", [ ] );
-    end
-  end
 
   """
   Wrapper for some common say functions. Grabs the last argument,
