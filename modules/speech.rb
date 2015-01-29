@@ -102,6 +102,7 @@ module Speech
 
       return ( nextword.wid != nil )
     end
+  end
 
   """
   Wrapper for some common say functions. Grabs the last argument,
