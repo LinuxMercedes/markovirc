@@ -47,7 +47,7 @@ class RandomSpeech
     counts = []
     wids = widhash.values
     wids.each do |wid|
-      counts << ( msg.getFirst "SELECT count(id) FROM chains WHERE wordid = ? OR nextwordid = ?", [ wid, wid ] ).to_i
+      counts << ( msg.getFirst "SELECT sum(count) FROM chains WHERE wid = ? OR nextwid = ?", [ wid, wid ] ).to_i
     end
 
     # Drop words with <= one occurence, this means it's brand new and not good fodder.

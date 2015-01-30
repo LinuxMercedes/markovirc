@@ -31,8 +31,8 @@ class Log
     sourceid = 0
 
     # Sentences store internally for use in RandomSpeak and other plugins on this thread
-    #sentences = sever @msg.message
-    #@msg.sentence = ( Sentence.new @msg, sentences )
+    sentences = sever @msg.message
+    @msg.sentence = ( Sentence.new @msg, sentences )
 
     # We don't log when we're pinged
     return if @msg.canRespond?
