@@ -33,12 +33,6 @@ class Markovirc < Cinch::Bot
     @logs = ThreadSafe::Hash.new 
 
     super( )
-
-    # Make some arrays for our channels to log stuff into temporarily.
-    # FIXME: Make this a join hook.
-    @set.channels.keys.each do |channel|
-      @logs[channel] = ThreadSafe::Array.new
-    end
   end
 end
 
@@ -222,43 +216,14 @@ end
 
 # Return a hash where a word => wid
 def widHash( txt, conn )
-        # Go through each wid and make sure we've got it
-        words = conn.exec("SELECT id,word FROM words WHERE word in ('" + txt.uniq.map{ |w| conn.escape_string w }.join("','") + "')").values
-        idhash = Hash.new
+  # Go through each wid and make sure we've got it
+  words = conn.exec("SELECT id,word FROM words WHERE word in ('" + txt.uniq.map{ |w| conn.escape_string w }.join("','") + "')").values
+  idhash = Hash.new
 
-        words.each do |w|
-          idhash[w[1]] = w[0]
-        end
-      
+  words.each do |w|
+    idhash[w[1]] = w[0]
+  end
 
-        idhash
-        #INSERTING
-=begin
-        # Prepare a query to insert tons of words if idhash.size != txt.size
-        if txt.uniq.size != idhash.size
-          insertwid = [ ]
-          txt.each do |w|
-            if not idhash.has_key? w and not insertwid.include? w
-              insertwid << w 
-            end
-          end
-          values = "('" + insertwid.map{ |w| @conn.escape_string w }.join("'),('") + "')" 
 
-          i = 0
-          @conn.exec("INSERT INTO words (word) VALUES #{values} RETURNING id").values.each do |w|
-            idhash[insertwid[i]] = w.first
-            i += 1
-          end
-        end
-
-        # Now order everything properly
-        oldtxt = txt
-        txt = [ ]
-        wids = [ ]
-        values = [ ]
-
-        oldtxt.each do |w|
-          wids << idhash[w]
-        end
-=end
+  idhash
 end
