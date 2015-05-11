@@ -4,7 +4,8 @@ require 'pg'
 
 require_relative "utils.rb"
 reqdir "modules/"
-reqdir "plugins/"
+reqdir "commands/"
+reqdir "classes/"
 
 $bot = Markovirc.new do
   configure do |c|

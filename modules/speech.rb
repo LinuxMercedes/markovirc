@@ -1,4 +1,4 @@
-require_relative '../modules/sentence.rb'
+require_relative '../classes/sentence.rb'
 require 'cinch'
 
 module Speech
