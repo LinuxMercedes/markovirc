@@ -7,14 +7,12 @@ class Say
   include Speech
   include RegexParser
 
-  match /(say[l]?) (.+)/, method: :execute
+  match /(say) (.+)/, method: :execute
 
   def execute( m, name, word )
     return if not m.useCommands?
 
     word, chainlen, type, regexinfo = self.sayArgParser word
-
-    type = "simto" if name == "sayl" and type != "regex"
 
     # Gets our word and chainlen in the right forms
     word, chainlen = self.prepare( m, word, chainlen, type, regexinfo )
@@ -49,10 +47,7 @@ class Say
       chainlen = nchain
     end
 
-    if type == "simto"
-      word = "%#{word}%"
-      wid = m.getFirst_i_rand "id", "words WHERE word SIMILAR TO ?", word
-    elsif type == "regex"
+    if type == "regex"
       wid = m.getFirst_i_rand( "id", ( "words WHERE word " + regexinfo[:op] + " ?" ), regexinfo[:regex] )
     else
       wid = m.getFirst_i_rand "id", "words WHERE word = ?", word
