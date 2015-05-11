@@ -7,9 +7,9 @@ class Say
   include Speech
   include RegexParser
 
-  match /(say) (.+)/, method: :execute
+  match /say (.+)/, method: :execute
 
-  def execute( m, name, word )
+  def execute( m, word )
     return if not m.useCommands?
 
     word, chainlen, type, regexinfo = self.sayArgParser word
