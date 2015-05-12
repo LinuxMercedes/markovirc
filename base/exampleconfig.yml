@@ -1,7 +1,6 @@
 user: markovirc
 nick: markovirc
 server: irc.freenode.net
-database: markovirc
 
 # Postgres database to connect to
 database: markovirc
@@ -60,12 +59,6 @@ logic:
 
 admins:
   - user!invalid@host
-
-# How many sentences we keep for backflow. This determines how far back !src can go.
-history: 50
-
-# Base URL to our quote ruby script, must be web accessible.
-quoteurl: "http://brod.es/quote/"
 
 # List of channels to join on start.
 # Current flags are -speak, silent, -commands, hilight. -speak disables

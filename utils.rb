@@ -22,6 +22,5 @@ def widHash( txt, conn )
     idhash[w[1]] = w[0]
   end
 
-
   idhash
 end
