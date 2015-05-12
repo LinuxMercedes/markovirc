@@ -5,10 +5,10 @@ class Speak
 
   match /(speak|unquiet)/, method: :execute
 
-  def execute( m, word )
-    return if m.canSpeak? or m.canRespond?
+  def execute( m )
+    return if m.canSpeak? or m.canRespond? or $bot.set['channels'][m.channel].has_key? '-commands'
 
-    channel = $bot.set['channels'][m.channel].delete 'silent'
+    $bot.set['channels'][m.channel].delete 'silent'
 
     m.reply "OK"
   end
