@@ -2,7 +2,7 @@
     "configs" : {
         "base" : {
             "location" : "/home/bot/bot/markovirc/",
-            "script" : "restart.sh",
+            "script" : "bash restart.sh",
             "branch" : "master",
             "remote" : "origin"
         }
