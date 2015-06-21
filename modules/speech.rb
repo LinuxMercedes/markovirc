@@ -2,9 +2,6 @@ require_relative '../classes/sentence.rb'
 require 'cinch'
 
 module Speech
-  LEFT = -1
-  RIGHT = 1
-
   class Chain < Sentence
     def_delegators :@words, :each, :unshift, :first, :last, :[], :size, :length
     attr_accessor :words, :msg, :chainids
@@ -32,7 +29,7 @@ module Speech
       @chainiterator = chainlen / 2
       new = true
       while self.chain( m, new, :right ) and @words.size < 80
-        new = !new if new
+        new = false
         $bot.debug "CHAIN ITERATOR: " + @chainiterator.to_s
         @chainiterator = chainlen and new = !new if @chainiterator <= 0
       end
@@ -50,7 +47,7 @@ module Speech
       # False so we use our original source.
       new = false
       while self.chain( m, new, :left ) and @words.size < 80
-        new = !new if new
+        new = false
         $bot.debug "CHAIN ITERATOR: " + @chainiterator.to_s
         @chainiterator = chainlen and new = !new if @chainiterator <= 0
       end
@@ -64,8 +61,6 @@ module Speech
       # New source aggregate id 
       aggid = ( dir == :left ? "nextchain" : "id" )
       aggwid = ( dir == :left ? "nextwid" : "wid" )
-      # Next chain id 
-      nextcid = ( dir == :right ? "nextchain" : "id" )
       # Next word id
       nextwid = ( dir == :right ? "nextwid" : "wid" )
       # Our critera for the new parameters
@@ -75,28 +70,28 @@ module Speech
       # Always first call of a sentence.
       if newsource 
         $bot.debug "New source"
-        id = m.getFirst_i( "SELECT selectchain#{( dir == :left ? "left" : "right" )}(?);", nextword.wid ) 
+        id = m.getFirst_i( "SELECT tid FROM chains WHERE #{aggwid}=?", nextword.wid ) 
+        nextword.textid = id
 
-        nextword.setChain( id )
-        $bot.debug "\tnextword.chainid: " + nextword.chainid.to_s
+        $bot.debug "\tnextword.textid: " + nextword.textid.to_s
       else
-        $bot.debug "Not new source (chainid=" + nextword.chainid.to_s + ")"
-        res = m.getArray( "SELECT #{nextcid},#{nextwid} FROM chains WHERE #{nextcriteria}=?", [ nextword.chainid ] ).first
+        $bot.debug "Not new source (chainid=" + nextword.textid.to_s + ")"
+        res = m.getArray( "SELECT #{nextwid} FROM chains WHERE textid=?", nextword.textid ).first
         $bot.debug "\tID and WID query res: " + res.to_s 
         return false if res == nil or res[1] == nil
 
-        nextword = Word.new( self, res[1].to_i, { 'wid' => res[1].to_i, 'chainid' => res[0].to_i } )     
+        nextword = Word.new( self, res[1].to_i, { 'wid' => res[1].to_i, 'textid' => res[0].to_i } )     
         if dir == :left
           @words.unshift nextword
         else
           @words << nextword
         end
 
-        $bot.debug "\tnew chainid:" + nextword.chainid.to_s
+        $bot.debug "\tnew textid:" + nextword.textid.to_s
       end
 
       # Avoid chaining off of punctuation/symbols.
-      @chainiterator -= 1 if nextword.text !~ /,\.!\?\(\)\{\}-_<>\+=\*\$#@/
+      @chainiterator -= 1 if nextword.text !~ /[,\.!\?\(\)\{\}-_<>\+=\*\$#@]/
 
       $bot.debug "\tnew wid: " + nextword.wid.to_s 
 
