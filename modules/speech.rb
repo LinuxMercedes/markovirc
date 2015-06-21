@@ -58,25 +58,19 @@ module Speech
     """
     def chain( m, newsource=false, dir )
       nextword = ( dir == :left ? @words.first : @words.last ) 
-      # New source aggregate id 
-      aggid = ( dir == :left ? "nextchain" : "id" )
-      aggwid = ( dir == :left ? "nextwid" : "wid" )
-      # Next word id
-      nextwid = ( dir == :right ? "nextwid" : "wid" )
-      # Our critera for the new parameters
-      nextcriteria = ( dir == :left ? "nextchain" : "id" )
+      field = ( dir == :left ? "nextwid" : "wid" )
 
       # Get rightmost word's chainid, if we don't have it, get a random one.
       # Always first call of a sentence.
       if newsource 
         $bot.debug "New source"
-        id = m.getFirst_i( "SELECT tid FROM chains WHERE #{aggwid}=?", nextword.wid ) 
-        nextword.textid = id
+        #SELECT myid FROM mytable OFFSET random()*N LIMIT 1;
+        nextword.textid = m.getFirst_i_rand( "tid", "chains WHERE #{field}=?", nextword.wid ) 
 
         $bot.debug "\tnextword.textid: " + nextword.textid.to_s
       else
-        $bot.debug "Not new source (chainid=" + nextword.textid.to_s + ")"
-        res = m.getArray( "SELECT #{nextwid} FROM chains WHERE textid=?", nextword.textid ).first
+        $bot.debug "Not new source (textid=" + nextword.textid.to_s + ")"
+        res = m.getArray( "SELECT #{field} FROM chains WHERE tid=?", nextword.textid ).first
         $bot.debug "\tID and WID query res: " + res.to_s 
         return false if res == nil or res[1] == nil
 
@@ -91,7 +85,7 @@ module Speech
       end
 
       # Avoid chaining off of punctuation/symbols.
-      @chainiterator -= 1 if nextword.text !~ /[,\.!\?\(\)\{\}-_<>\+=\*\$#@]/
+      @chainiterator -= 1 if nextword.text !~ /[,\.!\?\(\)\{\}\-_<>\+=\*\$#@]/
 
       $bot.debug "\tnew wid: " + nextword.wid.to_s 
 
