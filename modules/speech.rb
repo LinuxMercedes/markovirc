@@ -65,16 +65,31 @@ module Speech
       if newsource 
         $bot.debug "New source"
         #SELECT myid FROM mytable OFFSET random()*N LIMIT 1;
-        nextword.textid = m.getFirst_i_rand( "tid", "chains WHERE #{field}=?", nextword.wid ) 
+        res = m.getFirst_array_rand( [ "id", "tid" ], "chains WHERE #{field}=?", nextword.wid ) 
+
+        if res == nil or res[0] == nil or res[1] == nil
+          # chain is done, we're done going this way
+          $bot.debug "Couldn't find textid."
+          return false
+        end
+
+        nextword.chainid = res[0].to_i
+        nextword.textid = res[1].to_i
 
         $bot.debug "\tnextword.textid: " + nextword.textid.to_s
-      else
-        $bot.debug "Not new source (textid=" + nextword.textid.to_s + ")"
-        res = m.getArray( "SELECT #{field} FROM chains WHERE tid=?", nextword.textid ).first
-        $bot.debug "\tID and WID query res: " + res.to_s 
-        return false if res == nil or res[1] == nil
 
-        nextword = Word.new( self, res[1].to_i, { 'wid' => res[1].to_i, 'textid' => res[0].to_i } )     
+      else
+
+        $bot.debug "Not new source (textid=" + nextword.textid.to_s + ")"
+        res = m.getFirst_array_rand( [ "id", field ], "chains WHERE id=?", nextword.chainid ) 
+        $bot.debug "\tID and #{field} query res: " + res.to_s 
+        if res == nil or res[0] == nil or res[1] == nil
+          # chain is done, we're done going this way
+          $bot.debug "Chain terminated\n"
+          return false
+        end
+
+        nextword = Word.new( self, res[1].to_i, { 'chainid' => res[0].to_i, 'textid' => nextword.textid } ) 
         if dir == :left
           @words.unshift nextword
         else

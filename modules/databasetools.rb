@@ -52,7 +52,7 @@ module DatabaseTools
 
     args = nargs
     
-    r = self.getArray( "SELECT " + selection + " FROM " + query + " OFFSET floor(RANDOM() * (SELECT count(*) FROM " + query + ")) LIMIT 1", args ) 
+    r = self.getArray( "SELECT " + selection.join(',') + " FROM " + query + " OFFSET floor(RANDOM() * (SELECT count(*) FROM " + query + ")) LIMIT 1", args ) 
     
     r = r[0] if r.is_a? Array and r.size == 1
 
