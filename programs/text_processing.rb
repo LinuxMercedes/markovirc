@@ -24,7 +24,8 @@ end
 class TextProcessor < Workers::Worker
   def initialize( options = {} )
     @conn = PG::Connection.open dbname: 'markovirc'
-    @conn.exec "PREPARE chain_insert (int,int,int) AS INSERT INTO CHAINS (wid,nextwid,tid) VALUES ($1,$2,$3)"
+    @conn.exec "PREPARE chain_insert (int,int,int) AS INSERT INTO CHAINS (wid,nextid,tid) VALUES ($1,$2,$3)" \
+               + " RETURNING id"
 
     super options
   end
@@ -88,9 +89,10 @@ class TextProcessor < Workers::Worker
 
         wids.flatten!
 
+        lastcid = nil
         # Gives us consecuitive pairs
-        wids.each_cons(2) do |wid,nextwid|
-          @conn.exec "EXECUTE chain_insert(#{wid},#{nextwid},#{event.data.to_s})"
+        wids.reverse.each do |wid|
+          lastcid = @conn.exec("EXECUTE chain_insert(#{wid},#{nil_to_null(lastcid)},#{event.data.to_s})")[0]['id']
         end
 
         print "."
