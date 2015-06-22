@@ -14,6 +14,14 @@ module Speech
     Chain a sentence out in both directions. 
     """
     def fill( m, chainlen )
+      # FIXME HACK
+      # check for missing chainids
+      # Regex only passes a word with a wordid, so it doesn't have a chainid which causes failure
+      @words.each do |w|
+        if w.chainid == nil 
+          w.chainid = m.getFirst_i_rand( "id", "chains WHERE wid=?", [ w.wid ] )
+        end
+      end
       self.fillRight m, chainlen
       self.fillLeft m, chainlen
     end
