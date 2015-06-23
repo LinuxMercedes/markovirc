@@ -36,7 +36,8 @@ class Stats
         c = 0
         name = ""
 
-        #print "Type: ", type.inspect, " mod: ", mod, " operator: ", operator, " regex: ", regex, "\n\n"
+        $bot.debug "Type: " + type.inspect.to_s + " mod: " + mod.to_s + " operator: " + operator.to_s 
+                   + " regex: " + regex.to_s + "\n\n"
 
         if type == "u"
           name = "users"
@@ -50,7 +51,8 @@ class Stats
         end
 
         name = "hostmasks" if name == "users"
-        msg.reply "There #{( c == 1 ) ? "is" : "are"} #{c} #{c == 1 ? name[0..-2] : name} that match#{ c == 1 ? "es" : "" } that regex." 
+        msg.reply "There #{( c == 1 ) ? "is" : "are"} #{c} #{c == 1 ? name[0..-2] : name} that"
+                  + " match#{ c == 1 ? "es" : "" } that regex." 
 
       else
         wid = msg.getFirst "SELECT id FROM words WHERE word = ?", args.join( " " )
@@ -60,31 +62,27 @@ class Stats
           return
         end
         # Get the number of times our word occurs before / after any. 
-        contextslhs   = msg.getFirst_i "SELECT sum(count) FROM chains WHERE wid = ?", wid
-        contextsrhs   = msg.getFirst_i "SELECT sum(count) FROM chains WHERE nextwid = ?", wid
+        contextsrhs    = msg.getFirst_i( ( "SELECT COUNT(id) FROM chains WHERE nextid in (SELECT " \
+                           + "id FROM chains WHERE wid=?)" ), wid )
+        contextslhs    = msg.getFirst_i( ( "SELECT COUNT(id) FROM chains WHERE id in (SELECT nextid " \
+                           + "FROM chains WHERE wid=?)" ), wid )
 
         # Get the word which occurs the most before / after our wid.
-        topnext       = msg.getFirst "SELECT nextwid,sum(count) FROM chains WHERE wid = ? GROUP BY nextwid ORDER BY sum DESC LIMIT 1", wid
-        topbefore     = msg.getFirst "SELECT wid,sum(count) FROM chains WHERE nextwid = ? GROUP BY wid ORDER BY sum DESC LIMIT 1", wid
+        topbefore      = msg.getArray( ("SELECT COUNT(id) AS count, wid FROM chains WHERE nextid in (SELECT " \
+                           + "id FROM chains WHERE wid=?) GROUP BY wid ORDER BY count DESC LIMIT 1"), \
+                             wid ).first
+        topnext        = msg.getArray( ("SELECT COUNT(id) AS count, wid FROM chains WHERE id in (SELECT " \
+                           + "nextid FROM chains WHERE wid=?) GROUP BY wid ORDER BY count DESC LIMIT 1"), \
+                             wid ).first
 
         $bot.debug "topnext results: " + topnext.inspect
         $bot.debug "topbefore results: " + topbefore.inspect
 
-        topnexttimes = nil
-        topbeforetimes=nil
+        topnexttimes  = topnext.first 
+        topbeforetimes= topbefore.first
 
-        if topnext == nil
-          topnexttimes  = msg.getFirst_i "SELECT count(*) FROM chains WHERE wid = ? AND nextwid IS NULL", [ wid ]
-        else
-          topnexttimes  = msg.getFirst_i "SELECT count(*) FROM chains WHERE wid = ? AND nextwid = ?", [ wid, topnext ]
-        end
-
-        if topbefore == nil
-          topbeforetimes  = msg.getFirst_i "SELECT count(*) FROM chains WHERE wid IS NULL AND nextwid = ?", [ wid ]
-        else
-          topbeforetimes  = msg.getFirst_i "SELECT count(*) FROM chains WHERE wid = ? AND nextwid = ?", [ topbefore, wid ]
-
-        end
+        topnext       = topnext.last
+        topbefore     = topbefore.last
 
         # Use the overloaded float class to give us x sigfigs.
         if topnexttimes == 0
