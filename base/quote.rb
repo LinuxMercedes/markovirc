@@ -42,11 +42,8 @@ end
 def chain_to_word( chains )
   out = []
   chains.length.times.each do |i|
-    sent = exec "SELECT wordid,nextwordid FROM chains WHERE id=$1", chains[i]
+    sent = exec "SELECT wid FROM chains WHERE id=$1", chains[i]
     out << sent[0].to_i
-    if i == chains.length-1
-      out << sent[1].to_i
-    end
   end
 
   if out[-1] == -1
@@ -107,7 +104,7 @@ get '/src/:qid' do
       color = generator.create_hex
 
       res[chn].each do |r|
-        chain = exec( "select wordid,textid from chains where id=$1", r )
+        chain = exec( "select wid,tid from chains where id=$1", r )
 
         colors[chn] = color
         tid = chain[1]
@@ -139,7 +136,7 @@ get '/src/:qid' do
 
     #Get our source text's chain id's
     tids.each do |tid|
-      sent = exec "SELECT id FROM chains WHERE textid=$1 ORDER BY id ASC", tid
+      sent = exec "SELECT id FROM chains WHERE tid=$1 ORDER BY id ASC", tid
       sent.delete( sent[-1] )
       sent.flatten! if sent.is_a? Array
       srctext[tid] = sent
