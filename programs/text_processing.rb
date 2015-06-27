@@ -5,6 +5,7 @@ require_relative '../classes/sentence.rb'
 require_relative '../modules/sever.rb'
 
 $stdout.sync = false
+$numperthread = 100
 
 $lastwork = -1
 if $ARGV == nil or $ARGV.size == 0
@@ -131,12 +132,11 @@ class TextPool <  Workers::Pool
 end
 
 timer = Workers::PeriodicTimer.new 1 do
-  if $pool.queue_size < $pool.size*10
-    numperthread = 100
+  if $pool.queue_size < $pool.size*$numperthread/10
     #$rate = ( $threads.to_i * numperthread - $pool.queue_size ) / ( Time.now.to_f - $lastwork )
     #$lastwork = Time.now.to_i
     # Check for new work
-    texts = $check_conn.exec( "SELECT id FROM text WHERE processed=FALSE LIMIT #{$threads.to_i*numperthread}" ).values
+    texts = $check_conn.exec( "SELECT id FROM text WHERE processed=FALSE LIMIT #{$threads.to_i*$numperthread}" ).values
     texts.flatten!
 
     #print "\nCurrent rate: ", $rate, " sentences/s\n"

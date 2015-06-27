@@ -42,12 +42,8 @@ end
 # Translate a list of chain id's into wordid's
 def chain_to_word( chains )
   out = []
-  if not chains.is_a? Array
-    chains = [ chains ]
-  end
-
-  chains.each do |c|
-    sent = exec "SELECT wid FROM chains WHERE id=$1", c
+  chains.length.times.each do |i|
+    sent = exec "SELECT wid FROM chains WHERE id=$1", chains[i]
     out << sent[0].to_i
   end
 
@@ -103,20 +99,18 @@ get '/src/:qid' do
     colors = Hash.new # Stores colors in order of source id for easy zipping in
     generator = ColorGenerator.new saturation: 0.7, lightness: 0.5, seed: params[:qid].to_i
 
-    lasttid = -1
     res.length.times.each do |chn|
+      chains << []
       tid = 0
       color = generator.create_hex
 
-      chain = exec( "SELECT wid,tid FROM chains WHERE id=$1", res[chn] )
-      colors[chn] = color
-      tid = chain[1]
+      res[chn].each do |r|
+        chain = exec( "select wid,tid from chains where id=$1", r )
 
-      if tid != lasttid
-        chains << []
+        colors[chn] = color
+        tid = chain[1]
+        chains.last << [ color, chain[0], chain[1] ]
       end
-
-      chains.last << [ color, chain[0], tid ]
       tids << tid 
     end
 
@@ -127,7 +121,8 @@ get '/src/:qid' do
     # Push what marko said out.
     chains.map { |c| c.map { |d| wids << d[1].to_i } }
 
-    sentence = Sentence.new( msg, wids )
+    print "wids in: " , wids, "\n\n"
+    sentence = Sentence.new msg, wids
     i = 0
 
     flatchains = chains.flatten
@@ -158,14 +153,14 @@ get '/src/:qid' do
 
     res.length.times.each do |i|
       tid = tids_index[i]
-      print "TID: ", tid, "\n"
-      print "src: ", srctext[tid], "\n", res[i], "\n\n"
+      #print "TID: ", tid, "\n"
+      #print "src: ", srctext[tid], "\n", res[i], "\n\n"
       if not srcsent.has_key? tid
         srctext[tid] = chain_to_word srctext[tid]
       end
       res[i] = chain_to_word res[i]
 
-      print "src: ", srctext[tid], "\n", "res: ", res[i], "\n"
+      #print "src: ", srctext[tid], "\n", "res: ", res[i], "\n"
 
       ind = index_in srctext[tid], res[i] #Find the first occurance of this chain in this fragment & return index
       len = res[i].length
@@ -178,8 +173,7 @@ get '/src/:qid' do
         srcsent[tid] = Sentence.new msg, ( srctext[tid] ) 
 
         # Fill in information about the source user
-        sid = exec( "SELECT sourceid FROM text WHERE id=$1", tid ) 
-        chanid, userid = exec( "SELECT channelid,userid FROM sources WHERE id=$1", sid )
+        chanid, userid = exec( "SELECT channelid,userid FROM sources WHERE id=(SELECT sourceid FROM text WHERE id=$1)", tid )
         username = exec( "SELECT hostmask FROM users WHERE id=$1", userid )
         
         #Limit username
@@ -195,6 +189,7 @@ get '/src/:qid' do
         #if j+ind >= srctext[i].length 
         #  break
         #end
+        print "SRCSENT @ tid: ", srcsent[tid], " SRCSENT @ tid @ ind+j:\n "
         srcsent[tid][ind+j].prefix = "<font color=\"#{colors[i]}\">"
         srcsent[tid][ind+j].suffix = "</font>" 
       end  

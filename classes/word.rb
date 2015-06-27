@@ -77,15 +77,7 @@ class Word
       return @text
     end
 
-    if @wid == nil
-      if $bot
-        $bot.debug "ERROR: wid is not set but attempting to be used\n";
-      else
-        print "ERROR: wid is not set but attempting to be used\n";
-      end
-    end
-
-    @text = @sentence.msg.getFirst( "SELECT word FROM words WHERE id="+@wid.to_s )
+    @text = @sentence.msg.getFirst "SELECT word FROM words WHERE id = ?", @wid.to_i
     if @text == nil or @text.strip == ""
       print "ERROR: WID " + @wid.to_s + " was passed to a word constructor but doesn't exist in the database."
     end

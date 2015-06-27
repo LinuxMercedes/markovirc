@@ -15,6 +15,9 @@ logging: freenode
 # The address to the sinatra quote server, the first bit where you append the id at the end
 quoteurl: http://localhost:4567/src/
 
+# How far back to keep spoken phrases
+history: 25
+
 logic:
   # Markov chain length. Higher means more coherent, but in turn less
   # random. The stock chainlength 4 is very coherent and typically 8 is

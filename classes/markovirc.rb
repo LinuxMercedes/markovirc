@@ -15,5 +15,11 @@ class Markovirc < Cinch::Bot
     @logs = ThreadSafe::Hash.new 
 
     super( )
+
+    # Make some arrays for our channels to log stuff into temporarily.
+    # FIXME: Make this a join hook.
+    @set.channels.keys.each do |channel|
+      @logs[channel] = ThreadSafe::Array.new
+    end
   end
 end

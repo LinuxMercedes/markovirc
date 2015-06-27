@@ -7,6 +7,7 @@ module Speech
     attr_accessor :words, :msg, :chainids
 
     def initialize( msg, words ) 
+      @chainids = []
       super msg, words 
     end
     
@@ -22,16 +23,9 @@ module Speech
           w.chainid = m.getFirst_i_rand( "id", "chains WHERE wid=?", [ w.wid ] )
         end
       end
+
       self.fillRight m, chainlen
       self.fillLeft m, chainlen
-
-      # Store this sentence's chainids in $bot.logs
-      if !$bot.logs[m.channel].is_a? Array
-        $bot.logs[m.channel] = [ ]
-      end
-
-      # FIXME: this'll store forever... until memory exhaustion
-      $bot.logs[m.channel] << @words.map{ |w| w.chainid }
     end
 
     """
@@ -82,13 +76,18 @@ module Speech
       # Always first call of a sentence.
       if newsource 
         $bot.debug "New source"
-        #SELECT myid FROM mytable OFFSET random()*N LIMIT 1;
         res = m.getFirst_array_rand( [ "id", "tid" ], "chains WHERE wid=?", nextword.wid ) 
 
         if res == nil or res[0] == nil or res[1] == nil
           # chain is done, we're done going this way
           $bot.debug "Couldn't find textid."
           return false
+        end
+
+        if dir == :left
+          @chainids.unshift []
+        else
+          @chainids << []
         end
 
         nextword.chainid = res[0].to_i
@@ -117,8 +116,10 @@ module Speech
         nextword = Word.new( self, res[1].to_i, { 'chainid' => res[0].to_i, 'textid' => nextword.textid } ) 
         if dir == :left
           @words.unshift nextword
+          @chainids.first.unshift nextword.chainid
         else
           @words << nextword
+          @chainids.last.push nextword.chainid
         end
 
         $bot.debug "\tnew textid:" + nextword.textid.to_s

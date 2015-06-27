@@ -22,10 +22,11 @@ class Src
     end
 
     sent = $bot.logs[m.channel][-1*args]
+    print "\n\n", sent, "\n\n"
 
     chanid = m.getFirst_i "SELECT id FROM channels WHERE name=?", m.channel
     m.getFirst "INSERT INTO quotes (channelid, chain) VALUES ((SELECT id FROM channels WHERE name=?), ?)", 
-                 [m.channel,JSON.generate(sent)]
+                 [m.channel,JSON.generate(sent.chainids)]
     qid = m.getFirst_i "SELECT currval('quotes_id_seq')"
 
     m.reply "#{m.bot.set.quoteurl}#{qid.to_s}", true
