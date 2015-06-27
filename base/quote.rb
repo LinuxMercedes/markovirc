@@ -147,7 +147,6 @@ get '/src/:qid' do
       print "Before srctext2wid, srctext: ", srctext[tid], "\n", res[i], "\n\n"
       if not maptidtosentence.has_key? tid
         srctext[tid] = chain_to_word srctext[tid]
-        print srctext[tid], "\n\n"
       end
       res[i] = chain_to_word res[i]
 
@@ -191,8 +190,8 @@ get '/src/:qid' do
       out += "<tr>"
 
       ind = maptidtosentence.key sourcesentence
-      out += "<td>" + maptidtodetails[ind][0] + "</td>" + "<td>" + maptidtodetails[ind][1] + "</td>" 
-             + "<td>" + src.to_s + "</td>\n"
+      out += "<td>" + maptidtodetails[ind][0] + "</td>" + "<td>" + maptidtodetails[ind][1] + "</td>" \
+             + "<td>" + sourcesentence.to_s + "</td>\n"
 
       out += "</tr>"
     end

@@ -22,7 +22,8 @@ class Src
     end
 
     sent = $bot.logs[m.channel][-1*args]
-    print "\n\n", sent, "\n\n"
+
+    sent.chainids.map! { |w| w if w.size != 0  }
 
     chanid = m.getFirst_i "SELECT id FROM channels WHERE name=?", m.channel
     m.getFirst "INSERT INTO quotes (channelid, chain) VALUES ((SELECT id FROM channels WHERE name=?), ?)", 
