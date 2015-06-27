@@ -41,17 +41,7 @@ end
 # When tested in the past, it always returns wordid's in order
 # Translate a list of chain id's into wordid's
 def chain_to_word( chains )
-  out = []
-  chains.length.times.each do |i|
-    sent = exec "SELECT wid FROM chains WHERE id=$1", chains[i]
-    out << sent[0].to_i
-  end
-
-  if out[-1] == -1
-    out.delete -1
-  end
-
-  out
+  chains.map { |c| exec( "SELECT wid FROM chains WHERE id=$1", c ).to_i }
 end
 
 
@@ -144,8 +134,8 @@ get '/src/:qid' do
       srctext[tid] = sent
     end
 
-    srcsent = Hash.new
-    srcdeets = Hash.new
+    maptidtosentence = Hash.new    # textid map to sentence class
+    maptidtodetails  = Hash.new    # textid map to [username, channel] ids
 
     #Now that we have both the source text chain id's and the quote's
     #  we can flag text to be colored when it matches, in its entirety,
@@ -153,14 +143,15 @@ get '/src/:qid' do
 
     res.length.times.each do |i|
       tid = tids_index[i]
-      #print "TID: ", tid, "\n"
-      #print "src: ", srctext[tid], "\n", res[i], "\n\n"
-      if not srcsent.has_key? tid
+      print "TID: ", tid, "\n"
+      print "Before srctext2wid, srctext: ", srctext[tid], "\n", res[i], "\n\n"
+      if not maptidtosentence.has_key? tid
         srctext[tid] = chain_to_word srctext[tid]
+        print srctext[tid], "\n\n"
       end
       res[i] = chain_to_word res[i]
 
-      #print "src: ", srctext[tid], "\n", "res: ", res[i], "\n"
+      print "After srctext2wid, srctext: ", srctext[tid], "\n", "res: ", res[i], "\n"
 
       ind = index_in srctext[tid], res[i] #Find the first occurance of this chain in this fragment & return index
       len = res[i].length
@@ -169,8 +160,8 @@ get '/src/:qid' do
       end
       #print "i: " + i.to_s + "\tind: " + ind.to_s + "\tlen: " + len.to_s + "\n\n"
 
-      if not srcsent.has_key? tid
-        srcsent[tid] = Sentence.new msg, ( srctext[tid] ) 
+      if not maptidtosentence.has_key? tid
+        maptidtosentence[tid] = Sentence.new msg, srctext[tid] 
 
         # Fill in information about the source user
         chanid, userid = exec( "SELECT channelid,userid FROM sources WHERE id=(SELECT sourceid FROM text WHERE id=$1)", tid )
@@ -182,25 +173,26 @@ get '/src/:qid' do
         end
 
         channel = exec( "SELECT name FROM channels WHERE id=$1", chanid )
-        srcdeets[tid] = [ username, channel ] 
+        maptidtodetails[tid] = [ username, channel ] 
       end
 
       len.times do |j|
         #if j+ind >= srctext[i].length 
         #  break
         #end
-        print "SRCSENT @ tid: ", srcsent[tid], " SRCSENT @ tid @ ind+j:\n "
-        srcsent[tid][ind+j].prefix = "<font color=\"#{colors[i]}\">"
-        srcsent[tid][ind+j].suffix = "</font>" 
+        print "maptidtosentence @ tid: ", maptidtosentence[tid], " maptidtosentence @ tid @ ind+j:\n "
+        maptidtosentence[tid][ind+j].prefix = "<font color=\"#{colors[i]}\">"
+        maptidtosentence[tid][ind+j].suffix = "</font>" 
       end  
     end
 
     out += "<table cellspacing=\"5\">"
-    srcsent.values.each do |src|
+    maptidtosentence.values.each do |sourcesentence|
       out += "<tr>"
 
-      ind = srcsent.key src
-      out += "<td>" + srcdeets[ind][0] + "</td>" + "<td>" + srcdeets[ind][1] + "</td>" + "<td>" + src.to_s + "</td>\n"
+      ind = maptidtosentence.key sourcesentence
+      out += "<td>" + maptidtodetails[ind][0] + "</td>" + "<td>" + maptidtodetails[ind][1] + "</td>" 
+             + "<td>" + src.to_s + "</td>\n"
 
       out += "</tr>"
     end
