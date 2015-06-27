@@ -24,6 +24,14 @@ module Speech
       end
       self.fillRight m, chainlen
       self.fillLeft m, chainlen
+
+      # Store this sentence's chainids in $bot.logs
+      if !$bot.logs[m.channel].is_a? Array
+        $bot.logs[m.channel] = [ ]
+      end
+
+      # FIXME: this'll store forever... until memory exhaustion
+      $bot.logs[m.channel] << @words.map{ |w| w.chainid }
     end
 
     """
