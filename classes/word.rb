@@ -67,7 +67,7 @@ class Word
     @wid = @sentence.msg.getFirst "SELECT id FROM words WHERE word=?", @text
     if wid == nil
       @sentence.msg.getArray "INSERT INTO words (word) VALUES (?)", @text
-      @wid = @sentence.msg.getFirst "SELECT id FROM words WHERE word = ?", @text
+      @wid = @sentence.msg.getFirst "SELECT id FROM words WHERE word=?", @text
     end
     @wid = @wid.to_i
   end
@@ -77,7 +77,8 @@ class Word
       return @text
     end
 
-    @text = @sentence.msg.getFirst "SELECT word FROM words WHERE id = ?", @wid.to_i
+    #print "WID:\t", @wid.class, "\t", @wid.to_i.class, "\n\n"
+    @text = @sentence.msg.getFirst "SELECT word FROM words WHERE id=?", @wid.to_i
     if @text == nil or @text.strip == ""
       print "ERROR: WID " + @wid.to_s + " was passed to a word constructor but doesn't exist in the database."
     end

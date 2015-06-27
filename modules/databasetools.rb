@@ -8,7 +8,7 @@ module DatabaseTools
     res = self.exec( query, args ).values.first
 
     if res.is_a? Array
-      res = res[0]
+      res = res.first
     end
   end
 
@@ -17,7 +17,7 @@ module DatabaseTools
     res = self.exec( query, args ).values.first
 
     if res.is_a? Array
-      res = res[0]
+      res = res.first
     end
 
     res.to_i
@@ -81,13 +81,17 @@ module DatabaseTools
       query.sub! /(?<!\\)\?/ do
         if @pool != nil
           @pool.with do |conn|
+          #print "ARG: #{arg.to_s} w/ type: #{arg.class} is now #{conn.escape_string(arg)}"
             "'" + conn.escape_string( arg ) + "'"
           end
         else
-          "'" + $conn.escape_string( arg ) + "'"
+          #print "ARG: #{arg.to_s} w/ type: #{arg.class} is now #{$conn.escape_string(arg)}"
+            "'" + $conn.escape_string( arg ) + "'"
         end
       end
     end
+
+    #print "Query: ", query, "\n\n"
 
     # Now go back and change any escaped ?s to regular ?s (we escape already escaped ?s twice)
     query.gsub! /\\\?/, '?'
@@ -95,10 +99,10 @@ module DatabaseTools
     # Check whether we're using a pool or a global connection
     if @pool != nil
       @pool.with do |conn| 
-        conn.exec_params query
+        conn.exec_params query, args
       end
     else
-      $conn.exec_params query, args
+      $conn.exec query
     end
   end
 end
