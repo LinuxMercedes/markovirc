@@ -7,7 +7,6 @@ module Speech
     attr_accessor :words, :msg, :chainids
 
     def initialize( msg, words ) 
-      @chainids = []
       super msg, words 
     end
     
@@ -84,12 +83,6 @@ module Speech
           return false
         end
 
-        if dir == :left
-          @chainids.unshift []
-        else
-          @chainids << []
-        end
-
         nextword.chainid = res[0].to_i
         nextword.textid = res[1].to_i
 
@@ -116,10 +109,8 @@ module Speech
         nextword = Word.new( self, res[1].to_i, { 'chainid' => res[0].to_i, 'textid' => nextword.textid } ) 
         if dir == :left
           @words.unshift nextword
-          @chainids.first.unshift nextword.chainid
         else
           @words << nextword
-          @chainids.last.push nextword.chainid
         end
 
         $bot.debug "\tnew textid:" + nextword.textid.to_s

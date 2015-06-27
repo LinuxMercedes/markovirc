@@ -21,13 +21,24 @@ class Src
       return
     end
 
-    sent = $bot.logs[m.channel][-1*args]
 
-    sent.chainids.map! { |w| w if w.size != 0  }
+    # group chains by source text for serialization
+    chainids = []
+    lasttid = nil
+    $bot.logs[m.channel][-1*args].words.each do |w|
+      if lasttid != w.textid
+        chainids << []
+      end
+      lasttid = w.textid
+
+      chainids.last << w.chainid
+    end
+
+    print chainids, "\n\n"
 
     chanid = m.getFirst_i "SELECT id FROM channels WHERE name=?", m.channel
     m.getFirst "INSERT INTO quotes (channelid, chain) VALUES ((SELECT id FROM channels WHERE name=?), ?)", 
-                 [m.channel,JSON.generate(sent.chainids)]
+                 [m.channel,JSON.generate(chainids)]
     qid = m.getFirst_i "SELECT currval('quotes_id_seq')"
 
     m.reply "#{m.bot.set.quoteurl}#{qid.to_s}", true
