@@ -5,6 +5,8 @@ module Speech
   class Chain < Sentence
     def_delegators :@words, :each, :unshift, :first, :last, :[], :size, :length
     attr_accessor :words, :msg, :chainids
+    @newtextid = nil
+    @newchainid = nil
 
     def initialize( msg, words ) 
       super msg, words 

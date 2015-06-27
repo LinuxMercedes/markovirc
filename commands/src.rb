@@ -34,7 +34,8 @@ class Src
       chainids.last << w.chainid
     end
 
-    print chainids, "\n\n"
+    print "Chainids: ", chainids, "\n"
+    print "Wids: ", $bot.logs[m.channel][-1*args].words.map { |w| w.wid }, "\n\n"
 
     chanid = m.getFirst_i "SELECT id FROM channels WHERE name=?", m.channel
     m.getFirst "INSERT INTO quotes (channelid, chain) VALUES ((SELECT id FROM channels WHERE name=?), ?)", 
