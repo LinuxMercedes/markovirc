@@ -99,7 +99,7 @@ module DatabaseTools
     # Check whether we're using a pool or a global connection
     if @pool != nil
       @pool.with do |conn| 
-        conn.exec_params query, args
+        conn.exec query
       end
     else
       $conn.exec query
