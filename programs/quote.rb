@@ -79,27 +79,26 @@ get '/src/:qid' do
   else
     $conn = PG.connect( :dbname => 'markovirc' )
     # This gets our string of chain id's
-    res = exec( "SELECT chain FROM quotes WHERE id=$1", [ params[:qid] ] )
-    res = JSON.parse res
-    msg = Message.new
+    res = JSON.parse exec( "SELECT chain FROM quotes WHERE id=$1", [ params[:qid] ] )
+    msg = Message.new # Skeleton message
 
     out = ""
     chains = [] # Stores a 2d-array of [ [ word color, word, text source ], ... ]
-    tids = []
+    tids = []   # Our tid list, used as order for the rest of the program.
     colors = Hash.new # Stores colors in order of source id for easy zipping in
     generator = ColorGenerator.new saturation: 0.7, lightness: 0.5, seed: params[:qid].to_i
 
-    res.length.times.each do |chn|
+    res.each do |cs|
       chains << []
       tid = 0
+      # The color that will be shared by this chain
       color = generator.create_hex
 
-      res[chn].each do |r|
-        chain = exec( "select wid,tid from chains where id=$1", r )
+      cs.each do |c|
+        wid, tid = exec( "SELECT wid,tid FROM chains WHERE id=$1", c )
 
-        colors[chn] = color
-        tid = chain[1]
-        chains.last << [ color, chain[0], chain[1] ]
+        colors[res.index cs] = color
+        chains.last << [ color, wid, tid ]
       end
       tids << tid 
     end
