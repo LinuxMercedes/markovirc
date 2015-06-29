@@ -145,7 +145,11 @@ get '/src/:qid' do
       print "TID: ", tid, "\n"
       print "Before srctext2wid, srctext: ", srctext[tid], "\n", res[i], "\n\n"
       if not maptidtosentence.has_key? tid
-        srctext[tid] = chain_to_word srctext[tid]
+        if !srctext[tid].is_a? Array
+          srctext[tid] = chain_to_word [ srctext[tid] ]
+        else
+          srctext[tid] = chain_to_word srctext[tid]
+        end
       end
       res[i] = chain_to_word res[i]
 
