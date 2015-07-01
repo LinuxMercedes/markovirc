@@ -27,7 +27,7 @@ logic:
   maxchainlength: 8 
 
   # Maximum number of times we'll try to generate a new message after throwing one out
-  retries: 10
+  retries: 3
 
   # Percent of messages which markovirc has a chance to reply. Note 
   # that the weights also influence whether he will reply or not too.
@@ -47,7 +47,7 @@ logic:
   minwords: 2
 
   # Penalty for missing the minimum word count.
-  underflow: 30
+  underflow: 31
 
   # Maximum words on either side of the trigger word. This will cause
   # the a penalty to occur.

@@ -16,7 +16,7 @@ module Penalize
     # LHS
     # Start at the far left and work until a word has seed == true
     count = 0
-    @words.times.each do |i|
+    @words.size.times.each do |i|
       last if @words[i].seed
       count += 1
     end
@@ -28,7 +28,7 @@ module Penalize
 
     # RHS
     count = 0
-    @words.times.reverse.each do |i|
+    @words.size.times.reverse_each do |i|
       last if @words[i].seed
       count += 1
     end

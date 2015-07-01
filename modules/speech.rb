@@ -32,10 +32,11 @@ module Speech
       self.fillRight m, chainlen
       self.fillLeft m, chainlen
 
-      return if keep? or tries > m.bot.set.logic.retries
+      return if keep?( m ) or tries > m.bot.set.logic.retries
 
       # If we're resetting, clear chainid and remove all nonseed entries
       @words.map! { |w| if w.seed then w.chainid = nil; w end }
+      @words.compact!
       @chainids = []
       fill m, chainlen, tries+1 # and call again
     end
