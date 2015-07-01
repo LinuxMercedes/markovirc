@@ -27,8 +27,9 @@ functions:
 class Word
   @text = nil
   @wid = nil
+  @seed = false
   
-  attr_accessor :text, :wid, :prefix, :suffix, :chainid, :textid
+  attr_accessor :text, :wid, :prefix, :suffix, :chainid, :textid, :seed
   
   def initialize( sentence, word, args = { } )
     @sentence = sentence
