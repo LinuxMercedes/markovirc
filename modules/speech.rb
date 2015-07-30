@@ -1,8 +1,11 @@
 require_relative '../classes/sentence.rb'
+require_relative 'penalize.rb'
 require 'cinch'
 
 module Speech
   class Chain < Sentence
+    include Penalize
+
     def_delegators :@words, :each, :unshift, :first, :last, :[], :size, :length
     attr_accessor :words, :msg, :chainids
     @newtextid = nil
@@ -15,7 +18,7 @@ module Speech
     """
     Chain a sentence out in both directions. 
     """
-    def fill( m, chainlen )
+    def fill( m, chainlen, tries=0 )
       # FIXME HACK
       # check for missing chainids
       # Regex only passes a word with a wordid, so it doesn't have a chainid which causes failure
@@ -23,10 +26,19 @@ module Speech
         if w.chainid == nil 
           w.chainid = m.getFirst_i_rand( "id", "chains WHERE wid=?", [ w.wid ] )
         end
+        w.seed = true
       end
 
       self.fillRight m, chainlen
       self.fillLeft m, chainlen
+
+      return if keep?( m ) or tries > m.bot.set.logic.retries
+
+      # If we're resetting, clear chainid and remove all nonseed entries
+      @words.map! { |w| if w.seed then w.chainid = nil; w end }
+      @words.compact!
+      @chainids = []
+      fill m, chainlen, tries+1 # and call again
     end
 
     """

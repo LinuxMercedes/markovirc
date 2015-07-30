@@ -29,6 +29,9 @@ logic:
 
   maxchainlength: 8 
 
+  # Maximum number of times we'll try to generate a new message after throwing one out
+  retries: 3
+
   # Percent of messages which markovirc has a chance to reply. Note 
   # that the weights also influence whether he will reply or not too.
   replyrate: .10
@@ -40,18 +43,24 @@ logic:
   ###################################################################
 
   # Max penalty, if something hits this then the phrase is thrown out.
+  # -1 disables penalties
   maxpenalty: 30
 
+  # Minimum words in a chain total.
+  minwords: 2
+
+  # Penalty for missing the minimum word count.
+  underflow: 31
+
   # Maximum words on either side of the trigger word. This will cause
-  # the text chaining to stop immediately and a penalty to occur. 25
-  # means the total max length of a phrase is 51 words.
-  maxwords: 25
+  # the a penalty to occur.
+  maxwords: 15
 
-  # Penalty for hitting the word limit on the left hand side.
-  lhsoverflow: 30
+  # Penalty modifier for hitting the word limit on the left hand side. Every word over adds an increment of this.
+  lhsoverflow: 2
 
-  # Penalty for hitting the word limit on the right hand side.
-  rhsoverflow: 30
+  # Penalty modifier for hitting the word limit on the right hand side. Every word adds an increment of this.
+  rhsoverflow: 2
   
   # Penalty for using a rare chain. This is triggered by a with chainlength 
   # of chainlength/2, not existing in a source text.
