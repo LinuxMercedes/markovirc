@@ -13,6 +13,9 @@ $bot = Markovirc.new do
     c.channels = self.set['channels'].keys
     c.nick = self.set['nick']
     c.user = self.set['user'] 
+    c.port = self.set['port'] or 6667
+    c.ssl.use = self.set['ssl'] or false
+    c.ssl.verify = self.set['sslverify'] or true
     c.plugins.plugins = [Say, Stats, Log, RandomSpeech, Queued, Quiet, Speak, Join, Part, Src]
   end
 end

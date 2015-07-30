@@ -74,6 +74,7 @@ get '/src/' do
 end
 
 get '/src/:qid' do
+  out = "" # What we'll output--- html
   if params[:qid] != params[:qid].to_i.to_s or params[:qid].to_i < 0
     "QID Must be an integer that's greater than 0."
   else
@@ -82,7 +83,6 @@ get '/src/:qid' do
     res = JSON.parse exec( "SELECT chain FROM quotes WHERE id=$1", [ params[:qid] ] )
     msg = Message.new # Skeleton message
 
-    out = ""
     chains = [] # Stores a 2d-array of [ [ word color, word, text source ], ... ]
     tids = []   # Our tid list, used as order for the rest of the program.
     colors = Hash.new # Stores colors in order of source id for easy zipping in

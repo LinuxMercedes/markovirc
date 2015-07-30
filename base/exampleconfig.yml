@@ -1,6 +1,9 @@
 user: markovirc
 nick: markovirc
 server: irc.freenode.net
+port: 6667
+ssl: false
+sslverify: false
 
 # Postgres database to connect to
 database: markovirc
