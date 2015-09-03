@@ -15,13 +15,12 @@ class Stats
     if args == ""
       words = msg.getFirst_i "SELECT MAX(id) FROM words"
       contexts = msg.getFirst_i "SELECT MAX(id) FROM chains"
-      totcontexts = msg.getFirst_i "SELECT SUM(count) FROM chains"
       texts = msg.getFirst_i "SELECT MAX(id) FROM text"
       channels = msg.getFirst_i "SELECT MAX(id) FROM channels"
       users = msg.getFirst_i "SELECT MAX(id) FROM users"
 
-      msg.reply( "I have #{contexts.commas} unique contexts and #{totcontexts.commas} total for #{words.commas} words (~#{(contexts.to_f/words).sigfig 3} and ~#{(totcontexts.to_f/words).sigfig 3} ea). " +
-       "I have recorded #{texts.commas} individual messages on #{channels.commas} channels from #{users.commas} users." )
+      msg.reply( "I have #{contexts.commas} chains for #{words.commas} words (~#{(contexts.to_f/words).sigfig 3} ea). "  +
+      "I have recorded #{texts.commas} individual messages on #{channels.commas} channels from #{users.commas} users." )
     else
       args = args.split " "
 
