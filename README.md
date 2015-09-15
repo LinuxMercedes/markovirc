@@ -29,4 +29,4 @@ Previously, Marko processed all new messages on a new thread (with a GIL). When 
 
 Text processing handles the processing of text logged from the IRC bot instance. It individually processes each line asynchronously from the bot, and queues it up in an internal thread pool. It can optionally be ran with jruby (which requires you to install pg_jruby).
 
-  ruby programs/text_processing.rb [number of workers; default: 15]
+    ruby programs/text_processing.rb [number of workers; default: 15]
