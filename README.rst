@@ -43,4 +43,5 @@ Text processing handles the processing of text logged from the IRC bot instance.
 
 .. code:: bash
 
-    ruby programs/text_processing.rb [number of workers; default: 15]
+    cd programs
+    ruby text_processing.rb [config file; default: ../config.yml] [number of workers; default: 5]
