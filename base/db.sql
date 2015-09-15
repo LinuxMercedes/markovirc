@@ -4,7 +4,7 @@
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
-SET client_encoding = 'SQL_ASCII';
+SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SET check_function_bodies = false;
 SET client_min_messages = warning;
@@ -25,68 +25,6 @@ COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
 
 SET search_path = public, pg_catalog;
 
---
--- Name: selectchainleft(bigint); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION selectchainleft(bigint) RETURNS bigint
-    LANGUAGE plpgsql
-    AS $_$
-          DECLARE
-            maxsum BIGINT;
-            res    BIGINT;
-          BEGIN
-            DROP TABLE IF EXISTS widcache_$1;
-            CREATE TEMP TABLE widcache_$1 AS (
-              SELECT nextchain,sum(count) OVER (ORDER BY nextchain) 
-                FROM chains
-                WHERE nextwid=$1
-                ORDER BY nextchain
-            );
-            maxsum := ( SELECT max(sum) 
-                     FROM widcache_$1 );
-            res := ( SELECT nextchain
-              FROM widcache_$1
-              WHERE sum >= FLOOR(RANDOM() * maxsum)
-              LIMIT 1 );
-
-            RETURN res;
-          ROLLBACK;
-          END;
-        $_$;
-
-
---
--- Name: selectchainright(bigint); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION selectchainright(bigint) RETURNS bigint
-    LANGUAGE plpgsql
-    AS $_$
-          DECLARE
-            maxsum BIGINT;
-            res    BIGINT;
-          BEGIN
-            DROP TABLE IF EXISTS widcache_$1;
-            CREATE TEMP TABLE widcache_$1 AS (
-              SELECT id,sum(count) OVER (ORDER BY id) 
-                FROM chains
-                WHERE wid=$1
-                ORDER BY id
-            );
-            maxsum := ( SELECT max(sum) 
-                     FROM widcache_$1 );
-            res := ( SELECT id
-              FROM widcache_$1
-              WHERE sum >= FLOOR(RANDOM() * maxsum)
-              LIMIT 1 );
-
-            RETURN res;
-          ROLLBACK;
-          END;
-        $_$;
-
-
 SET default_tablespace = '';
 
 SET default_with_oids = false;
@@ -98,9 +36,8 @@ SET default_with_oids = false;
 CREATE TABLE chains (
     id integer NOT NULL,
     wid integer,
-    nextwid integer,
-    nextchain integer,
-    count integer
+    tid integer,
+    nextid integer
 );
 
 
@@ -403,13 +340,6 @@ ALTER TABLE ONLY words
 
 
 --
--- Name: chains_count; Type: INDEX; Schema: public; Owner: -; Tablespace: 
---
-
-CREATE INDEX chains_count ON chains USING btree (count);
-
-
---
 -- Name: chains_id_index; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
@@ -417,17 +347,17 @@ CREATE INDEX chains_id_index ON chains USING btree (id);
 
 
 --
--- Name: chains_nextchain; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: chains_nextid_index; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
-CREATE INDEX chains_nextchain ON chains USING btree (nextchain);
+CREATE INDEX chains_nextid_index ON chains USING btree (nextid);
 
 
 --
--- Name: chains_nextwid; Type: INDEX; Schema: public; Owner: -; Tablespace: 
+-- Name: chains_tid; Type: INDEX; Schema: public; Owner: -; Tablespace: 
 --
 
-CREATE INDEX chains_nextwid ON chains USING btree (nextwid);
+CREATE INDEX chains_tid ON chains USING btree (tid);
 
 
 --
@@ -435,13 +365,6 @@ CREATE INDEX chains_nextwid ON chains USING btree (nextwid);
 --
 
 CREATE INDEX chains_wid_index ON chains USING btree (wid);
-
-
---
--- Name: chains_wid_nextwid_nextcid; Type: INDEX; Schema: public; Owner: -; Tablespace: 
---
-
-CREATE INDEX chains_wid_nextwid_nextcid ON chains USING btree (wid, nextwid, nextchain);
 
 
 --
