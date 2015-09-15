@@ -26,3 +26,6 @@ gem 'json'
 
 # Handles queued sentences for processing
 gem 'rufus-scheduler'
+
+# Handles worker pool
+gem 'workers'

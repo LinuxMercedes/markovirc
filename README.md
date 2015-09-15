@@ -19,8 +19,14 @@ After this, copy down  the example config and edit it in your favorite editor. I
     
 ## Usage
 
-Marko only supports a single command line parameter and it's optional, it is used to specify an alternate config yml which allows easier multiserver support.
+Marko only supports a single, optional command line parameter. The first argument is used to specify an alternate config yml which allows easier multiserver support.
 
-    ruby bot.rb freenode.yml
-    
-    
+    ruby bot.rb [config file; default: config.yml] 
+
+### Text Processing
+
+Previously, Marko processed all new messages on a new thread (with a GIL). When the primary instance of Marko was moved to over 60 channels, a lot of database action was conflicting and causing table locks. This, in turn, spawned many threads which all waited on each other progressively to finish. It quickly became benefical to have a single, separate program handle learning.
+
+Text processing handles the processing of text logged from the IRC bot instance. It individually processes each line asynchronously from the bot, and queues it up in an internal thread pool. It can optionally be ran with jruby (which requires you to install pg_jruby).
+
+  ruby programs/text_processing.rb [number of workers; default: 15]
