@@ -14,6 +14,10 @@ $bot = Markovirc.new do
     c.nick = self.set['nick']
     c.user = self.set['user'] 
     c.port = self.set['port']
+    if self.set.has_key? 'pass'
+      c.password = self.set['pass']
+    end
+
     c.ssl.use = self.set['ssl'] or false
     c.ssl.verify = self.set['sslverify'] or true
     c.plugins.plugins = [Say, Stats, Log, RandomSpeech, Queued, Quiet, Speak, Join, Part, Src]

@@ -1,6 +1,7 @@
 user: markovirc
 nick: markovirc
 server: irc.freenode.net
+# pass: server password--- if any
 port: 6667
 ssl: false
 sslverify: false
