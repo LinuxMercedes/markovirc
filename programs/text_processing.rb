@@ -19,7 +19,7 @@ else
 end
 
 $lastwork = -1
-if ARGV == nil or ARGV.size == 1
+if ARGV.size == 0
   $threads = 5
 elsif ARGV.size == 2
   $threads = ARGV[1]
@@ -44,7 +44,7 @@ class TextProcessor < Workers::Worker
 
   private
 
-  def process_event( event )
+  def event_handler( event )
     case event.command
     when :newtext
       begin
@@ -80,7 +80,6 @@ class TextProcessor < Workers::Worker
           end
 
           values = "('" + insertwid.map{ |w| @conn.escape_string w }.join("'),('") + "')" 
-          #print "VALUES: ", values, "\n"
 
           i = 0
           @conn.exec("INSERT INTO words (word) VALUES #{values} RETURNING id").values.each do |w|
@@ -114,7 +113,7 @@ class TextProcessor < Workers::Worker
           @conn.exec "UPDATE text SET processed=FALSE WHERE id=#{event.data.to_s}"
           @conn.exec "DELETE FROM chains WHERE tid=#{event.data.to_s}"
         end
-        print "\nError: ", e.to_s, "\n"
+        #print "\nError: ", e.to_s, "\n"
         print "!"
         $stdout.flush
       end
@@ -149,7 +148,6 @@ timer = Workers::PeriodicTimer.new 1 do
     texts.flatten!
 
     left = $check_conn.exec( "SELECT count(*) FROM text WHERE processed=FALSE" ).values.first.first
-    #print "Remaining: ", left, "\n\n"
     texts.each do |i|
       $pool.enqueue :newtext, i
     end
