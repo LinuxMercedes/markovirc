@@ -37,4 +37,9 @@ if $bot.set.has_key? 'logging'
   $bot.info "="*40 
 end
 
-$bot.start
+begin
+  $bot.start
+rescue Exception => e
+  $bot.quit "User quit"
+  $bot.pool.shutdown { |c| c.finish }
+end
