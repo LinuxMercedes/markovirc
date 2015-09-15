@@ -28,4 +28,4 @@ gem 'json'
 gem 'rufus-scheduler'
 
 # Handles worker pool
-gem 'workers'
+gem 'workers', '=0.2.2'

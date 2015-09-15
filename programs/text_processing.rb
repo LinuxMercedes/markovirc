@@ -1,17 +1,24 @@
 require 'pg'
 require 'workers'
+require 'settingslogic'
 
 require_relative '../classes/sentence.rb'
 require_relative '../modules/sever.rb'
+require_relative '../classes/settings.rb'
 
+# Don't buffer or wait to catch up.
 $stdout.sync = false
+# The amount of text we queue up for each thread
 $numperthread = 100
 
+#FIXME: These globals are terrible
+$set = Settings.new('../config.yml')
+
 $lastwork = -1
-if $ARGV == nil or $ARGV.size == 0
+if $ARGV == nil or $ARGV.size == 1
   $threads = 5
-else
-  $threads = $ARGV[0]
+elsif $ARGV.size == 2
+  $threads = $ARGV[1]
 end
 
 def nil_to_null str
@@ -24,7 +31,7 @@ end
 
 class TextProcessor < Workers::Worker
   def initialize( options = {} )
-    @conn = PG::Connection.open dbname: 'markovirc'
+    @conn = PG::Connection.open( dbname: $set['database'] )
     @conn.exec "PREPARE chain_insert (int,int,int) AS INSERT INTO CHAINS (wid,nextid,tid) VALUES ($1,$2,$3)" \
                + " RETURNING id"
 
@@ -151,6 +158,6 @@ end
 
 # Our pool for future workers
 $pool = TextPool.new( worker_class: TextProcessor, size: $threads.to_i )
-$check_conn = PG::Connection.open dbname: 'markovirc' 
+$check_conn = PG::Connection.open( dbname: 'markovirc' )
 
 $pool.join
