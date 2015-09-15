@@ -72,7 +72,7 @@ class RandomSpeech
     # Hacky say wrapper
     $bot.handlers.each do |handler|
       if handler.event == :message and "!say w".match handler.pattern.to_r
-        handler.call msg, ["say", widhash.key(wids[Random.rand(0..(wids.size-1))]).to_s ], [] # this is a bit slower since it'll look it up twice, but saves code
+        handler.call msg, [widhash.key(wids[Random.rand(0..(wids.size-1))]).to_s ], [] # this is a bit slower since it'll look it up twice, but saves code
         break
       end
     end
