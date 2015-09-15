@@ -12,13 +12,17 @@ $stdout.sync = false
 $numperthread = 100
 
 #FIXME: These globals are terrible
-$set = Settings.new('../config.yml')
+if ARGV.size == 0
+  $set = Settings.new('../config.yml')
+else
+  $set = Settings.new # class reads from command line
+end
 
 $lastwork = -1
-if $ARGV == nil or $ARGV.size == 1
+if ARGV == nil or ARGV.size == 1
   $threads = 5
-elsif $ARGV.size == 2
-  $threads = $ARGV[1]
+elsif ARGV.size == 2
+  $threads = ARGV[1]
 end
 
 def nil_to_null str
@@ -140,14 +144,10 @@ end
 
 timer = Workers::PeriodicTimer.new 1 do
   if $pool.queue_size < $pool.size*$numperthread/10
-    #$rate = ( $threads.to_i * numperthread - $pool.queue_size ) / ( Time.now.to_f - $lastwork )
-    #$lastwork = Time.now.to_i
     # Check for new work
     texts = $check_conn.exec( "SELECT id FROM text WHERE processed=FALSE LIMIT #{$threads.to_i*$numperthread}" ).values
     texts.flatten!
 
-    #print "\nCurrent rate: ", $rate, " sentences/s\n"
-    #print "\Workers: ", $pool.size, "\n"
     left = $check_conn.exec( "SELECT count(*) FROM text WHERE processed=FALSE" ).values.first.first
     #print "Remaining: ", left, "\n\n"
     texts.each do |i|
@@ -158,6 +158,7 @@ end
 
 # Our pool for future workers
 $pool = TextPool.new( worker_class: TextProcessor, size: $threads.to_i )
-$check_conn = PG::Connection.open( dbname: 'markovirc' )
+# Pool to grab values to process
+$check_conn = PG::Connection.open( dbname: $set['database'] )
 
 $pool.join
