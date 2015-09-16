@@ -67,7 +67,10 @@ class RandomSpeech
       end
     end
 
-    return if wids.size <= 0
+    if wids.size <= 0
+      print "All words were thrown out due to rarity. Not speaking."
+      return
+    end
 
     # Sort each word by its appropriate count. This nasty bit sorts words from least occurences to most. 
     wids = wids.sort { |x, y| counts[wids.index( x )] <=> counts[wids.index( y )] }
