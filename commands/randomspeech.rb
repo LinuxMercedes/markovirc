@@ -18,6 +18,12 @@ class RandomSpeech
   ** The Secret Life of Pronouns, pg 25
   """
   def execute( msg )
+    # If we have -speak and aren't highlighted, we stop here
+    if not msg.canSpeak? and not msg.canRespond?
+      return
+    end
+
+    # If we get a chance (or we are highlighted) respond
     if Random.rand > $bot.set.logic.replyrate and not msg.canRespond?
       return
     end
