@@ -68,7 +68,7 @@ class RandomSpeech
     end
 
     if wids.size <= 0
-      print "All words were thrown out due to rarity. Not speaking."
+      msg.bot.debug "All words were thrown out due to rarity. Not speaking."
       return
     end
 
