@@ -35,7 +35,7 @@ class Stats
         c = 0
         name = ""
 
-        $bot.debug "Type: " + type.inspect.to_s + " mod: " + mod.to_s + " operator: " + operator.to_s 
+        $bot.debug "Type: " + type.inspect.to_s + " mod: " + mod.to_s + " operator: " + operator.to_s  \
                    + " regex: " + regex.to_s + "\n\n"
 
         if type == "u"
@@ -50,7 +50,7 @@ class Stats
         end
 
         name = "hostmasks" if name == "users"
-        msg.reply "There #{( c == 1 ) ? "is" : "are"} #{c} #{c == 1 ? name[0..-2] : name} that"
+        msg.reply "There #{( c == 1 ) ? "is" : "are"} #{c} #{c == 1 ? name[0..-2] : name} that" \
                   + " match#{ c == 1 ? "es" : "" } that regex." 
 
       else
