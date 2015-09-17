@@ -34,6 +34,8 @@ def nil_to_null str
 end
 
 class TextProcessor < Workers::Worker
+
+  attr_accessor :conn
   def initialize( options = {} )
     @conn = PG::Connection.open( dbname: $set['database'] )
     @conn.exec "PREPARE chain_insert (int,int,int) AS INSERT INTO CHAINS (wid,nextid,tid) VALUES ($1,$2,$3)" \
@@ -113,7 +115,7 @@ class TextProcessor < Workers::Worker
           @conn.exec "UPDATE text SET processed=FALSE WHERE id=#{event.data.to_s}"
           @conn.exec "DELETE FROM chains WHERE tid=#{event.data.to_s}"
         end
-        #print "\nError: ", e.to_s, "\n"
+        print "\nError: ", e.to_s, "\n"
         print "!"
         $stdout.flush
       end
@@ -159,4 +161,17 @@ $pool = TextPool.new( worker_class: TextProcessor, size: $threads.to_i )
 # Pool to grab values to process
 $check_conn = PG::Connection.open( dbname: $set['database'] )
 
-$pool.join
+begin
+  $pool.join
+rescue Exception => e
+  print "Shutting down cleanly. Press ctrl+c again to force.\n"
+
+  $pool.shutdown do
+    Thread.current.conn.finish
+  end
+
+  timer.cancel
+
+  $pool.join 1
+  $check_conn.finish
+end

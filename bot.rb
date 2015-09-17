@@ -40,6 +40,9 @@ end
 begin
   $bot.start
 rescue Exception => e
+  $bot.debug "Shutting down cleanly. Press ctrl+c again to force."
   $bot.quit "User quit"
   $bot.pool.shutdown { |c| c.finish }
+
+  sleep 1 # Could wait on $bot.quitting, but it never flips
 end
