@@ -20,7 +20,7 @@ $bot = Markovirc.new do
 
     c.ssl.use = self.set['ssl'] or false
     c.ssl.verify = self.set['sslverify'] or true
-    c.plugins.plugins = [Say, Stats, Log, RandomSpeech, Queued, Quiet, Speak, Join, Part, Src]
+    c.plugins.plugins = [Say, Stats, Log, RandomSpeech, Queued, Quiet, Speak, Join, Part, Src, SayUser]
   end
 end
 

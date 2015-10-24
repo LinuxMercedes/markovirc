@@ -63,6 +63,12 @@ module DatabaseTools
     self.exec( query, args ).values
   end
 
+  def escape_string( string )
+    @pool.with do |conn|
+      conn.escape_string( string )
+    end
+  end
+
   def exec( query, argsin )
     args = Array.new
 

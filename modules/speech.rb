@@ -7,9 +7,11 @@ module Speech
     include Penalize
 
     def_delegators :@words, :each, :unshift, :first, :last, :[], :size, :length
-    attr_accessor :words, :msg, :chainids
+    attr_accessor :words, :msg, :chainids, :extracriteria
     @newtextid = nil
     @newchainid = nil
+
+    @extracriteria = "" # allows us to specify specific sources or times
 
     def initialize( msg, words ) 
       super msg, words 
@@ -24,7 +26,7 @@ module Speech
       # Regex only passes a word with a wordid, so it doesn't have a chainid which causes failure
       @words.each do |w|
         if w.chainid == nil 
-          w.chainid = m.getFirst_i_rand( "id", "chains WHERE wid=?", [ w.wid ] )
+          w.chainid = m.getFirst_i_rand( "id", "chains WHERE wid=? #{@extracriteria}", [ w.wid ] )
         end
         w.seed = true
       end
@@ -89,7 +91,7 @@ module Speech
       # Always first call of a sentence.
       if newsource 
         $bot.debug "New source"
-        res = m.getFirst_array_rand( [ "id", "tid" ], "chains WHERE wid=?", nextword.wid ) 
+        res = m.getFirst_array_rand( [ "id", "tid" ], "chains WHERE wid=? #{@extracriteria}", nextword.wid ) 
 
         if res == nil or res[0] == nil or res[1] == nil
           # chain is done, we're done going this way
@@ -107,9 +109,9 @@ module Speech
         $bot.debug "Not new source (textid=" + nextword.textid.to_s + ")"
 
         if dir == :left
-          res = m.getArray( "SELECT id,wid FROM chains WHERE nextid=?", nextword.chainid )
+          res = m.getArray( "SELECT id,wid FROM chains WHERE nextid=? #{@extracriteria}", nextword.chainid )
         else
-          res = m.getArray( "SELECT id,wid FROM chains WHERE id=(SELECT nextid FROM chains WHERE id=?)", 
+          res = m.getArray( "SELECT id,wid FROM chains WHERE id=(SELECT nextid FROM chains WHERE id=?) #{@extracriteria}", 
                   nextword.chainid  )
         end
         $bot.debug "\tID and #{field} query res: " + res.to_s 
