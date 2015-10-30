@@ -68,7 +68,7 @@ class SayUser
     end
 
     if type == "regex"
-      wid = m.getFirst_i_rand( "id", ( "words WHERE word " + regexinfo[:op] + " ?" ), regexinfo[:regex] )
+      wid = m.getFirst_i_rand "id", "words WHERE word #{regexinfo[:op]} ?", regexinfo[:regex]
     else
       wid = m.getFirst_i_rand "id", "words WHERE word = ?", word
     end

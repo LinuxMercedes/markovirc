@@ -66,7 +66,12 @@ module DatabaseTools
 
     args = nargs
     
-    self.getFirst_i( "SELECT " + selection + " FROM " + query + " OFFSET floor(RANDOM() * (SELECT count(*) FROM " + query + ")) LIMIT 1", args )
+    self.getFirst_i( "SELECT #{selection} 
+                      FROM #{query} 
+                      OFFSET floor(RANDOM() * 
+                        (SELECT count(*) 
+                         FROM #{query})) 
+                         LIMIT 1", args )
   end 
 
   # Wraps around getFirst_i to return a random int
@@ -82,11 +87,14 @@ module DatabaseTools
 
     args = nargs
     
-    r = self.getArray( "SELECT " + selection.join(',') + " FROM " + query + " OFFSET floor(RANDOM() * (SELECT count(*) FROM " + query + ")) LIMIT 1", args ) 
+    r = self.getArray( "SELECT #{selection.join(',')} 
+                        FROM #{query} 
+                        OFFSET floor(RANDOM() * 
+                          (SELECT count(*) 
+                           FROM #{query})) 
+                           LIMIT 1", args ) 
     
     r = r[0] if r.is_a? Array and r.size == 1
-
-    r
   end 
 
   def getArray( query, args )
@@ -99,40 +107,32 @@ module DatabaseTools
     end
   end
 
-  def exec( query, argsin=[] )
-    args = Array.new
-
-    if not argsin.is_a? Array
-      args = [ argsin ]
-    else
-      args = argsin
+  def exec( query, args=[] )
+    if not args.is_a? Array
+      args = [ args ]
     end
 
     # Escape args which contain ?
     args.map! { |a| a.to_s.gsub( /\?/, '\\?' ) }
-
+    
     # Replace our ?'s with our args in order. Escape them and use exec
     # for compatibility with jruby_pg and pg.
     args.each do |arg|
       query.sub! /(?<!\\)\?/ do
         if @pool != nil
           @pool.with do |conn|
-          #print "ARG: #{arg.to_s} w/ type: #{arg.class} is now #{conn.escape_string(arg)}"
-            "'" + conn.escape_string( arg ) + "'"
+            "'#{conn.escape_string( arg )}'"
           end
         else
-          #print "ARG: #{arg.to_s} w/ type: #{arg.class} is now #{$conn.escape_string(arg)}"
-            "'" + $conn.escape_string( arg ) + "'"
+            "'#{$conn.escape_string( arg )}'"
         end
       end
     end
 
-    #print "Query: ", query, "\n\n"
-
     # Now go back and change any escaped ?s to regular ?s (we escape already escaped ?s twice)
     query.gsub! /\\\?/, '?'
 
-    print query, "\n\n"
+    $bot.debug "QUERY:\n#{query}"
     
     # Check whether we're using a pool or a global connection
     if @pool != nil
