@@ -3,6 +3,36 @@ module DatabaseTools
   attr_accessor :sentence, :textid, :sourceid, :db
 
   @pool = @sentence = @textid = @sourceid = @db = nil
+  @setup = false
+
+  def setup
+    return if @setup
+
+    @setup = true
+    self.exec \
+      """
+      CREATE OR REPLACE FUNCTION randomchain(int,text) 
+      RETURNS int AS
+      $$
+        BEGIN
+        EXECUTE 'CREATE TEMP TABLE temptable 
+          ON COMMIT DROP
+          AS (SELECT id
+            FROM chains
+            WHERE wid=' || $1 || $2
+            || ');';
+
+          RETURN (SELECT id
+          FROM temptable
+          OFFSET floor(RANDOM()*(
+            SELECT count(id)
+            FROM temptable
+          ))
+          LIMIT 1);
+        END;
+      $$ LANGUAGE plpgsql;
+      """
+  end
 
   def getFirst( query, args=[] )
     res = self.exec( query, args ).values.first
@@ -69,7 +99,7 @@ module DatabaseTools
     end
   end
 
-  def exec( query, argsin )
+  def exec( query, argsin=[] )
     args = Array.new
 
     if not argsin.is_a? Array
@@ -101,6 +131,8 @@ module DatabaseTools
 
     # Now go back and change any escaped ?s to regular ?s (we escape already escaped ?s twice)
     query.gsub! /\\\?/, '?'
+
+    print query, "\n\n"
     
     # Check whether we're using a pool or a global connection
     if @pool != nil

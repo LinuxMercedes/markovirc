@@ -11,6 +11,7 @@ class SayUser
 
   def execute( m, mask, word )
     return if not m.useCommands?
+    m.setup 
 
     word, chainlen, type, regexinfo = self.sayArgParser word
 

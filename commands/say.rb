@@ -6,11 +6,13 @@ class Say
   include Cinch::Plugin
   include Speech
   include RegexParser
-
+  
   match /say (.+)/, method: :execute
 
   def execute( m, word )
     return if not m.useCommands?
+    m.setup 
+
 
     word, chainlen, type, regexinfo = self.sayArgParser word
 

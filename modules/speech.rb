@@ -26,7 +26,7 @@ module Speech
       # Regex only passes a word with a wordid, so it doesn't have a chainid which causes failure
       @words.each do |w|
         if w.chainid == nil 
-          w.chainid = m.getFirst_i_rand( "id", "chains WHERE wid=? #{@extracriteria}", [ w.wid ] )
+          w.chainid = m.getFirst_i("SELECT randomchain(#{w.wid},'#{@extracriteria}')")
         end
         w.seed = true
       end
@@ -91,18 +91,22 @@ module Speech
       # Always first call of a sentence.
       if newsource 
         $bot.debug "New source"
-        res = m.getFirst_array_rand( [ "id", "tid" ], "chains WHERE wid=? #{@extracriteria}", nextword.wid ) 
+        nextword.chainid = m.getFirst_i("SELECT randomchain(?,'#{@extracriteria}')", nextword.wid)
 
-        if res == nil or res[0] == nil or res[1] == nil
+        if nextword.chainid == nil
+          # chain is done, we're done going this way
+          $bot.debug "Couldn't find chainid."
+          return false
+        end
+
+        nextword.textid = m.getFirst_i("SELECT tid FROM chains WHERE id=?", nextword.chainid)
+        $bot.debug "\tnextword.textid: " + nextword.textid.to_s
+
+        if nextword.textid == nil
           # chain is done, we're done going this way
           $bot.debug "Couldn't find textid."
           return false
         end
-
-        nextword.chainid = res[0].to_i
-        nextword.textid = res[1].to_i
-
-        $bot.debug "\tnextword.textid: " + nextword.textid.to_s
 
       else
 
