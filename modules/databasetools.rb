@@ -66,7 +66,7 @@ module DatabaseTools
 
     args = nargs
     
-    return( self.getFirst_i( "SELECT " + selection + " FROM " + query + " OFFSET floor(RANDOM() * (SELECT count(*) FROM " + query + ")) LIMIT 1", args ) )
+    self.getFirst_i( "SELECT " + selection + " FROM " + query + " OFFSET floor(RANDOM() * (SELECT count(*) FROM " + query + ")) LIMIT 1", args )
   end 
 
   # Wraps around getFirst_i to return a random int

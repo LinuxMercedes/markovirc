@@ -26,7 +26,7 @@ module Speech
       # Regex only passes a word with a wordid, so it doesn't have a chainid which causes failure
       @words.each do |w|
         if w.chainid == nil 
-          w.chainid = m.getFirst_i("SELECT randomchain(#{w.wid},'#{@extracriteria}')")
+          w.chainid = m.getFirst_i("SELECT randomchain(?,?)", [w.wid, @extracriteria])
         end
         w.seed = true
       end
@@ -91,7 +91,7 @@ module Speech
       # Always first call of a sentence.
       if newsource 
         $bot.debug "New source"
-        nextword.chainid = m.getFirst_i("SELECT randomchain(?,'#{@extracriteria}')", nextword.wid)
+        nextword.chainid = m.getFirst_i("SELECT randomchain(?,?)", [nextword.wid, @extracritera])
 
         if nextword.chainid == nil
           # chain is done, we're done going this way
